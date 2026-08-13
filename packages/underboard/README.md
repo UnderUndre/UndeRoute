@@ -48,7 +48,7 @@ Or run it directly via Node using the absolute path:
     "underboard": {
       "command": "node",
       "args": [
-        "C:/Users/Admin/Documents/Repos/underhelpers/under-ai-helpers/packages/underboard/dist/cli/index.js",
+        "C:/Users/Admin/Documents/Repos/underhelpers/underoute/packages/underboard/dist/cli/index.js",
         "start",
         "--port",
         "4284",
@@ -59,7 +59,7 @@ Or run it directly via Node using the absolute path:
 }
 ```
 
-*Note: Make sure to include the `--stdio` flag. This allows Claude Desktop to communicate with the server directly over standard input/output. Also, ensure each argument (e.g., `start`, `--port`, `4282`, `--stdio`) is a separate element in the `"args"` array. Passing them as a single string will cause the execution to fail.*
+_Note: Make sure to include the `--stdio` flag. This allows Claude Desktop to communicate with the server directly over standard input/output. Also, ensure each argument (e.g., `start`, `--port`, `4282`, `--stdio`) is a separate element in the `"args"` array. Passing them as a single string will cause the execution to fail._
 
 ### Configuration
 
@@ -68,18 +68,18 @@ Underboard uses a cascading precedence tree for configuration on a per-field bas
 
 #### Config options and defaults:
 
-| Parameter | CLI Option | Environment Variable | Default Value | Description |
-|-----------|------------|----------------------|---------------|-------------|
-| HTTP Port | `--port <port>` | `PORT` | `4280` | HTTP port for the dashboard. |
-| Database Path | `--db-path <path>` | `UNDERBOARD_DB_PATH` | `~/.underboard/data.db` | Path to the SQLite database. Tilde `~` is expanded to homedir. |
-| Honcho Endpoint | `--honcho-endpoint <url>` | `HONCHO_ENDPOINT` | `http://127.0.0.1:8000` | Coordinates to your Honcho v3 instance. |
-| Honcho Token | `--honcho-token <token>` | `HONCHO_TOKEN` | `undefined` | Bearer token for Honcho API (redacted as `***` in log output). |
-| Honcho Timeout | `--honcho-timeout <ms>` | `HONCHO_TIMEOUT_MS` | `5000` | Connection and request timeout in milliseconds. |
-| Embedding Model Name | `--embedding-model-name <name>` | `EMBEDDING_MODEL_NAME` | `paraphrase-multilingual-MiniLM-L12-v2.onnx` | Model name metadata. |
-| Embedding Model Path | `--embedding-model-path <path>` | `EMBEDDING_MODEL_PATH` | `undefined` | Path to local ONNX model file. If unset, embedding is disabled. |
-| LLM Endpoint | `--llm-endpoint <url>` | `LLM_ENDPOINT` | `undefined` | OpenAI-compatible endpoint. Suffix `/chat/completions` is auto-stripped. |
-| LLM API Key | `--llm-api-key <key>` | `LLM_API_KEY` | `undefined` | API key for LLM operations (redacted as `***` in log output). |
-| LLM Model Name | `--llm-model <model>` | `LLM_MODEL` | `undefined` | LLM model identifier. |
+| Parameter            | CLI Option                      | Environment Variable   | Default Value                                | Description                                                              |
+| -------------------- | ------------------------------- | ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| HTTP Port            | `--port <port>`                 | `PORT`                 | `4280`                                       | HTTP port for the dashboard.                                             |
+| Database Path        | `--db-path <path>`              | `UNDERBOARD_DB_PATH`   | `~/.underboard/data.db`                      | Path to the SQLite database. Tilde `~` is expanded to homedir.           |
+| Honcho Endpoint      | `--honcho-endpoint <url>`       | `HONCHO_ENDPOINT`      | `http://127.0.0.1:8000`                      | Coordinates to your Honcho v3 instance.                                  |
+| Honcho Token         | `--honcho-token <token>`        | `HONCHO_TOKEN`         | `undefined`                                  | Bearer token for Honcho API (redacted as `***` in log output).           |
+| Honcho Timeout       | `--honcho-timeout <ms>`         | `HONCHO_TIMEOUT_MS`    | `5000`                                       | Connection and request timeout in milliseconds.                          |
+| Embedding Model Name | `--embedding-model-name <name>` | `EMBEDDING_MODEL_NAME` | `paraphrase-multilingual-MiniLM-L12-v2.onnx` | Model name metadata.                                                     |
+| Embedding Model Path | `--embedding-model-path <path>` | `EMBEDDING_MODEL_PATH` | `undefined`                                  | Path to local ONNX model file. If unset, embedding is disabled.          |
+| LLM Endpoint         | `--llm-endpoint <url>`          | `LLM_ENDPOINT`         | `undefined`                                  | OpenAI-compatible endpoint. Suffix `/chat/completions` is auto-stripped. |
+| LLM API Key          | `--llm-api-key <key>`           | `LLM_API_KEY`          | `undefined`                                  | API key for LLM operations (redacted as `***` in log output).            |
+| LLM Model Name       | `--llm-model <model>`           | `LLM_MODEL`            | `undefined`                                  | LLM model identifier.                                                    |
 
 > [!NOTE]
 > Sensitive configuration headers (Honcho Token and LLM API Key) are redacted in startup echoes and stderr blocks. When created/rewritten, `config.json` restricts permissions to `0600` (owner read/write only). Dotenv is resolved Cascading-style: first `~/.underboard/.env` is loaded, then cwd `.env` (overriding home).

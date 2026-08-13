@@ -70,16 +70,14 @@ function createBenchMock() {
     // Lockfile contents — return valid lockfile for every repo
     if (u.includes("/contents/helpers-lock.json")) {
       return mockResponse({
-        content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+        content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
         encoding: "base64",
       });
     }
 
     // Commits for lockfile
     if (u.includes("/commits?")) {
-      return mockResponse([
-        { commit: { author: { date: "2026-05-01T12:00:00Z" } } },
-      ]);
+      return mockResponse([{ commit: { author: { date: "2026-05-01T12:00:00Z" } } }]);
     }
 
     return mockResponse([], 200);

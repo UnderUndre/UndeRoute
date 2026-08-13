@@ -15,7 +15,7 @@ const TEST_ENTRY: FleetEntry = {
   shortName: "testrepo",
   defaultBranch: "main",
   pinnedRef: "v0.3.0",
-  pinnedSource: "github:UnderUndre/under-ai-helpers",
+  pinnedSource: "github:UnderUndre/underoute",
   latestRef: "v0.4.0",
   hasDrift: true,
   lastSyncAt: "2026-01-15T10:30:00Z",
@@ -48,7 +48,7 @@ vi.mock("../../../../src/core/fleet/ephemeral-clone.js", () => ({
     Promise.resolve({
       dir: "/tmp/helpers-fleet-test",
       cleanup: mockCleanup,
-    }),
+    })
   ),
 }));
 
@@ -58,8 +58,12 @@ vi.mock("../../../../src/core/fleet/github-api.js", () => ({
 }));
 
 vi.mock("../../../../src/core/fleet/modes/run-sync.js", () => ({
-  get runSyncPipeline() { return mockRunSyncPipeline; },
-  get hasWorkingTreeChanges() { return mockHasWorkingTreeChanges; },
+  get runSyncPipeline() {
+    return mockRunSyncPipeline;
+  },
+  get hasWorkingTreeChanges() {
+    return mockHasWorkingTreeChanges;
+  },
   getHeadSha: vi.fn(() => Promise.resolve("abc123")),
   getFullDiff: vi.fn(() => Promise.resolve("diff content")),
 }));
@@ -148,7 +152,7 @@ describe("syncPr", () => {
   it("returns failed with errorCode git/clone-failed on clone failure", async () => {
     const { createEphemeralClone } = await import("../../../../src/core/fleet/ephemeral-clone.js");
     vi.mocked(createEphemeralClone).mockRejectedValueOnce(
-      new FleetError("git/clone-failed", "Failed to clone repo"),
+      new FleetError("git/clone-failed", "Failed to clone repo")
     );
 
     const result = await syncPr(TEST_ENTRY, AUTH, "v0.4.0", mockFetch);
@@ -174,7 +178,11 @@ describe("syncPr", () => {
     expect(result.outcome).toBe("succeeded");
     // Verify git was called with a valid branch name (no trailing /)
     const checkoutCall = mockExecFileAsync.mock.calls.find(
-      (call: unknown[]) => Array.isArray(call) && call[0] === "git" && Array.isArray(call[1]) && call[1][0] === "checkout",
+      (call: unknown[]) =>
+        Array.isArray(call) &&
+        call[0] === "git" &&
+        Array.isArray(call[1]) &&
+        call[1][0] === "checkout"
     );
     expect(checkoutCall).toBeDefined();
     const branchArg = (checkoutCall as unknown[])[1] as string[];
@@ -190,7 +198,11 @@ describe("syncPr", () => {
 
     expect(result.outcome).toBe("succeeded");
     const checkoutCall = mockExecFileAsync.mock.calls.find(
-      (call: unknown[]) => Array.isArray(call) && call[0] === "git" && Array.isArray(call[1]) && call[1][0] === "checkout",
+      (call: unknown[]) =>
+        Array.isArray(call) &&
+        call[0] === "git" &&
+        Array.isArray(call[1]) &&
+        call[1][0] === "checkout"
     );
     expect(checkoutCall).toBeDefined();
     const branchArg = (checkoutCall as unknown[])[1] as string[];

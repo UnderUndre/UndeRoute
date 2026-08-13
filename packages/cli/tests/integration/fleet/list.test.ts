@@ -47,31 +47,49 @@ function createHappyPathMock() {
     }
     if (u.includes("/user/repos")) {
       return mockResponse([
-        { full_name: "testuser/project-a", name: "project-a", default_branch: "main", archived: false, disabled: false },
-        { full_name: "testuser/project-b", name: "project-b", default_branch: "develop", archived: false, disabled: false },
+        {
+          full_name: "testuser/project-a",
+          name: "project-a",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
+        {
+          full_name: "testuser/project-b",
+          name: "project-b",
+          default_branch: "develop",
+          archived: false,
+          disabled: false,
+        },
       ]);
     }
     if (u.includes("/orgs/myorg/repos")) {
       return mockResponse([
-        { full_name: "myorg/shared-lib", name: "shared-lib", default_branch: "main", archived: false, disabled: false },
+        {
+          full_name: "myorg/shared-lib",
+          name: "shared-lib",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
       ]);
     }
     if (u.includes("/contents/helpers-lock.json")) {
       if (u.includes("project-a")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
       if (u.includes("project-b")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
       if (u.includes("shared-lib")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
@@ -112,9 +130,16 @@ describe("fleet list (integration)", () => {
 
     // Verify required keys
     const requiredKeys: (keyof FleetEntry)[] = [
-      "fullName", "shortName", "defaultBranch", "pinnedRef",
-      "pinnedSource", "latestRef", "hasDrift", "lastSyncAt",
-      "state", "unreadableReason",
+      "fullName",
+      "shortName",
+      "defaultBranch",
+      "pinnedRef",
+      "pinnedSource",
+      "latestRef",
+      "hasDrift",
+      "lastSyncAt",
+      "state",
+      "unreadableReason",
     ];
     for (const key of requiredKeys) {
       expect(key in parsed[0]!).toBe(true);
@@ -189,7 +214,7 @@ describe("fleet list (integration)", () => {
     };
 
     await expect(
-      discoverFleet(noOrgsConfig, AUTH, fetchMock as typeof globalThis.fetch),
+      discoverFleet(noOrgsConfig, AUTH, fetchMock as typeof globalThis.fetch)
     ).rejects.toThrow(FleetError);
 
     try {
@@ -211,7 +236,13 @@ describe("fleet list (integration)", () => {
       }
       if (u.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "testuser/no-lock", name: "no-lock", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "testuser/no-lock",
+            name: "no-lock",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (u.includes("/contents/helpers-lock.json")) {

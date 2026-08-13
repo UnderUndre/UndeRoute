@@ -5,7 +5,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { FleetConfig, FleetEntry, SyncResult, SyncSession } from "../../../src/core/fleet/types.js";
+import type {
+  FleetConfig,
+  FleetEntry,
+  SyncResult,
+  SyncSession,
+} from "../../../src/core/fleet/types.js";
 import { summarise, exitCode } from "../../../src/core/fleet/types.js";
 import { dispatchSync } from "../../../src/core/fleet/modes/index.js";
 
@@ -19,7 +24,7 @@ function makeEntry(overrides: Partial<FleetEntry> = {}): FleetEntry {
     shortName: "testrepo",
     defaultBranch: "main",
     pinnedRef: "v0.3.0",
-    pinnedSource: "github:UnderUndre/under-ai-helpers",
+    pinnedSource: "github:UnderUndre/underoute",
     latestRef: "v0.4.0",
     hasDrift: true,
     lastSyncAt: "2026-01-15T10:30:00Z",
@@ -60,7 +65,7 @@ vi.mock("../../../src/core/fleet/ephemeral-clone.js", () => ({
     Promise.resolve({
       dir: "/tmp/helpers-fleet-test",
       cleanup: mockCleanup,
-    }),
+    })
   ),
 }));
 
@@ -71,10 +76,18 @@ vi.mock("../../../src/core/fleet/github-api.js", () => ({
 }));
 
 vi.mock("../../../src/core/fleet/modes/run-sync.js", () => ({
-  get runSyncPipeline() { return mockRunSyncPipeline; },
-  get hasWorkingTreeChanges() { return mockHasWorkingTreeChanges; },
-  get getHeadSha() { return mockGetHeadSha; },
-  get getFullDiff() { return mockGetFullDiff; },
+  get runSyncPipeline() {
+    return mockRunSyncPipeline;
+  },
+  get hasWorkingTreeChanges() {
+    return mockHasWorkingTreeChanges;
+  },
+  get getHeadSha() {
+    return mockGetHeadSha;
+  },
+  get getFullDiff() {
+    return mockGetFullDiff;
+  },
 }));
 
 vi.mock("node:util", () => ({
@@ -86,8 +99,12 @@ vi.mock("node:child_process", () => ({
 }));
 
 vi.mock("node:fs/promises", () => ({
-  get mkdir() { return mockMkdir; },
-  get writeFile() { return mockWriteFile; },
+  get mkdir() {
+    return mockMkdir;
+  },
+  get writeFile() {
+    return mockWriteFile;
+  },
 }));
 
 // ── Tests ────────────────────────────────────────────────────────────
@@ -100,7 +117,9 @@ describe("fleet sync (integration)", () => {
     mockRunSyncPipeline.mockResolvedValue(true);
     mockHasWorkingTreeChanges.mockResolvedValue(true);
     mockGetHeadSha.mockResolvedValue("abc123def456");
-    mockGetFullDiff.mockResolvedValue("diff --git a/file.ts b/file.ts\n--- a/file.ts\n+++ b/file.ts\n");
+    mockGetFullDiff.mockResolvedValue(
+      "diff --git a/file.ts b/file.ts\n--- a/file.ts\n+++ b/file.ts\n"
+    );
     mockExecFileAsync.mockResolvedValue({ stdout: "", stderr: "" });
     mockCleanup.mockResolvedValue(undefined);
     mockCreatePullRequest.mockResolvedValue({

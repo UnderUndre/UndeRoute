@@ -19,18 +19,8 @@ import { parseSourceFile } from "../core/parse.js";
 import { matchGlob, resolveOutputPath } from "../core/glob.js";
 import { canonicalHash, slotsHash, renderedHash } from "../core/hash.js";
 import { parseSlots, mergeSlots } from "../core/slots.js";
-import {
-  createStagingDir,
-  stageFile,
-  commitStaged,
-  cleanStaging,
-} from "../core/staging.js";
-import {
-  createJournal,
-  writeJournal,
-  markOperationDone,
-  deleteJournal,
-} from "../core/journal.js";
+import { createStagingDir, stageFile, commitStaged, cleanStaging } from "../core/staging.js";
+import { createJournal, writeJournal, markOperationDone, deleteJournal } from "../core/journal.js";
 import { ensureGitignoreEntries } from "../core/gitignore.js";
 import { guardMutatingCommand, releaseMutatingGuard } from "../cli.js";
 
@@ -42,7 +32,7 @@ export default defineCommand({
   args: {
     source: {
       type: "string",
-      default: "github:UnderUndre/under-ai-helpers",
+      default: "github:UnderUndre/underoute",
       description: "Source repo URL",
     },
     version: {
@@ -89,23 +79,24 @@ export default defineCommand({
       // 1. Fetch source repo
       const ref = args.ref ?? args.version;
       consola.start("Fetching source repo...");
-      const { dir: sourceDir, commit } = await fetchSource(
-        args.source,
-        ref,
-        undefined,
-        { offline: (args as Record<string, unknown>).offline === true },
-      );
+      const { dir: sourceDir, commit } = await fetchSource(args.source, ref, undefined, {
+        offline: (args as Record<string, unknown>).offline === true,
+      });
       consola.success(`Fetched source (commit: ${commit.slice(0, 8)})`);
 
       // 2. Load and validate manifest
       const manifest = await loadManifest(sourceDir, args["source-config"]);
-      consola.success(`Loaded manifest: ${manifest.sources.length} source patterns, ${Object.keys(manifest.targets).length} targets`);
+      consola.success(
+        `Loaded manifest: ${manifest.sources.length} source patterns, ${Object.keys(manifest.targets).length} targets`
+      );
 
       // 3. Resolve active targets
       const requestedTargets = args.targets.split(",").map((t: string) => t.trim());
       for (const t of requestedTargets) {
         if (!manifest.targets[t]) {
-          consola.error(`Unknown target: "${t}". Available: ${Object.keys(manifest.targets).join(", ")}`);
+          consola.error(
+            `Unknown target: "${t}". Available: ${Object.keys(manifest.targets).join(", ")}`
+          );
           process.exitCode = ExitCode.UsageError;
           return;
         }
@@ -123,7 +114,7 @@ export default defineCommand({
         sourceFiles.map(async (relPath) => {
           const content = await readFile(join(sourceDir, relPath), "utf8");
           return parseSourceFile(relPath, content);
-        }),
+        })
       );
 
       // 7. Run transformer pipelines per target
@@ -153,14 +144,20 @@ export default defineCommand({
 
             for (const file of files) {
               // Always resolve output path from pipeline template
-              file.targetPath = resolveOutputPath(pipeline.output, parsed.sourcePath, pipeline.match);
+              file.targetPath = resolveOutputPath(
+                pipeline.output,
+                parsed.sourcePath,
+                pipeline.match
+              );
               allRendered.push(file);
             }
           }
         }
       }
 
-      consola.info(`Generated ${allRendered.length} files across ${requestedTargets.length} targets`);
+      consola.info(
+        `Generated ${allRendered.length} files across ${requestedTargets.length} targets`
+      );
 
       // 8. Dry run — just print what would happen
       if (dryRun) {
@@ -284,7 +281,7 @@ async function discoverSourceFiles(baseDir: string, patterns: string[]): Promise
 function buildLockEntries(
   rendered: RenderedFile[],
   _parsedFiles: ReturnType<typeof parseSourceFile>[],
-  _manifest: ReturnType<typeof loadManifest> extends Promise<infer T> ? T : never,
+  _manifest: ReturnType<typeof loadManifest> extends Promise<infer T> ? T : never
 ): (SourceEntry | GeneratedEntry)[] {
   const entries: (SourceEntry | GeneratedEntry)[] = [];
   const seen = new Set<string>();

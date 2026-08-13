@@ -14,7 +14,7 @@ const TEST_ENTRY: FleetEntry = {
   shortName: "testrepo",
   defaultBranch: "main",
   pinnedRef: "v0.3.0",
-  pinnedSource: "github:UnderUndre/under-ai-helpers",
+  pinnedSource: "github:UnderUndre/underoute",
   latestRef: "v0.4.0",
   hasDrift: true,
   lastSyncAt: "2026-01-15T10:30:00Z",
@@ -45,14 +45,20 @@ vi.mock("../../../../src/core/fleet/ephemeral-clone.js", () => ({
     Promise.resolve({
       dir: "/tmp/helpers-fleet-test",
       cleanup: mockCleanup,
-    }),
+    })
   ),
 }));
 
 vi.mock("../../../../src/core/fleet/modes/run-sync.js", () => ({
-  get runSyncPipeline() { return mockRunSyncPipeline; },
-  get hasWorkingTreeChanges() { return mockHasWorkingTreeChanges; },
-  get getHeadSha() { return mockGetHeadSha; },
+  get runSyncPipeline() {
+    return mockRunSyncPipeline;
+  },
+  get hasWorkingTreeChanges() {
+    return mockHasWorkingTreeChanges;
+  },
+  get getHeadSha() {
+    return mockGetHeadSha;
+  },
   getFullDiff: vi.fn(() => Promise.resolve("diff content")),
 }));
 
@@ -114,10 +120,10 @@ describe("syncPush", () => {
   // ── 3. Branch protected → outcome: "skipped" ──────────────────────
 
   it("returns skipped with reason git/branch-protected on protected branch error", async () => {
-    const pushError: Error & { stderr: string } = Object.assign(
-      new Error("push failed"),
-      { stderr: "error: failed to push some refs to https://github.com/testowner/testrepo.git\nremote: error: GH006: Protected branch update failed for main. Changes must be made via a pull request.\nTo https://github.com/testowner/testrepo.git\n! [remote rejected] main -> main (protected branch hook declined)" },
-    );
+    const pushError: Error & { stderr: string } = Object.assign(new Error("push failed"), {
+      stderr:
+        "error: failed to push some refs to https://github.com/testowner/testrepo.git\nremote: error: GH006: Protected branch update failed for main. Changes must be made via a pull request.\nTo https://github.com/testowner/testrepo.git\n! [remote rejected] main -> main (protected branch hook declined)",
+    });
 
     // Make push fail, other git commands succeed
     mockExecFileAsync.mockImplementation((cmd: string, args: string[]) => {
@@ -136,10 +142,10 @@ describe("syncPush", () => {
   // ── 4. Non-fast-forward → outcome: "skipped" ──────────────────────
 
   it("returns skipped with reason git/push-rejected on non-fast-forward error", async () => {
-    const pushError: Error & { stderr: string } = Object.assign(
-      new Error("push failed"),
-      { stderr: "To https://github.com/testowner/testrepo.git\n ! [rejected]        main -> main (non-fast-forward)\nerror: failed to push some refs to 'https://github.com/testowner/testrepo.git'\nhint: Updates were rejected because the tip of your current branch is behind" },
-    );
+    const pushError: Error & { stderr: string } = Object.assign(new Error("push failed"), {
+      stderr:
+        "To https://github.com/testowner/testrepo.git\n ! [rejected]        main -> main (non-fast-forward)\nerror: failed to push some refs to 'https://github.com/testowner/testrepo.git'\nhint: Updates were rejected because the tip of your current branch is behind",
+    });
 
     mockExecFileAsync.mockImplementation((cmd: string, args: string[]) => {
       if (args.includes("push")) return Promise.reject(pushError);
@@ -158,16 +164,14 @@ describe("syncPush", () => {
 
   it("distinguishes protected branch from non-fast-forward by stderr content", async () => {
     // Protected branch contains "protected branch"
-    const protectedError: Error & { stderr: string } = Object.assign(
-      new Error("push failed"),
-      { stderr: "remote: error: GH006: protected branch update failed" },
-    );
+    const protectedError: Error & { stderr: string } = Object.assign(new Error("push failed"), {
+      stderr: "remote: error: GH006: protected branch update failed",
+    });
 
     // Non-fast-forward contains "non-fast-forward" but NOT "protected branch"
-    const rejectedError: Error & { stderr: string } = Object.assign(
-      new Error("push failed"),
-      { stderr: "non-fast-forward\nfailed to push some refs" },
-    );
+    const rejectedError: Error & { stderr: string } = Object.assign(new Error("push failed"), {
+      stderr: "non-fast-forward\nfailed to push some refs",
+    });
 
     // Test protected
     mockExecFileAsync.mockImplementation((_cmd: string, args: string[]) => {

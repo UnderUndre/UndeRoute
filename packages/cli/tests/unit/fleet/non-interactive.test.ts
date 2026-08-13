@@ -9,9 +9,7 @@ import { FleetError } from "../../../src/core/fleet/types.js";
 
 // ── Import selection logic ────────────────────────────────────────────
 
-const { selectByFlag, validateMutualExclusion } = await import(
-  "../../../src/cli/fleet/sync.js"
-);
+const { selectByFlag, validateMutualExclusion } = await import("../../../src/cli/fleet/sync.js");
 
 // ── Import config functions ───────────────────────────────────────────
 
@@ -48,9 +46,7 @@ afterAll(() => {
   if (originalXdg) process.env.XDG_CONFIG_HOME = originalXdg;
 });
 
-const { addOrg, removeOrg } = await import(
-  "../../../src/core/fleet/config.js"
-);
+const { addOrg, removeOrg } = await import("../../../src/core/fleet/config.js");
 
 // ── Test fixtures ─────────────────────────────────────────────────────
 
@@ -60,7 +56,7 @@ function makeEntry(overrides: Partial<FleetEntry> = {}): FleetEntry {
     shortName: "testrepo",
     defaultBranch: "main",
     pinnedRef: "v0.3.0",
-    pinnedSource: "github:UnderUndre/under-ai-helpers",
+    pinnedSource: "github:UnderUndre/underoute",
     latestRef: "v0.4.0",
     hasDrift: true,
     lastSyncAt: "2026-01-15T10:30:00Z",
@@ -112,9 +108,9 @@ describe("non-interactive selection", () => {
 
   // 3. --repo nonexistent → error
   it("--repo nonexistent/foo throws 'not found' error", () => {
-    expect(() =>
-      selectByFlag(SAMPLE_ENTRIES, { repo: ["nonexistent/foo"] })
-    ).toThrow("Repo 'nonexistent/foo' not found in fleet.");
+    expect(() => selectByFlag(SAMPLE_ENTRIES, { repo: ["nonexistent/foo"] })).toThrow(
+      "Repo 'nonexistent/foo' not found in fleet."
+    );
   });
 
   // 4. --all + --filter → mutual exclusion
@@ -153,17 +149,14 @@ describe("non-interactive selection", () => {
       repos: ["myorg/repo-a", "myorg/repo-c"],
     });
     expect(result!.entries).toHaveLength(2);
-    expect(result!.entries.map((e) => e.fullName)).toEqual([
-      "myorg/repo-a",
-      "myorg/repo-c",
-    ]);
+    expect(result!.entries.map((e) => e.fullName)).toEqual(["myorg/repo-a", "myorg/repo-c"]);
   });
 
   // 9. --repo with mix of valid and invalid → error on first missing
   it("--repo with one valid and one invalid throws on the invalid", () => {
-    expect(() =>
-      selectByFlag(SAMPLE_ENTRIES, { repo: ["myorg/repo-a", "bogus/repo"] })
-    ).toThrow("Repo 'bogus/repo' not found in fleet.");
+    expect(() => selectByFlag(SAMPLE_ENTRIES, { repo: ["myorg/repo-a", "bogus/repo"] })).toThrow(
+      "Repo 'bogus/repo' not found in fleet."
+    );
   });
 
   // 10. All three flags → mutual exclusion (first two reported)
@@ -197,9 +190,7 @@ describe("add-org config mutation", () => {
     await addOrg("new-org");
 
     expect(mockWriteFile).toHaveBeenCalledTimes(1);
-    const written = JSON.parse(
-      (mockWriteFile.mock.calls[0] as unknown[])[1] as string
-    );
+    const written = JSON.parse((mockWriteFile.mock.calls[0] as unknown[])[1] as string);
     expect(written.scope.orgs).toContain("new-org");
     expect(written.scope.orgs).toContain("existing-org");
     expect(written.defaultSyncMode).toBe("pr");
@@ -238,9 +229,7 @@ describe("remove-org config mutation", () => {
     await removeOrg("beta");
 
     expect(mockWriteFile).toHaveBeenCalledTimes(1);
-    const written = JSON.parse(
-      (mockWriteFile.mock.calls[0] as unknown[])[1] as string
-    );
+    const written = JSON.parse((mockWriteFile.mock.calls[0] as unknown[])[1] as string);
     expect(written.scope.orgs).toEqual(["alpha", "gamma"]);
     expect(written.defaultSyncMode).toBe("pr");
     expect(written.discoveryConcurrency).toBe(5);

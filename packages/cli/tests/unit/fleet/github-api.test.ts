@@ -47,8 +47,20 @@ describe("github-api", () => {
   describe("listReposForUser", () => {
     it("returns repos on 200", async () => {
       const repos = [
-        { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
-        { full_name: "user/repo2", name: "repo2", default_branch: "develop", archived: false, disabled: false },
+        {
+          full_name: "user/repo1",
+          name: "repo1",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
+        {
+          full_name: "user/repo2",
+          name: "repo2",
+          default_branch: "develop",
+          archived: false,
+          disabled: false,
+        },
       ];
       fetchMock.mockResolvedValueOnce(mockResponse(repos));
       const result = await listReposForUser(AUTH, fetchMock);
@@ -82,17 +94,17 @@ describe("github-api", () => {
       };
 
       // All calls return 403 rate-limited
-      fetchMock.mockResolvedValue(
-        mockResponse({ message: "rate limited" }, 403, rateLimitHeaders),
-      );
+      fetchMock.mockResolvedValue(mockResponse({ message: "rate limited" }, 403, rateLimitHeaders));
 
       // Start the call — it will enter retry loop
       const promise = listReposForUser(AUTH, fetchMock);
 
       // Prevent unhandled rejection by attaching catch immediately
       const resultPromise = promise.then(
-        () => { expect.unreachable("Should have thrown"); },
-        (e: unknown) => e,
+        () => {
+          expect.unreachable("Should have thrown");
+        },
+        (e: unknown) => e
       );
 
       // Fast-forward through all retries
@@ -109,9 +121,7 @@ describe("github-api", () => {
   // ── 4. 403 without rate-limit headers → auth/insufficient-scope ─
 
   it("throws auth/insufficient-scope on 403 without rate-limit headers", async () => {
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ message: "Forbidden" }, 403),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ message: "Forbidden" }, 403));
 
     try {
       await listReposForUser(AUTH, fetchMock);
@@ -124,9 +134,7 @@ describe("github-api", () => {
   // ── 5. 404 → github/repo-not-found ──────────────────────────────
 
   it("throws github/repo-not-found on 404", async () => {
-    fetchMock.mockResolvedValueOnce(
-      mockResponse({ message: "Not Found" }, 404),
-    );
+    fetchMock.mockResolvedValueOnce(mockResponse({ message: "Not Found" }, 404));
 
     try {
       await getDefaultBranch("owner", "nonexistent", AUTH, fetchMock);
@@ -141,10 +149,22 @@ describe("github-api", () => {
   describe("pagination", () => {
     it("follows Link rel=next until exhausted", async () => {
       const page1 = [
-        { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
+        {
+          full_name: "user/repo1",
+          name: "repo1",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
       ];
       const page2 = [
-        { full_name: "user/repo2", name: "repo2", default_branch: "main", archived: false, disabled: false },
+        {
+          full_name: "user/repo2",
+          name: "repo2",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
       ];
 
       fetchMock
@@ -155,7 +175,7 @@ describe("github-api", () => {
               "Content-Type": "application/json",
               link: '<https://api.github.com/user/repos?page=2>; rel="next"',
             },
-          }),
+          })
         )
         .mockResolvedValueOnce(mockResponse(page2));
 
@@ -174,7 +194,7 @@ describe("github-api", () => {
       new Response("not json at all", {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      }),
+      })
     );
 
     await expect(listReposForUser(AUTH, fetchMock)).rejects.toThrow();
@@ -184,9 +204,7 @@ describe("github-api", () => {
 
   describe("getLatestRelease", () => {
     it("returns tag_name from latest release", async () => {
-      fetchMock.mockResolvedValueOnce(
-        mockResponse({ tag_name: "v0.5.0", name: "Release 0.5.0" }),
-      );
+      fetchMock.mockResolvedValueOnce(mockResponse({ tag_name: "v0.5.0", name: "Release 0.5.0" }));
 
       const tag = await getLatestRelease("UnderUndre", "ai", AUTH, fetchMock);
       expect(tag).toBe("v0.5.0");
@@ -197,7 +215,7 @@ describe("github-api", () => {
 
   describe("readLockfile", () => {
     it("correctly decodes Base64 and parses JSON", async () => {
-      const lockfile = { ref: "v0.4.0", source: "github:UnderUndre/under-ai-helpers" };
+      const lockfile = { ref: "v0.4.0", source: "github:UnderUndre/underoute" };
       const encoded = btoa(JSON.stringify(lockfile));
 
       fetchMock.mockResolvedValueOnce(
@@ -206,11 +224,11 @@ describe("github-api", () => {
           encoding: "base64",
           name: "helpers-lock.json",
           path: "helpers-lock.json",
-        }),
+        })
       );
 
       const result = await readLockfile("owner", "repo", "main", AUTH, fetchMock);
-      expect(result).toEqual({ ref: "v0.4.0", source: "github:UnderUndre/under-ai-helpers" });
+      expect(result).toEqual({ ref: "v0.4.0", source: "github:UnderUndre/underoute" });
     });
 
     it("throws lockfile/malformed on invalid JSON content", async () => {
@@ -220,7 +238,7 @@ describe("github-api", () => {
         mockResponse({
           content: encoded,
           encoding: "base64",
-        }),
+        })
       );
 
       try {
@@ -238,7 +256,7 @@ describe("github-api", () => {
         mockResponse({
           content: encoded,
           encoding: "base64",
-        }),
+        })
       );
 
       try {
@@ -255,7 +273,13 @@ describe("github-api", () => {
   describe("listReposForOrg", () => {
     it("calls correct org endpoint", async () => {
       const repos = [
-        { full_name: "myorg/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
+        {
+          full_name: "myorg/repo1",
+          name: "repo1",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
       ];
       fetchMock.mockResolvedValueOnce(mockResponse(repos));
 
@@ -270,27 +294,35 @@ describe("github-api", () => {
   describe("readLastCommitForPath", () => {
     it("returns ISO date from latest commit", async () => {
       const date = "2025-01-15T10:30:00Z";
-      fetchMock.mockResolvedValueOnce(
-        mockResponse([{ commit: { author: { date } } }]),
-      );
+      fetchMock.mockResolvedValueOnce(mockResponse([{ commit: { author: { date } } }]));
 
-      const result = await readLastCommitForPath("owner", "repo", "helpers-lock.json", AUTH, fetchMock);
+      const result = await readLastCommitForPath(
+        "owner",
+        "repo",
+        "helpers-lock.json",
+        AUTH,
+        fetchMock
+      );
       expect(result).toBe(date);
     });
 
     it("returns null when no commits found", async () => {
       fetchMock.mockResolvedValueOnce(mockResponse([]));
 
-      const result = await readLastCommitForPath("owner", "repo", "helpers-lock.json", AUTH, fetchMock);
+      const result = await readLastCommitForPath(
+        "owner",
+        "repo",
+        "helpers-lock.json",
+        AUTH,
+        fetchMock
+      );
       expect(result).toBeNull();
     });
   });
 
   describe("getDefaultBranch", () => {
     it("returns default_branch from repo", async () => {
-      fetchMock.mockResolvedValueOnce(
-        mockResponse({ default_branch: "develop" }),
-      );
+      fetchMock.mockResolvedValueOnce(mockResponse({ default_branch: "develop" }));
 
       const branch = await getDefaultBranch("owner", "repo", AUTH, fetchMock);
       expect(branch).toBe("develop");
@@ -324,9 +356,7 @@ describe("github-api", () => {
       };
       const created = { html_url: "https://github.com/owner/repo/pull/5", number: 5 };
 
-      fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify(created), { status: 201 }),
-      );
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(created), { status: 201 }));
 
       const result = await createPullRequest("owner", "repo", params, AUTH, fetchMock);
       expect(result).toEqual(created);
@@ -342,7 +372,13 @@ describe("github-api", () => {
   describe("server errors", () => {
     it("retries once on 5xx then succeeds", async () => {
       const repos = [
-        { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
+        {
+          full_name: "user/repo1",
+          name: "repo1",
+          default_branch: "main",
+          archived: false,
+          disabled: false,
+        },
       ];
 
       fetchMock

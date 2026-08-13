@@ -66,19 +66,37 @@ describe("discoverFleet", () => {
       // User repos
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/repo1",
+            name: "repo1",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       // Org1 repos
       if (url.includes("/orgs/org1/repos")) {
         return mockResponse([
-          { full_name: "org1/repo2", name: "repo2", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "org1/repo2",
+            name: "repo2",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       // Org2 repos
       if (url.includes("/orgs/org2/repos")) {
         return mockResponse([
-          { full_name: "org2/repo3", name: "repo3", default_branch: "develop", archived: false, disabled: false },
+          {
+            full_name: "org2/repo3",
+            name: "repo3",
+            default_branch: "develop",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       // Lockfile reads — all 404 (no lockfile)
@@ -114,13 +132,25 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/with-lock", name: "with-lock", default_branch: "main", archived: false, disabled: false },
-          { full_name: "user/no-lock", name: "no-lock", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/with-lock",
+            name: "with-lock",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "user/no-lock",
+            name: "no-lock",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/user/with-lock/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
@@ -149,12 +179,18 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/archived-repo", name: "archived-repo", default_branch: "main", archived: true, disabled: false },
+          {
+            full_name: "user/archived-repo",
+            name: "archived-repo",
+            default_branch: "main",
+            archived: true,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
@@ -180,7 +216,13 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/bad-lock", name: "bad-lock", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/bad-lock",
+            name: "bad-lock",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/contents/helpers-lock.json")) {
@@ -244,14 +286,32 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
-          { full_name: "user/repo2", name: "repo2", default_branch: "main", archived: false, disabled: false },
-          { full_name: "user/repo3", name: "repo3", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/repo1",
+            name: "repo1",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "user/repo2",
+            name: "repo2",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "user/repo3",
+            name: "repo3",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
@@ -279,19 +339,43 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/repo1", name: "repo1", default_branch: "main", archived: false, disabled: false },
-          { full_name: "user/repo2", name: "repo2", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/repo1",
+            name: "repo1",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "user/repo2",
+            name: "repo2",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/orgs/myorg/repos")) {
         return mockResponse([
-          { full_name: "myorg/repo3", name: "repo3", default_branch: "main", archived: false, disabled: false },
-          { full_name: "myorg/repo4", name: "repo4", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "myorg/repo3",
+            name: "repo3",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "myorg/repo4",
+            name: "repo4",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
@@ -347,19 +431,31 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/repos")) {
         return mockResponse([
-          { full_name: "user/old", name: "old", default_branch: "main", archived: false, disabled: false },
-          { full_name: "user/current", name: "current", default_branch: "main", archived: false, disabled: false },
+          {
+            full_name: "user/old",
+            name: "old",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
+          {
+            full_name: "user/current",
+            name: "current",
+            default_branch: "main",
+            archived: false,
+            disabled: false,
+          },
         ]);
       }
       if (url.includes("/user/old/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }
       if (url.includes("/user/current/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/under-ai-helpers" }),
+          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/underoute" }),
           encoding: "base64",
         });
       }

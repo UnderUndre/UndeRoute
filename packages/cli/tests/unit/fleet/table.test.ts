@@ -12,7 +12,7 @@ function makeEntry(overrides: Partial<FleetEntry> = {}): FleetEntry {
     shortName: "repo",
     defaultBranch: "main",
     pinnedRef: "v0.3.0",
-    pinnedSource: "github:UnderUndre/under-ai-helpers",
+    pinnedSource: "github:UnderUndre/underoute",
     latestRef: "v0.4.0",
     hasDrift: true,
     lastSyncAt: "2026-01-15T10:30:00Z",
@@ -30,7 +30,7 @@ function makeEntries(n: number): FleetEntry[] {
       pinnedRef: i % 2 === 0 ? "v0.3.0" : "v0.4.0",
       hasDrift: i % 2 === 0,
       lastSyncAt: new Date(Date.now() - i * 86400000).toISOString(),
-    }),
+    })
   );
 }
 
@@ -114,8 +114,14 @@ describe("renderFleetTable", () => {
   // ── 7. Long repo name truncation ──────────────────────────────────
 
   it("truncates repo names longer than 40 chars with …", () => {
-    const longName = "a-very-long-org-name/this-is-an-extremely-long-repository-name-that-exceeds-limit";
-    const entries = [makeEntry({ fullName: longName, shortName: "this-is-an-extremely-long-repository-name-that-exceeds-limit" })];
+    const longName =
+      "a-very-long-org-name/this-is-an-extremely-long-repository-name-that-exceeds-limit";
+    const entries = [
+      makeEntry({
+        fullName: longName,
+        shortName: "this-is-an-extremely-long-repository-name-that-exceeds-limit",
+      }),
+    ];
     const output = renderFleetTable(entries, { noColor: true });
 
     // Should be truncated — the full name should NOT appear
@@ -152,9 +158,16 @@ describe("renderFleetTable", () => {
 
       // Verify shape: all FleetEntry keys present
       const requiredKeys: (keyof FleetEntry)[] = [
-        "fullName", "shortName", "defaultBranch", "pinnedRef",
-        "pinnedSource", "latestRef", "hasDrift", "lastSyncAt",
-        "state", "unreadableReason",
+        "fullName",
+        "shortName",
+        "defaultBranch",
+        "pinnedRef",
+        "pinnedSource",
+        "latestRef",
+        "hasDrift",
+        "lastSyncAt",
+        "state",
+        "unreadableReason",
       ];
       for (const key of requiredKeys) {
         expect(key in parsed[0]!).toBe(true);
