@@ -1,5 +1,5 @@
 {
-  "name": "underoute-clai-clai",
+  "name": "underoute-clai",
   "version": "1.0.0",
   "description": "CLI tool that transpiles .claude/ AI config into GitHub Copilot, Gemini, and other AI tool formats",
   "type": "module",
