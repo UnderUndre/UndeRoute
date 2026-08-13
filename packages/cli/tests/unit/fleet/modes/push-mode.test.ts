@@ -14,7 +14,7 @@ const TEST_ENTRY: FleetEntry = {
   shortName: "testrepo",
   defaultBranch: "main",
   pinnedRef: "v0.3.0",
-  pinnedSource: "github:UnderUndre/underoute",
+  pinnedSource: "github:UnderUndre/underoute-clai",
   latestRef: "v0.4.0",
   hasDrift: true,
   lastSyncAt: "2026-01-15T10:30:00Z",

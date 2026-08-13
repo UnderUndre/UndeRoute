@@ -34,11 +34,11 @@ describe("fetchSource — 'latest' sentinel resolution", () => {
     const fetchSpy = vi.fn(async () => new Response("{}", { status: 500 }));
     globalThis.fetch = fetchSpy as unknown as typeof globalThis.fetch;
 
-    await fetchSource("github:UnderUndre/underoute", "latest", undefined, { offline: true }).catch(
-      () => {
-        /* whatever happens downstream — not our concern */
-      }
-    );
+    await fetchSource("github:UnderUndre/underoute-clai", "latest", undefined, {
+      offline: true,
+    }).catch(() => {
+      /* whatever happens downstream — not our concern */
+    });
 
     const releaseCalls = fetchSpy.mock.calls.filter((c) =>
       String(c[0]).includes("/releases/latest")
@@ -62,14 +62,14 @@ describe("fetchSource — 'latest' sentinel resolution", () => {
     // Call fetchSource with ref "latest"; expect it to try releases/latest first.
     // It will then call giget (which will fail because we haven't mocked that),
     // but by the time it fails, we've already observed the API call we wanted.
-    await fetchSource("github:UnderUndre/underoute", "latest").catch(() => {
+    await fetchSource("github:UnderUndre/underoute-clai", "latest").catch(() => {
       // giget will fail in a unit test environment without a real tarball; we
       // don't care about that failure — only that the resolver hit the right API.
     });
 
     const releaseCalls = calls.filter((c) => c.includes("/releases/latest"));
     expect(releaseCalls.length).toBeGreaterThanOrEqual(1);
-    expect(releaseCalls[0]).toContain("UnderUndre/underoute");
+    expect(releaseCalls[0]).toContain("UnderUndre/underoute-clai");
   });
 
   it("resolveLatestRef: falls back to default_branch when no releases exist", async () => {
@@ -82,19 +82,19 @@ describe("fetchSource — 'latest' sentinel resolution", () => {
       if (u.includes("/releases/latest")) {
         return new Response("Not Found", { status: 404 });
       }
-      if (u.endsWith("/underoute")) {
+      if (u.endsWith("/underoute-clai")) {
         return new Response(JSON.stringify({ default_branch: "main" }), { status: 200 });
       }
       return new Response("{}", { status: 404 });
     }) as unknown as typeof globalThis.fetch;
 
-    await fetchSource("github:UnderUndre/underoute", "latest").catch(() => {
+    await fetchSource("github:UnderUndre/underoute-clai", "latest").catch(() => {
       /* giget will fail — not our concern */
     });
 
     // Verify the fallback path was exercised.
     const releaseCalls = calls.filter((c) => c.includes("/releases/latest"));
-    const repoCalls = calls.filter((c) => c.endsWith("UnderUndre/underoute"));
+    const repoCalls = calls.filter((c) => c.endsWith("UnderUndre/underoute-clai"));
     expect(releaseCalls.length).toBeGreaterThanOrEqual(1);
     expect(repoCalls.length).toBeGreaterThanOrEqual(1);
   });
@@ -105,7 +105,7 @@ describe("fetchSource — 'latest' sentinel resolution", () => {
     const fetchSpy = vi.fn(async () => new Response("{}", { status: 500 }));
     globalThis.fetch = fetchSpy as unknown as typeof globalThis.fetch;
 
-    await fetchSource("github:UnderUndre/underoute", "v1.2.3").catch(() => {
+    await fetchSource("github:UnderUndre/underoute-clai", "v1.2.3").catch(() => {
       /* giget failure expected in unit test */
     });
 

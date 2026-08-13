@@ -32,7 +32,7 @@ export default defineCommand({
   args: {
     source: {
       type: "string",
-      default: "github:UnderUndre/underoute",
+      default: "github:UnderUndre/underoute-clai",
       description: "Source repo URL",
     },
     version: {

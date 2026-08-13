@@ -150,7 +150,7 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/with-lock/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }
@@ -190,7 +190,7 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }
@@ -311,7 +311,7 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }
@@ -375,7 +375,7 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }
@@ -449,13 +449,13 @@ describe("discoverFleet", () => {
       }
       if (url.includes("/user/old/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.3.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }
       if (url.includes("/user/current/contents/helpers-lock.json")) {
         return mockResponse({
-          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/underoute" }),
+          content: base64Encode({ ref: "v0.4.0", source: "github:UnderUndre/underoute-clai" }),
           encoding: "base64",
         });
       }

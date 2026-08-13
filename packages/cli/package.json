@@ -1,6 +1,6 @@
 {
-  "name": "underundre-clai-helpers",
-  "version": "0.6.0",
+  "name": "underoute-clai-clai",
+  "version": "1.0.0",
   "description": "CLI tool that transpiles .claude/ AI config into GitHub Copilot, Gemini, and other AI tool formats",
   "type": "module",
   "bin": {
@@ -68,5 +68,8 @@
     "vitest": "^3.0.0",
     "typescript": "^5.7.0",
     "@types/node": "^22.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true
   }
 }

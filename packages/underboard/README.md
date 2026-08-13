@@ -48,7 +48,7 @@ Or run it directly via Node using the absolute path:
     "underboard": {
       "command": "node",
       "args": [
-        "C:/Users/Admin/Documents/Repos/underhelpers/underoute/packages/underboard/dist/cli/index.js",
+        "C:/Users/Admin/Documents/Repos/underhelpers/underoute-clai/packages/underboard/dist/cli/index.js",
         "start",
         "--port",
         "4284",
