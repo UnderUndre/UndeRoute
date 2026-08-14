@@ -94,9 +94,7 @@ Every task MUST strictly follow this format:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
 2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[AGENT] tag**: REQUIRED for every task. One of:
-   - **Core** (any project): `[SETUP]`, `[DB]`, `[BE]`, `[FE]`, `[OPS]`, `[E2E]`, `[SEC]`, `[PERF]`, `[DOC]`, `[DEBUG]`, `[REFACTOR]`
-   - **Conditional** (only when plan.md explicitly requires): `[SEO]`, `[MOBILE]`, `[UIUX]`, `[PENTEST]`, `[GAME]`
+3. **[AGENT] tag**: REQUIRED for every task. One of: - **Core** (any project): `[SETUP]`, `[DB]`, `[BE]`, `[FE]`, `[OPS]`, `[E2E]`, `[SEC]`, `[PERF]`, `[DOC]`, `[DEBUG]`, `[REFACTOR]` - **Human & Business Roles** (non-technical / ops): `[FIN]`, `[LAW]`, `[MKT]`, `[QA]`, `[BIZ]` - **Conditional** (only when plan.md explicitly requires): `[SEO]`, `[MOBILE]`, `[UIUX]`, `[PENTEST]`, `[GAME]`
 4. **[Story] label**: REQUIRED for user story phase tasks only
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
    - Setup phase: NO story label
@@ -119,22 +117,32 @@ Every task MUST strictly follow this format:
 
 ### By file path (primary)
 
-| Path Pattern | Agent |
-|-------------|-------|
-| `src/models/`, `prisma/`, `drizzle/`, `migrations/`, `schema.*`, `seeds/` | `[DB]` |
-| `src/api/`, `src/services/`, `src/middleware/`, `server/`, `src/routes/`, `src/lib/` | `[BE]` |
-| `src/components/`, `src/pages/`, `src/app/`, `styles/`, `public/`, `src/hooks/` | `[FE]` |
-| `Dockerfile`, `.github/workflows/`, `infra/`, `deploy/`, CI configs | `[OPS]` |
-| `tests/e2e/`, `tests/integration/` (cross-domain only) | `[E2E]` |
-| `docs/`, `README.md`, `CHANGELOG.md`, `*.api.md`, OpenAPI specs, runbooks | `[DOC]` |
-| `app/` (React Native/Expo), `lib/` (Flutter), `ios/`, `android/`, `pubspec.yaml` | `[MOBILE]` |
-| `robots.txt`, `sitemap.xml`, `app/sitemap.ts`, `app/robots.ts`, structured-data components | `[SEO]` |
-| `design/`, `figma/`, `*.fig`, wireframes, design tokens, style guide | `[UIUX]` |
-| `Assets/` (Unity), `*.godot`, `*.unity`, shaders, game-engine configs | `[GAME]` |
+| Path Pattern                                                                               | Agent      |
+| ------------------------------------------------------------------------------------------ | ---------- |
+| `src/models/`, `prisma/`, `drizzle/`, `migrations/`, `schema.*`, `seeds/`                  | `[DB]`     |
+| `src/api/`, `src/services/`, `src/middleware/`, `server/`, `src/routes/`, `src/lib/`       | `[BE]`     |
+| `src/components/`, `src/pages/`, `src/app/`, `styles/`, `public/`, `src/hooks/`            | `[FE]`     |
+| `Dockerfile`, `.github/workflows/`, `infra/`, `deploy/`, CI configs                        | `[OPS]`    |
+| `tests/e2e/`, `tests/integration/` (cross-domain only)                                     | `[E2E]`    |
+| `docs/`, `README.md`, `CHANGELOG.md`, `*.api.md`, OpenAPI specs, runbooks                  | `[DOC]`    |
+| `app/` (React Native/Expo), `lib/` (Flutter), `ios/`, `android/`, `pubspec.yaml`           | `[MOBILE]` |
+| `robots.txt`, `sitemap.xml`, `app/sitemap.ts`, `app/robots.ts`, structured-data components | `[SEO]`    |
+| `design/`, `figma/`, `*.fig`, wireframes, design tokens, style guide                       | `[UIUX]`   |
+| `Assets/` (Unity), `*.godot`, `*.unity`, shaders, game-engine configs                      | `[GAME]`   |
+| `docs/business-plan.md`, `financial/`, `pricing.md`, unit-econ spreadsheets                | `[FIN]`    |
+| `LEGAL.md`, `TOS.md`, `PRIVACY.md`, compliance checklists, entity setups                   | `[LAW]`    |
+| `marketing/`, `gtm/`, `pitch/`, promo videos, social posts, ProductHunt launch             | `[MKT]`    |
+| `tests/manual/`, `qa/`, exploratory testing check-lists, physical device testing           | `[QA]`     |
+| `partnerships/`, `deals/`, roadmap strategy, vendor contracts                              | `[BIZ]`    |
 
 ### By task description (fallback)
 
 - "audit", "security review", "vulnerability", "hardening", "OWASP", "threat model" → `[SEC]`
+- "unit-economics", "pricing calculation", "Stripe payout setup", "Telegram Stars setup", "cashflow model" → `[FIN]`
+- "TOS", "Privacy Policy", "DMCA disclaimer", "trademark review", "legal entity setup", "LLC registration" → `[LAW]`
+- "marketing campaign", "ProductHunt launch", "viral video demo", "Reddit/X promo post", "GTM strategy" → `[MKT]`
+- "manual QA pass", "physical device testing", "voiceover audio sanity check", "hand-held test" → `[QA]`
+- "partner deal", "skin author contract", "b2b sales pitch", "founder qualification" → `[BIZ]`
 - "pentest", "exploit", "offensive test", "red team", "attack simulation" → `[PENTEST]`
 - "create schema", "add migration", "seed data", "create model", "index", "query optimization" → `[DB]`
 - "implement endpoint", "add route", "create service", "add middleware", "background job" → `[BE]`

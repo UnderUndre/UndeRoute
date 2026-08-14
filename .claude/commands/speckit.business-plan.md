@@ -1,5 +1,5 @@
 ---
-description: Create or update the product/agency business plan before or alongside SpecKit features. First feature → create canon plan; second+ features → versioned update from spec delta. Stress-tested unit econ, focus gates, honest traction.
+description: Create or update the product/agency business plan before or alongside SpecKit features. First feature → create canon plan; second+ features → versioned update from spec delta. Stress-tested unit econ, focus gates, honest traction, pre-mortem failure modes, 12-mo cashflow, and kill criteria.
 handoffs:
   - label: Start Feature Worktree
     agent: speckit.start
@@ -25,30 +25,30 @@ Optional args (any order, free text):
 - `--create` — force create mode even if a plan file exists (new brand/product plan)
 - `--update` — force update mode (requires existing plan)
 - `--path <file>` — explicit plan path (default: auto-detect under `docs/`)
-- `--skip-stress` — do **not** use (debug only); stress tables are mandatory in normal mode
+- `--skip-stress` — do **not** use (debug only); stress tables and pre-mortem pass are mandatory in normal mode
 - `--request-external-review` — after write, print explicit prompt to run `/speckit.business-plan-review` (or manual Gemini/Grok pass); **auto-on** for CREATE and **major** bumps
 
 ultrathink
 
-> "Без юнит-экономики спека — это чертёж крана без давления в трубе." — Valera
+> "Без юнит-экономики, Pre-Mortem опрессовки и Cashflow — это чертёж крана без давления в трубе." — Valera
 
 ## Goal
 
 Make the **business plan a first-class SpecKit stage**, not a side PDF:
 
-| Situation | Mode | Output |
-| :--- | :--- | :--- |
-| **No** `docs/**/*business-plan*.md` (or user `--create`) | **CREATE** | New versioned plan from template + market/stress pass |
-| Plan exists and this is **2nd+** feature (or `--update`) | **UPDATE** | Same file(s), bump version, changelog row, patch sections touched by new spec/scope |
-| Plan exists, first feature still in flight | **CREATE if empty stub / UPDATE if substantive plan** | Prefer update; never fork silent duplicates |
+| Situation                                                | Mode                                                  | Output                                                                              |
+| :------------------------------------------------------- | :---------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| **No** `docs/**/*business-plan*.md` (or user `--create`) | **CREATE**                                            | New versioned plan from template + market/stress/pre-mortem pass                    |
+| Plan exists and this is **2nd+** feature (or `--update`) | **UPDATE**                                            | Same file(s), bump version, changelog row, patch sections touched by new spec/scope |
+| Plan exists, first feature still in flight               | **CREATE if empty stub / UPDATE if substantive plan** | Prefer update; never fork silent duplicates                                         |
 
 **When it runs in the pipeline**
 
-1. **Before or at first `/speckit.specify`** (greenfield): plan MUST exist or be created in this command / specify gate.  
-2. **On every later `/speckit.specify`** that changes ICP, pricing, packaging, focus gates, legal rails, or monetization: **UPDATE** after `spec.md` is stable (post-clarify preferred; minimum post-specify).  
+1. **Before or at first `/speckit.specify`** (greenfield): plan MUST exist or be created in this command / specify gate.
+2. **On every later `/speckit.specify`** that changes ICP, pricing, packaging, focus gates, legal rails, or monetization: **UPDATE** after `spec.md` is stable (post-clarify preferred; minimum post-specify).
 3. Standalone: user runs `/speckit.business-plan <context>` anytime.
 
-Does **not** replace `spec.md`. Plan = money/focus/go-to-market; spec = product behavior.
+Does **not** replace `spec.md`. Plan = money/focus/go-to-market/pre-mortem; spec = product behavior.
 
 ## Operating Constraints
 
@@ -94,49 +94,58 @@ Else if user --update OR FEATURE_COUNT >= 1 OR EXISTING_PLANS:
 
 ### 0. Load inputs
 
-1. Read `$ARGUMENTS` and repo context: `README*`, `AGENTS.md`, `.specify/memory/constitution.md`, existing `docs/*business-plan*`, latest `specs/**/spec.md` (if any).  
-2. Load template: `.specify/templates/business-plan-template.md`.  
+1. Read `$ARGUMENTS` and repo context: `README*`, `AGENTS.md`, `.specify/memory/constitution.md`, existing `docs/*business-plan*`, latest `specs/**/spec.md` (if any).
+2. Load template: `.specify/templates/business-plan-template.md`.
 3. If feature slug known (cwd worktree or args), read `specs/<slug>/spec.md` when present.
 
 ### 1. Mode branch
 
 #### A) CREATE (first plan)
 
-1. Interview gaps **only** if blocking (max 5 questions). Prefer informed defaults + Assumptions section over endless Q&A. Blocking examples: who pays, price floor, Phase A sole SKU, legal entity path.  
-2. Fill template completely.  
-3. Run **Stress Pass** (section below) — mandatory.  
-4. Set version **1.0** or **10.0** if continuing an external series; status honest (`Pre-revenue` / `Phase A` / traction N).  
-5. Write `PLAN_PATH`.  
-6. Changelog section: `vX ← ∅` initial.  
+1. Interview gaps **only** if blocking (max 5 questions). Prefer informed defaults + Assumptions section over endless Q&A. Blocking examples: who pays, price floor, Phase A sole SKU, legal entity path.
+2. Fill template completely, including **Bottom-up Sizing**, **Competition Edge**, **Team Bus-Factor**, **12-mo Cashflow**, **Pre-Mortem Failure Modes**, and **Kill Criteria**.
+3. Run **Stress Pass** (section below) — mandatory.
+4. Set version **1.0** or **10.0** if continuing an external series; status honest (`Pre-revenue` / `Phase A` / traction N).
+5. Write `PLAN_PATH`.
+6. Changelog section: `vX ← ∅` initial.
 7. Report path + “next: `/speckit.start` + `/speckit.specify`” (or continue specify if already in flight).
 
 #### B) UPDATE (second+ feature or explicit)
 
-1. Read existing plan end-to-end.  
-2. Diff against new/changed `spec.md` + user args: ICP, SKUs, pricing, gates, legal, risks, roadmap, unit econ.  
-3. **Do not** full-rewrite unless user asked. Patch minimal sections.  
-4. Bump version **patch** (copy/ops) or **minor** (new SKU/gate) or **major** (positioning/focus law break). Default: minor if new feature monetization; patch if wording only.  
-5. Prepend/append **Changelog** row: `vNEW ← vOLD` with table of deltas + why (spec slug link).  
-6. Re-run **Stress Pass** on any changed price/CAC/focus claim.  
+1. Read existing plan end-to-end.
+2. Diff against new/changed `spec.md` + user args: ICP, SKUs, pricing, gates, legal, risks, pre-mortem, cashflow, kill criteria, roadmap, unit econ.
+3. **Do not** full-rewrite unless user asked. Patch minimal sections.
+4. Bump version **patch** (copy/ops) or **minor** (new SKU/gate) or **major** (positioning/focus law break). Default: minor if new feature monetization; patch if wording only.
+5. Prepend/append **Changelog** row: `vNEW ← vOLD` with table of deltas + why (spec slug link).
+6. Re-run **Stress Pass** on any changed price/CAC/focus claim.
 7. Write file. Snapshot if applicable.
 
-### 2. Stress Pass (mandatory — “Gemini/Grok valves”)
+### 2. Stress & Pre-Mortem Pass (mandatory — “Valera/Gemini/Grok valves”)
 
 Before marking done, verify and encode:
 
-| Valve | Rule |
-| :--- | :--- |
-| Traction honesty | Never “Production Ready” at 0 closed deals |
-| Unit econ | At least one **stress** column (stall, low convert, FX 4.5–6%, tax) |
-| Focus law | Phase A sole cash-engine explicit; dual-front banned or gated |
-| Services prepay | Discovery/Blueprint-like SKUs: **100% prepay** preference under $5k |
-| Timebox | Client data delay → freeze / as-is / non-refundable language if services |
-| Convert | Discovery→build target + **stress 10–15%** for new bureau |
-| Cold CAC | $0 paid cold until proof (cases/videos) unless plan justifies otherwise |
-| Legal micro-revenue | Don’t light US LLC/5472 burn on $19 rails without gate |
-| Brand isolation | B2B sterile vs polity/crypto surfaces split if both exist |
-| Fantasy margins | Ban “98% margin @ 10 users with fixed GPU” class claims |
-| GTM spine present | ICP, hero ladder, Phase A channels, CAC policy, convert KPI, sales artifacts, kill-criteria — not a full media plan |
+| Valve                          | Rule                                                                                                                                  |
+| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| **Traction honesty**           | Never “Production Ready” at 0 closed deals                                                                                            |
+| **Unit econ & Cashflow**       | At least one **stress** column (stall, low convert, FX 4.5–6%, tax) + 12-mo cashflow projection                                       |
+| **Bottom-Up Sizing**           | TAM-SAM-SOM must be bottom-up (`# ICP accounts × ARPU`), no top-down 1% fantasies                                                     |
+| **Team Bus-Factor**            | Founder dependency called by name + explicit hiring gates based on revenue/utilization                                                |
+| **Pre-Mortem Audit**           | Must evaluate top 6 failure vectors (Payment freeze, AI token burn, Phantom demand, Scope creep, Lead channel death, Key-person risk) |
+| **Kill Criteria (Red Button)** | Explicit numeric triggers to kill/pivot SKU (e.g. max spend $X / Y days / min Z paying conversions)                                   |
+| **AI/API Unit Floor**          | Hard cap on token/compute burn; gross margin must survive at >=75–80% under heavy usage                                               |
+| **Payment Redundancy**         | MoR-first rule (Paddle/LemonSqueezy) until $50k ARR; backup payment rail identified if primary freezes                                |
+| **Whale Concentration**        | Single client cannot exceed >35% revenue model without explicit risk buffer                                                           |
+| **Scope Lockdown & SLA-Pause** | Max 1 revision round; client silence > 72h / 5d = SLA-pause / auto-accept clause                                                      |
+| **Validation Honesty**         | Verbal interest is NOT traction. Only paid deposits / LOIs count towards Phase A gates                                                |
+| **Focus law**                  | Phase A sole cash-engine explicit; dual-front banned or gated                                                                         |
+| **Services prepay**            | Discovery/Blueprint-like SKUs: **100% prepay** preference under $5k                                                                   |
+| **Timebox / SLA-Pause**        | Client data delay → SLA-pause / freeze / as-is / non-refundable language if services                                                  |
+| **Convert**                    | Discovery→build target + **stress 10–15%** for new bureau                                                                             |
+| **Cold CAC**                   | $0 paid cold until proof (cases/videos) unless plan justifies otherwise                                                               |
+| **Legal micro-revenue**        | Don’t light US LLC/5472 burn on $19 rails without gate ($50k net threshold)                                                           |
+| **Brand isolation**            | B2B sterile vs polity/crypto surfaces split if both exist                                                                             |
+| **Fantasy margins**            | Ban “98% margin @ 10 users with fixed GPU” class claims                                                                               |
+| **GTM spine present**          | ICP, hero ladder, Phase A channels, CAC policy, convert KPI, sales artifacts, kill-criteria                                           |
 
 If a claim fails stress → fix plan text, don’t ship vibes.
 
@@ -144,11 +153,11 @@ If a claim fails stress → fix plan text, don’t ship vibes.
 
 Business-plan quality uses **three layers**. This command owns A; feature pipeline owns B; C is for CREATE/major only.
 
-| Layer | Who | When | Output |
-| :--- | :--- | :--- | :--- |
-| **A. Stress Pass** | This command (authoring model) | Every CREATE/UPDATE | In-plan stress tables; fail → fix before done |
-| **B. Commercial drift lens** | `/speckit.analyze` + `/speckit.review` | Every feature gate before implement | Findings in `specs/<slug>/reviews/*` — plan vs spec/plan/tasks consistency only |
-| **C. External biz audit** | Independent provider (Gemini/Grok/Codex/…) via `/speckit.business-plan-review` | **CREATE** always recommended; **major** bump MUST request; minor optional | `docs/reviews/business-plan-<provider>.md` (or `docs/business-plans/reviews/`) |
+| Layer                           | Who                                                                            | When                                                                       | Output                                                                          |
+| :------------------------------ | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| **A. Stress & Pre-Mortem Pass** | This command (authoring model)                                                 | Every CREATE/UPDATE                                                        | In-plan stress and pre-mortem tables; fail → fix before done                    |
+| **B. Commercial drift lens**    | `/speckit.analyze` + `/speckit.review`                                         | Every feature gate before implement                                        | Findings in `specs/<slug>/reviews/*` — plan vs spec/plan/tasks consistency only |
+| **C. External biz audit**       | Independent provider (Gemini/Grok/Codex/…) via `/speckit.business-plan-review` | **CREATE** always recommended; **major** bump MUST request; minor optional | `docs/reviews/business-plan-<provider>.md` (or `docs/business-plans/reviews/`)  |
 
 **Not** Principle VI: implement is **not** blocked solely by missing bizplan external review. Missing/contradictory plan on a **monetized** feature **is** blocked via analyze/review lens B (HIGH/CRITICAL).
 
@@ -164,8 +173,8 @@ External biz review: RECOMMENDED | REQUIRED (major)
 
 If repo has **publicly isolated** brands (agency vs polity):
 
-- One file per brand under `docs/`.  
-- UPDATE only brands touched by the feature.  
+- One file per brand under `docs/`.
+- UPDATE only brands touched by the feature.
 - Cross-link focus law (e.g. polity frozen until agency cash) explicitly in both.
 
 ### 4. Snapshot (Principle VII)
@@ -186,35 +195,37 @@ Use slug `main` or product id if plan is repo-global and not feature-scoped.
 
 ```text
 ✓ Business plan [CREATE|UPDATE] vX.Y
-  Path:    docs/...
-  Mode:    first-spec | feature-N update
-  Stress:  PASS | PASS-with-assumptions
-  GTM spine: present | missing-sections
+  Path:         docs/...
+  Mode:         first-spec | feature-N update
+  Stress Pass:  PASS | PASS-with-assumptions
+  Pre-Mortem:   PASS (Failure Modes & Kill Criteria defined)
+  GTM spine:    present | missing-sections
   External biz review: skip | RECOMMENDED | REQUIRED (major)
-  Next:    /speckit.specify ...  OR  /speckit.business-plan-review  OR  continue pipeline
+  Next:         /speckit.specify ...  OR  /speckit.business-plan-review  OR  continue pipeline
 ```
 
 List open assumptions (max 5). Do not dump entire plan into chat — path + delta summary only.
 
 ## Quality bar (reject own draft if)
 
-- Status lies about traction  
-- No changelog on update  
-- No stress unit econ  
-- Phase A sells three heroes at once with no gate  
-- Custom/integration scope unlimited inside fixed price  
-- Plan contradicts constitution red lines without explicit override note  
+- Status lies about traction
+- No changelog on update
+- No stress unit econ
+- Missing Pre-Mortem failure modes table or explicit Kill Criteria
+- Phase A sells three heroes at once with no gate
+- Custom/integration scope unlimited inside fixed price
+- Plan contradicts constitution red lines without explicit override note
 
 ## Coordination
 
-| Command | Duty |
-| :--- | :--- |
-| `/speckit.start` | Remind: if no plan file, run `/speckit.business-plan` before specify |
-| `/speckit.specify` | **Gate:** create plan if missing on first feature; **hook:** queue update after spec if plan exists and feature is commercial/scope-expanding |
-| `/speckit.full-spec` | Same gates as specify (inherits) |
-| `/speckit.clarify` | If answers change pricing/ICP/gates → run update business-plan before plan stage |
-| `/speckit.plan` | Read current business plan as commercial constraint input |
-| `/speckit.implement` | Does not edit plan; may flag drift in completion notes |
+| Command              | Duty                                                                                                                                          |
+| :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/speckit.start`     | Remind: if no plan file, run `/speckit.business-plan` before specify                                                                          |
+| `/speckit.specify`   | **Gate:** create plan if missing on first feature; **hook:** queue update after spec if plan exists and feature is commercial/scope-expanding |
+| `/speckit.full-spec` | Same gates as specify (inherits)                                                                                                              |
+| `/speckit.clarify`   | If answers change pricing/ICP/gates → run update business-plan before plan stage                                                              |
+| `/speckit.plan`      | Read current business plan as commercial constraint input                                                                                     |
+| `/speckit.implement` | Does not edit plan; may flag drift in completion notes                                                                                        |
 
 ## Context
 
