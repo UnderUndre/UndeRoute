@@ -89,7 +89,8 @@
 ## Functional Requirements
 
 - **FR-001 (Theme Engine)**: 9 локальных тем персонажей (UGC/CDN lazy loading).
-- **FR-002 (Plan/Act Sandbox State Machine)**: Plan Mode (read-only) и Act Mode (read-write) с принудительной Docker/nsjail изоляцией `execute_bash` (512MB RAM, 30s timeout, cap-drop ALL, network-off).
+- **FR-002 (Plan/Act Sandbox State Machine & ISandboxProvider)**: Plan Mode (read-only) и Act Mode (read-write) с обязательной изоляцией исполнения через `ISandboxProvider` (`LocalNativeSandbox` по умолчанию в MVP-1, `OpenSandboxAdapter` в MVP-2).
+- **FR-002a (Sandbox Runtimes)**: `LocalNativeSandbox` (Dockerode/nsjail, read-only rootfs, 512MB RAM, timeout 30s) для локалки; `OpenSandboxAdapter` (`@alibaba-group/opensandbox` & `opensandbox-mcp`) для gVisor/Firecracker microVM, Playwright браузеров и Egress Firewall в облаке.
 - **FR-003 (Context Providers)**: `@file`, `@folder`, `@terminal`, `@git`.
 - **FR-004 (Repo Map Compression)**: AST Repo Map via `web-tree-sitter` & PageRank.
 - **FR-005 (Noise_XX Remote Relay)**: Noise_XX handshake, X25519 pairing, OTP/QR code, Device Registry & Revocation (MVP-2).

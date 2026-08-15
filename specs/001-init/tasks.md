@@ -47,7 +47,8 @@
 - [x] T006 [FE] [US1] Implement `PersonaSelector.tsx`, `ChatBoxFxOverlay.tsx` and `AudioVideoTrigger.tsx` in `src/components/persona/`
 - [x] T007 [BE] [US2] Implement Plan Mode vs Act Mode logic with HITL approval resolver in `src/core/agent/state-machine.ts`
 - [x] T008 [OPS] [US2] Implement Docker Execution Sandbox (`container-sandbox.ts`) with cgroups memory limits (512MB RAM, 30s timeout) and `orphan-reaper.ts` in `src/core/agent/`
-- [x] T009 [BE] [US2] Route `execute_bash` through `container-sandbox.ts` in `src/core/agent/tool-executor.ts`
+- [x] T008a [BE] [US2] Implement `ISandboxProvider` interface and `LocalNativeSandbox` adapter in `src/core/agent/sandbox-provider.ts`
+- [x] T009 [BE] [US2] Route `execute_bash` through `container-sandbox.ts` via `ISandboxProvider` in `src/core/agent/tool-executor.ts`
 - [x] T010 [BE] [US2] Implement `@file`, `@folder`, `@terminal`, `@git` context providers in `src/core/context/`
 - [x] T011 [BE] [US2] Implement AST Repo Map Builder via `web-tree-sitter` and PageRank in `src/core/agent/repo-map-builder.ts`
 - [x] T012 [FE] [US2] Build `MonacoDiffViewer.tsx` and `AgentPlanOverlay.tsx` in `src/components/ide/`
@@ -66,6 +67,7 @@
 - [ ] T018 [OPS] [US3] Configure grammY Telegram Bot Relay & Voice-to-Code Whisper pipeline in `src/core/remote/tg-bot-relay.ts`
 - [ ] T019 [FE] [US3] Build Telegram Mini App (TWA) Diff Viewer page with `initData` HMAC validation in `app/twa/diff-viewer/page.tsx`
 - [ ] T020 [SEC] [US3] Security audit of Noise_XX handshake and OTP pairing mechanism in `tests/security/remote-pairing.test.ts`
+- [ ] T020a [BE] [US3] Implement `OpenSandboxAdapter` (`@alibaba-group/opensandbox` & `opensandbox-mcp`) for Firecracker microVMs, Playwright VNC & Egress Firewall in `src/core/agent/opensandbox-adapter.ts`
 
 ---
 

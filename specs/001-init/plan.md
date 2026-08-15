@@ -22,6 +22,7 @@
 - **ADR-002 (Execution Sandbox)**: Docker Container / nsjail with `--cap-drop=ALL`, `read-only rootfs`, `network-off`, 512MB RAM cgroups, 30s timeout, non-root user.
 - **ADR-003 (Data Persistence)**: SQLite local database for Desktop Agent (`User`, `Device`, `Workspace`, `AgentSession`, `Approval`, `AuditEvent`).
 - **ADR-004 (Crypto Protocol)**: Noise_XX (`e, s, ee, s, es, sk`) with X25519 static/ephemeral keys and OTP 6-digit pairing.
+- **ADR-005 (ISandboxProvider Pattern)**: `ISandboxProvider` abstraction separating lightweight local `LocalNativeSandbox` (Dockerode/nsjail for MVP-1) from `OpenSandboxAdapter` (`@alibaba-group/opensandbox` SDK & `opensandbox-mcp` for MVP-2/Cloud Firecracker microVMs, Playwright VNC, and Egress Firewall).
 
 ---
 
