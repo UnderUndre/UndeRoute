@@ -23,35 +23,35 @@
 
 ## Phase 0: Architecture & Foundation Prerequisites (P0 Blocking Gate)
 
-- [ ] T000a [SEC] Document Sandbox Threat Model & Deny-by-Default Policy in `docs/threat-model.md`
-- [ ] T000b [OPS] Create Hardened Sandbox Dockerfile, Seccomp profile & AppArmor profile in `sandbox/`
-- [ ] T000c [DB] Implement SQLite Database Schema, Migrations & Audit Logger (`User`, `Workspace`, `Device`, `AgentSession`, `Approval`, `AuditEvent`) in `src/core/db/`
-- [ ] T000d [BE] Document Noise_XX Protocol Specification (Handshake, Framing, Nonces, Pairing, Revocation) in `docs/adr/004-noise-protocol.md`
-- [ ] T000e [BE] Create Runtime Schema Validation contracts using Zod in `src/contracts/`
-- [ ] T000f [SEC] Adversarial Sandbox Test Suite (path traversal, symlink escape, fork bomb, network block, orphan reaper) in `tests/security/sandbox.test.ts`
+- [x] T000a [SEC] Document Sandbox Threat Model & Deny-by-Default Policy in `docs/threat-model.md`
+- [x] T000b [OPS] Create Hardened Sandbox Dockerfile, Seccomp profile & AppArmor profile in `sandbox/`
+- [x] T000c [DB] Implement SQLite Database Schema, Migrations & Audit Logger (`User`, `Workspace`, `Device`, `AgentSession`, `Approval`, `AuditEvent`) in `src/core/db/`
+- [x] T000d [BE] Document Noise_XX Protocol Specification (Handshake, Framing, Nonces, Pairing, Revocation) in `docs/adr/004-noise-protocol.md`
+- [x] T000e [BE] Create Runtime Schema Validation contracts using Zod in `src/contracts/`
+- [x] T000f [SEC] Adversarial Sandbox Test Suite (path traversal, symlink escape, fork bomb, network block, orphan reaper) in `tests/security/sandbox.test.ts`
 
 ---
 
 ## Phase 1: MVP-1 Setup & Shared Infrastructure
 
-- [ ] T001 [SETUP] Create project structure per implementation plan in `app/`, `src/core/`, `src/themes/`
-- [ ] T002 [SETUP] Install frontend, WASM & core dependencies (`@monaco-editor/react`, `web-tree-sitter`, `dockerode`, `better-sqlite3`, `zod`) in `package.json`
+- [x] T001 [SETUP] Create project structure per implementation plan in `app/`, `src/core/`, `src/themes/`
+- [x] T002 [SETUP] Install frontend, WASM & core dependencies (`@monaco-editor/react`, `web-tree-sitter`, `dockerode`, `better-sqlite3`, `zod`) in `package.json`
 
 ---
 
 ## Phase 2: MVP-1 Local Agentic IDE Core (Priority: P1) 🎯 MVP-1 RELEASE
 
-- [ ] T003 [FE] [US1] Create `ThemeEngine` registry in `src/themes/theme-engine.ts` supporting dynamic 9-Persona configuration loading
-- [ ] T004 [FE] [US1] Create 9 persona definitions in `src/themes/definitions/`
-- [ ] T005 [BE] [US1] Create System Prompt builder for all 9 personas in `src/themes/persona-prompts.ts`
-- [ ] T006 [FE] [US1] Implement `PersonaSelector.tsx`, `ChatBoxFxOverlay.tsx` and `AudioVideoTrigger.tsx` in `src/components/persona/`
-- [ ] T007 [BE] [US2] Implement Plan Mode vs Act Mode logic with HITL approval resolver in `src/core/agent/state-machine.ts`
-- [ ] T008 [OPS] [US2] Implement Docker Execution Sandbox (`container-sandbox.ts`) with cgroups memory limits (512MB RAM, 30s timeout) and `orphan-reaper.ts` in `src/core/agent/`
-- [ ] T009 [BE] [US2] Route `execute_bash` through `container-sandbox.ts` in `src/core/agent/tool-executor.ts`
-- [ ] T010 [BE] [US2] Implement `@file`, `@folder`, `@terminal`, `@git` context providers in `src/core/context/`
-- [ ] T011 [BE] [US2] Implement AST Repo Map Builder via `web-tree-sitter` and PageRank in `src/core/agent/repo-map-builder.ts`
-- [ ] T012 [FE] [US2] Build `MonacoDiffViewer.tsx` and `AgentPlanOverlay.tsx` in `src/components/ide/`
-- [ ] T013 [E2E] [US2] Integration test for MVP-1 Local IDE (Plan mode read-only check, sandbox execution, diff preview) in `tests/integration/local-ide.test.ts`
+- [x] T003 [FE] [US1] Create `ThemeEngine` registry in `src/themes/theme-engine.ts` supporting dynamic 9-Persona configuration loading
+- [x] T004 [FE] [US1] Create 9 persona definitions in `src/themes/definitions/`
+- [x] T005 [BE] [US1] Create System Prompt builder for all 9 personas in `src/themes/persona-prompts.ts`
+- [x] T006 [FE] [US1] Implement `PersonaSelector.tsx`, `ChatBoxFxOverlay.tsx` and `AudioVideoTrigger.tsx` in `src/components/persona/`
+- [x] T007 [BE] [US2] Implement Plan Mode vs Act Mode logic with HITL approval resolver in `src/core/agent/state-machine.ts`
+- [x] T008 [OPS] [US2] Implement Docker Execution Sandbox (`container-sandbox.ts`) with cgroups memory limits (512MB RAM, 30s timeout) and `orphan-reaper.ts` in `src/core/agent/`
+- [x] T009 [BE] [US2] Route `execute_bash` through `container-sandbox.ts` in `src/core/agent/tool-executor.ts`
+- [x] T010 [BE] [US2] Implement `@file`, `@folder`, `@terminal`, `@git` context providers in `src/core/context/`
+- [x] T011 [BE] [US2] Implement AST Repo Map Builder via `web-tree-sitter` and PageRank in `src/core/agent/repo-map-builder.ts`
+- [x] T012 [FE] [US2] Build `MonacoDiffViewer.tsx` and `AgentPlanOverlay.tsx` in `src/components/ide/`
+- [x] T013 [E2E] [US2] Integration test for MVP-1 Local IDE (Plan mode read-only check, sandbox execution, diff preview) in `tests/integration/local-ide.test.ts`
 
 **Checkpoint**: MVP-1 Local Agentic IDE is fully functional, secure, and testable independently without any remote dependencies!
 

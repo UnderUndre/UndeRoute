@@ -20,6 +20,10 @@ export const DEFAULT_ALLOWED_ORIGINS: readonly string[] = Object.freeze([
   "http://127.0.0.1:20128",
   "http://localhost:20128",
   "http://[::1]:20128",
+  "http://127.0.0.1:20129",
+  "http://localhost:20129",
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
 ]);
 
 /**
@@ -102,5 +106,14 @@ export function isOriginAllowed(
   }
   if (allowedOrigins.has(origin)) return true;
   if (originHostMatches(origin, allowedHosts)) return true;
+  const parsed = originHost(origin);
+  if (
+    parsed &&
+    (parsed.hostname === "localhost" ||
+      parsed.hostname === "127.0.0.1" ||
+      parsed.hostname === "[::1]")
+  ) {
+    return true;
+  }
   return false;
 }

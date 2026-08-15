@@ -10,6 +10,10 @@ import StudioTopBar, { type StudioTab } from "./components/StudioTopBar";
 import StudioConfigPane, { type ConfigState } from "./components/StudioConfigPane";
 import { DEFAULT_PARAMS } from "./components/ParamSliders";
 import CompareTab from "./components/tabs/CompareTab";
+import { PersonaSelector } from "@/components/persona/PersonaSelector";
+import { AgentPlanOverlay } from "@/components/ide/AgentPlanOverlay";
+import { allThemes } from "@/themes/definitions";
+import { PERSONA_SYSTEM_PROMPTS } from "@/themes/persona-prompts";
 
 // Lazy-load tabs to reduce initial bundle size
 const ChatTab = dynamic(() => import("./components/tabs/ChatTab"), { ssr: false });
@@ -60,6 +64,16 @@ export function PlaygroundStudio() {
 
   const [configState, setConfigState] = useState<ConfigState>(INITIAL_CONFIG);
   const [metrics, setMetrics] = useState<StreamMetrics>(INITIAL_METRICS);
+  const [activeThemeId, setActiveThemeId] = useState<string>("naruto");
+  const [agentMode, setAgentMode] = useState<"PLAN" | "ACT">("PLAN");
+
+  function handleSelectTheme(themeId: string) {
+    setActiveThemeId(themeId);
+    const newPrompt = PERSONA_SYSTEM_PROMPTS[themeId];
+    if (newPrompt) {
+      setConfigState((prev) => ({ ...prev, systemPrompt: newPrompt }));
+    }
+  }
 
   function handleTabChange(tab: StudioTab) {
     setManualTab(tab);
@@ -71,6 +85,16 @@ export function PlaygroundStudio() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+      {/* UndeRoute MVP-1 Persona Selector & Agent Plan Overlay Bar */}
+      <div className="px-3 pt-2 bg-slate-950 flex flex-col gap-1.5 border-b border-slate-800">
+        <PersonaSelector
+          themes={allThemes}
+          activeThemeId={activeThemeId}
+          onSelectTheme={handleSelectTheme}
+        />
+        <AgentPlanOverlay mode={agentMode} onSwitchMode={(mode) => setAgentMode(mode)} />
+      </div>
+
       {/* Top bar with tabs + token/cost counter + export button */}
       <StudioTopBar
         activeTab={effectiveTab}
