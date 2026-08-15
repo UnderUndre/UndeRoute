@@ -30,7 +30,7 @@ Optional args (any order, free text):
 
 ultrathink
 
-> "Без юнит-экономики, Pre-Mortem опрессовки и Cashflow — это чертёж крана без давления в трубе." — Valera
+> "Без юнит-экономики, Pre-Mortem опрессовки, 7 Powers и Cashflow — это чертёж крана без давления в трубе." — Valera
 
 ## Goal
 
@@ -120,46 +120,75 @@ Else if user --update OR FEATURE_COUNT >= 1 OR EXISTING_PLANS:
 6. Re-run **Stress Pass** on any changed price/CAC/focus claim.
 7. Write file. Snapshot if applicable.
 
-### 2. Stress & Pre-Mortem Pass (mandatory — “Valera/Gemini/Grok valves”)
+### 2. Stress & Pre-Mortem Pass (mandatory — “Valera/Forensic Valves”)
 
 Before marking done, verify and encode:
 
-| Valve                          | Rule                                                                                                                                  |
-| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
-| **Traction honesty**           | Never “Production Ready” at 0 closed deals                                                                                            |
-| **Unit econ & Cashflow**       | At least one **stress** column (stall, low convert, FX 4.5–6%, tax) + 12-mo cashflow projection                                       |
-| **Bottom-Up Sizing**           | TAM-SAM-SOM must be bottom-up (`# ICP accounts × ARPU`), no top-down 1% fantasies                                                     |
-| **Team Bus-Factor**            | Founder dependency called by name + explicit hiring gates based on revenue/utilization                                                |
-| **Pre-Mortem Audit**           | Must evaluate top 6 failure vectors (Payment freeze, AI token burn, Phantom demand, Scope creep, Lead channel death, Key-person risk) |
-| **Kill Criteria (Red Button)** | Explicit numeric triggers to kill/pivot SKU (e.g. max spend $X / Y days / min Z paying conversions)                                   |
-| **AI/API Unit Floor**          | Hard cap on token/compute burn; gross margin must survive at >=75–80% under heavy usage                                               |
-| **Payment Redundancy**         | MoR-first rule (Paddle/LemonSqueezy) until $50k ARR; backup payment rail identified if primary freezes                                |
-| **Whale Concentration**        | Single client cannot exceed >35% revenue model without explicit risk buffer                                                           |
-| **Scope Lockdown & SLA-Pause** | Max 1 revision round; client silence > 72h / 5d = SLA-pause / auto-accept clause                                                      |
-| **Validation Honesty**         | Verbal interest is NOT traction. Only paid deposits / LOIs count towards Phase A gates                                                |
-| **Focus law**                  | Phase A sole cash-engine explicit; dual-front banned or gated                                                                         |
-| **Services prepay**            | Discovery/Blueprint-like SKUs: **100% prepay** preference under $5k                                                                   |
-| **Timebox / SLA-Pause**        | Client data delay → SLA-pause / freeze / as-is / non-refundable language if services                                                  |
-| **Convert**                    | Discovery→build target + **stress 10–15%** for new bureau                                                                             |
-| **Cold CAC**                   | $0 paid cold until proof (cases/videos) unless plan justifies otherwise                                                               |
-| **Legal micro-revenue**        | Don’t light US LLC/5472 burn on $19 rails without gate ($50k net threshold)                                                           |
-| **Brand isolation**            | B2B sterile vs polity/crypto surfaces split if both exist                                                                             |
-| **Fantasy margins**            | Ban “98% margin @ 10 users with fixed GPU” class claims                                                                               |
-| **GTM spine present**          | ICP, hero ladder, Phase A channels, CAC policy, convert KPI, sales artifacts, kill-criteria                                           |
+| Valve                                 | Rule / Requirement                                                                                                                           |
+| :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Traction Honesty**                  | Never “Production Ready” at 0 closed deals. Phase A counts strictly paid deposits or non-refundable LOIs.                                    |
+| **Working Capital & Cash Drag**       | Net-30/60 terms must model 45-day cash gap and require 2–3 months OPEX liquidity buffer.                                                     |
+| **Cross-Border Tax & Substance**      | Banned using 1% IE (Georgia/Armenia) without proven Economic Substance. MoR (Paddle/LemonSqueezy) required until $50k ARR for VAT/Sales tax. |
+| **Pass-Through SLA & Outage Cap**     | Client SLA cannot exceed upstream providers (OpenAI/Anthropic). Cap on Liability MUST be <= 1 month fees; Force Majeure clause mandatory.    |
+| **Compute Floor & Circuit Breaker**   | Inference cost ceiling <= 10–15% gross subscription. Hardware circuit breaker ($X/session limit) with fallback to lightweight SLM mandatory. |
+| **Vector DB & Data Privacy**          | RAG architecture must enforce Namespace Isolation per tenant and cascading deletion of embeddings (GDPR Art. 17 / CCPA / 152-FZ).            |
+| **Burnout Shield & Capacity Ceiling** | Solo founder capped at max 2 concurrent Custom Build projects. Excess leads forced to Waitlist or async audits.                              |
+| **Helmer Moat Verification**          | Must prove at least 1 durable moat (7 Powers: Switching Costs, Network Effects, Counter-Positioning, Scale Economies, etc.) over 12mo.       |
+| **Grand Slam Offer Integrity**        | Offers must decompose via Hormozi Value Equation (Time-to-Value <= 72h, Done-For-You packaging, risk reversal guarantee).                    |
+| **Beachhead Whole Product Gate**      | Banned expanding to new niches until >= 3 paid contracts closed in a single narrow beachhead market with a complete Whole Product.           |
 
 If a claim fails stress → fix plan text, don’t ship vibes.
 
-### 2b. Review policy (hybrid — do not invent a third implement-gate)
+### 2a. Canonical Business Mental Models & Strategic Frameworks
 
-Business-plan quality uses **three layers**. This command owns A; feature pipeline owns B; C is for CREATE/major only.
+Every generated or updated business plan MUST pass through these 8 core mental models:
+
+1. **Antifragility & Barbell Strategy (Nassim Taleb — _Antifragile_ & _The Black Swan_):**
+   - **Barbell Allocation:** 80% effort on low-risk, predictable cashflow (Phase A Hero SKU / Prepay / T&M), 20% on asymmetric bets with massive upside (IP / Platform extensions). Banned: middle-tier high-fragility bets.
+   - **Black Swan Preparedness & Skin in the Game:** Identify single-point-of-failure vulnerabilities (payment freezes, platform bans, API pricing spikes) and require MoR / payment redundancy.
+
+2. **The 7 Powers Moat Framework (Hamilton Helmer — _7 Powers_):**
+   - **Durability Audit:** Verify economic rent sources (_Scale Economies, Network Economies, Switching Costs, Counter-Positioning, Cornered Resources, Branding, Process Power_). Banned: commoditized wrappers over raw APIs without proprietary moats.
+
+3. **Value Equation & Risk Reversal (Alex Hormozi — _$100M Offers_):**
+   - **Value Equation Optimization:** Maximize Dream Outcome & Perceived Likelihood while minimizing Time Delay (Time-to-Value <= 72h) and Effort & Sacrifice.
+   - **Grand Slam Offer:** Package as Done-For-You with conditional performance guarantees and financial risk reversal.
+
+4. **Crossing the Chasm & Beachhead Strategy (Geoffrey Moore — _Crossing the Chasm_):**
+   - **Beachhead Market First:** Dominant market share in a single, narrow niche before horizontal expansion.
+   - **Whole Product Delivery:** Scope must include training, CRM/ERP connectors, SLA, and compliance required by pragmatic buyers.
+
+5. **The Mom Test Validation Gate (Rob Fitzpatrick — _The Mom Test_):**
+   - **Behavioral Evidence Only:** Verbal compliments count as ZERO validation. Validation requires historical proof of client spending real money on clumsy workarounds right now, or paid deposits.
+
+6. **10x Monopoly Niche Rule (Peter Thiel — _Zero to One_):**
+   - **Dominant Micro-Niche:** Avoid "1% of a $100B red ocean market" fantasies. Target a micro-niche where the solution is **10x better or 10x faster** than existing alternatives.
+
+7. **Jobs-To-Be-Done & Non-Consumption Target (Clayton Christensen):**
+   - **Specific Job Hiring:** Product is evaluated by the exact "job" it is hired to do. Target non-consumption (clients currently losing leads/time) rather than feature wars with legacy players.
+
+8. **Wartime Execution & Cash Runway Realism (Ben Horowitz & Eric Ries):**
+   - **Wartime Execution Mode:** Pre-revenue status triggers an immediate lockdown on non-revenue engineering.
+   - **Hard Kill Criteria:** Numeric metrics (spend limit, contact capacity, calendar timeframe, min closed deals) that automatically trigger a freeze, pivot, or shutdown ("Red Button").
+
+### 2b. Forensic Architecture & Legal Guardrails
+
+| Control Area                        | Forensic Requirement                                                  | Enforcement Mechanism                                                                                                                                |
+| :---------------------------------- | :-------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **IP Chain-of-Title**               | Absolute purity of IP rights for codebase, prompts, and architecture. | Subcontractor agreements require explicit Work-for-Hire / Assignment clauses. AI-generated code requires human curation for copyright validity.      |
+| **Data Privacy & AI RAG Isolation** | Tenant isolation and GDPR / CCPA / 152-FZ compliance.                 | Multi-tenant vector DBs must use Namespace per Tenant and cascading deletion of embeddings. LLM providers must feature Zero Data Retention policies. |
+| **Currency & FX Risk**              | Buffer against FX fluctuations and banking compliance.                | Include 4.5–6% FX currency spread buffer; maintain at least two backup bank accounts in independent jurisdictions.                                   |
+| **Compute Floor & Session Cap**     | Gross margin protection from token loops or prompt injection attacks. | Hardware circuit breaker (max $X/session cap) with automatic fallback to lightweight SLM when session limits are exceeded.                           |
+
+### 2c. Review Policy (Hybrid)
+
+Business-plan quality uses **three layers**:
 
 | Layer                           | Who                                                                            | When                                                                       | Output                                                                          |
 | :------------------------------ | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
 | **A. Stress & Pre-Mortem Pass** | This command (authoring model)                                                 | Every CREATE/UPDATE                                                        | In-plan stress and pre-mortem tables; fail → fix before done                    |
-| **B. Commercial drift lens**    | `/speckit.analyze` + `/speckit.review`                                         | Every feature gate before implement                                        | Findings in `specs/<slug>/reviews/*` — plan vs spec/plan/tasks consistency only |
-| **C. External biz audit**       | Independent provider (Gemini/Grok/Codex/…) via `/speckit.business-plan-review` | **CREATE** always recommended; **major** bump MUST request; minor optional | `docs/reviews/business-plan-<provider>.md` (or `docs/business-plans/reviews/`)  |
-
-**Not** Principle VI: implement is **not** blocked solely by missing bizplan external review. Missing/contradictory plan on a **monetized** feature **is** blocked via analyze/review lens B (HIGH/CRITICAL).
+| **B. Commercial Drift Lens**    | `/speckit.analyze` + `/speckit.review`                                         | Every feature gate before implement                                        | Findings in `specs/<slug>/reviews/*` — plan vs spec/plan/tasks consistency only |
+| **C. External Biz Audit**       | Independent provider (Gemini/Grok/Codex/…) via `/speckit.business-plan-review` | **CREATE** always recommended; **major** bump MUST request; minor optional | `docs/reviews/business-plan-<provider>.md` (or `docs/business-plans/reviews/`)  |
 
 After CREATE or major UPDATE completion report, always include:
 
@@ -210,10 +239,17 @@ List open assumptions (max 5). Do not dump entire plan into chat — path + delt
 
 - Status lies about traction
 - No changelog on update
-- No stress unit econ
+- No stress unit econ table
 - Missing Pre-Mortem failure modes table or explicit Kill Criteria
 - Phase A sells three heroes at once with no gate
 - Custom/integration scope unlimited inside fixed price
+- Uncalculated cash drag (Working Capital Drag) for Net-30/60 enterprise contracts
+- Unlimited liability for third-party LLM provider outages (missing Pass-Through SLA or Liability Cap)
+- Missing proof of at least 1 durable moat from Helmer's 7 Powers
+- Offer framed as hourly body-leasing without Hormozi Value Equation decomposition & risk-reversal
+- Missing compute floor / token session circuit breakers to protect margins
+- Vector DB architecture lacks cascading erasure mechanisms (GDPR Art. 17 / CCPA)
+- Solo founder capacity ceiling exceeded without Waitlist routing
 - Plan contradicts constitution red lines without explicit override note
 
 ## Coordination
