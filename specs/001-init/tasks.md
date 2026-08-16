@@ -46,6 +46,8 @@
 - [x] T005 [BE] [US1] Create System Prompt builder for all 9 personas in `src/themes/persona-prompts.ts`
 - [x] T006 [FE] [US1] Implement `PersonaSelector.tsx`, `ChatBoxFxOverlay.tsx` and `AudioVideoTrigger.tsx` in `src/components/persona/`
 - [x] T007 [BE] [US2] Implement Plan Mode vs Act Mode logic with HITL approval resolver in `src/core/agent/state-machine.ts`
+- [x] T007a [BE] [US2] Implement ACP Reverse Execution Bridge (`acp-bridge.ts`) for stdio CLI agent spawn in `src/core/agent/acp-bridge.ts`
+- [x] T007b [BE] [US2] Implement ANSI Escape Sequence Stripper (`ansi-sanitizer.ts`) in `src/core/agent/ansi-sanitizer.ts`
 - [x] T008 [OPS] [US2] Implement Docker Execution Sandbox (`container-sandbox.ts`) with cgroups memory limits (512MB RAM, 30s timeout) and `orphan-reaper.ts` in `src/core/agent/`
 - [x] T008a [BE] [US2] Implement `ISandboxProvider` interface and `LocalNativeSandbox` adapter in `src/core/agent/sandbox-provider.ts`
 - [x] T009 [BE] [US2] Route `execute_bash` through `container-sandbox.ts` via `ISandboxProvider` in `src/core/agent/tool-executor.ts`
