@@ -69,3 +69,4 @@ export interface ISandboxProvider {
 - **FR-004 (Repo Map Compression)**: AST Repo Map via `web-tree-sitter` & PageRank.
 - **FR-005 (Noise_XX Remote Relay)**: Noise_XX handshake, X25519 pairing, OTP/QR code, Device Registry (MVP-2).
 - **FR-006 (Cloud Sync & Entitlement)**: E2E multi-device sync, Telegram Stars / Stripe adapters (MVP-3).
+- **FR-007 (Ecosystem Auth & SSO Integration)**: Доступ к OmniRoute API (`/v1/chat/completions`) и ACP-воркерам валидирует федеративные **RS256 JWT** токены, выданные единым провайдером идентичности **Undrlla IdP (`https://id.undrlla.network`)**. Проверка подписи осуществляется локально через стандартный JWKS эндпоинт (`/.well-known/jwks.json`) в соответствии со спецификацией `undrlla/specs/005-sso-jwt-contract.md`.

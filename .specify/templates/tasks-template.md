@@ -279,39 +279,46 @@ graph LR
 
 > For each agent that has tasks, provide the context needed to spawn a subagent (Claude Code) or switch role context (Gemini/Copilot). The orchestrator or human uses this table to dispatch without re-reading plan.md.
 
-| Agent     | Subagent              | Skills                                                   | Input Context                                            | Tasks                        | Files                                          |
-| --------- | --------------------- | -------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- | ---------------------------------------------- |
-| `[SETUP]` | — (orchestrator)      | —                                                        | plan.md §structure                                       | T001, T002                   | `package.json`, `tsconfig.json`, project root  |
-| `[DB]`    | `database-architect`  | `database-design`                                        | data-model.md, plan.md §storage                          | T004, T007, T012, T013       | `src/models/`, `migrations/`                   |
-| `[BE]`    | `backend-specialist`  | `api-patterns`, `system-design-patterns`                 | contracts/, plan.md §tech-stack, data-model.md §entities | T005, T006, T008, T014, T015 | `src/api/`, `src/services/`, `src/middleware/` |
-| `[FE]`    | `frontend-specialist` | `react-patterns`, `tailwind-patterns`, `frontend-design` | contracts/ §endpoints, plan.md §ui-framework             | T016, T017                   | `src/components/`, `src/pages/`                |
-| `[OPS]`   | `devops-engineer`     | `deployment-procedures`                                  | plan.md §infra, quickstart.md                            | T003, T009                   | `Dockerfile`, `.github/workflows/`, `infra/`   |
-| `[E2E]`   | `test-engineer`       | `testing-patterns`, `webapp-testing`                     | contracts/, quickstart.md §scenarios                     | T011                         | `tests/e2e/`, `tests/integration/`             |
-| `[SEC]`   | `security-auditor`    | `vulnerability-scanner`                                  | spec.md §security, plan.md §auth                         | TXXX                         | project-wide                                   |
+| Agent     | Subagent / Command    | Skills                                                                            | Input Context                                            | Tasks                        | Files                                          |
+| --------- | --------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- | ---------------------------------------------- |
+| `[SETUP]` | `orchestrator`        | `architecture`, `system-design-patterns`, `app-builder`, `clean-code`             | plan.md §structure                                       | T001, T002                   | `package.json`, `tsconfig.json`, project root  |
+| `[DB]`    | `database-architect`  | `database-design`, `prisma-expert`, `clean-code`                                  | data-model.md, plan.md §storage                          | T004, T007, T012, T013       | `src/models/`, `migrations/`                   |
+| `[BE]`    | `backend-specialist`  | `api-patterns`, `nodejs-best-practices`, `typescript-expert`, `clean-code`        | contracts/, plan.md §tech-stack, data-model.md §entities | T005, T006, T008, T014, T015 | `src/api/`, `src/services/`, `src/middleware/` |
+| `[FE]`    | `frontend-specialist` | `react-patterns`, `nextjs-best-practices`, `tailwind-patterns`, `frontend-design` | contracts/ §endpoints, plan.md §ui-framework             | T016, T017                   | `src/components/`, `src/pages/`                |
+| `[OPS]`   | `devops-engineer`     | `docker-expert`, `server-management`, `deployment-procedures`, `bash-linux`       | plan.md §infra, quickstart.md                            | T003, T009                   | `Dockerfile`, `.github/workflows/`, `infra/`   |
+| `[E2E]`   | `test-engineer`       | `testing-patterns`, `webapp-testing`, `tdd-workflow`                              | contracts/, quickstart.md §scenarios                     | T011                         | `tests/e2e/`, `tests/integration/`             |
+| `[SEC]`   | `security-auditor`    | `vulnerability-scanner`, `ai-engineering-hygiene`, `code-review-checklist`        | spec.md §security, plan.md §auth                         | TXXX                         | project-wide                                   |
 
 <!--
   ============================================================================
   GENERATOR RULES for Agent Dispatch Plan:
 
   1. Only include agents that have actual tasks (skip unused conditional agents)
-  2. Skills: pull from .claude/agents/<agent>.md frontmatter `skills:` field
-  3. Input Context: list specific sections from plan.md/data-model.md/contracts/
+  2. Subagent / Command: MUST select exact command file from .claude/commands/<command>.md
+  3. Skills: MUST select exact skills from .claude/skills/<skill>/
+  4. Input Context: list specific sections from plan.md/data-model.md/contracts/
      that the agent needs — NOT the whole file
-  4. Tasks: list actual task IDs assigned to this agent
-  5. Files: list directories/files the agent will create or modify
-  6. For conditional agents ([PERF], [DOC], [DEBUG], [REFACTOR], [SEO], [MOBILE],
-     [UIUX], [PENTEST], [GAME]) — add rows only when tasks exist
+  5. Tasks: list actual task IDs assigned to this agent
+  6. Files: list directories/files the agent will create or modify
 
-  Additional conditional agent mappings (add row if tasks exist):
-  - [PERF]     → performance-optimizer  → performance-profiling
-  - [DOC]      → documentation-writer   → documentation-templates
-  - [DEBUG]    → debugger               → systematic-debugging
-  - [REFACTOR] → (general-purpose)      → legacy-code, testing-patterns
-  - [SEO]      → seo-specialist         → seo-fundamentals, geo-fundamentals
-  - [MOBILE]   → mobile-developer       → mobile-design + framework-specific
-  - [UIUX]     → (general-purpose)      → ui-ux-pro-max, frontend-design
-  - [PENTEST]  → penetration-tester     → red-team-tactics
-  - [GAME]     → game-developer         → game-development
+  Full command & skill mapping for dispatch table:
+  - [SETUP]    → orchestrator          → architecture, system-design-patterns, app-builder, clean-code
+  - [DB]       → database-architect    → database-design, prisma-expert, clean-code
+  - [BE]       → backend-specialist    → api-patterns, nodejs-best-practices, typescript-expert, clean-code, nestjs-expert
+  - [FE]       → frontend-specialist   → react-patterns, nextjs-best-practices, tailwind-patterns, frontend-design, ui-ux-pro-max
+  - [OPS]      → devops-engineer       → docker-expert, server-management, deployment-procedures, bash-linux, powershell-windows
+  - [E2E]/[QA] → test-engineer         → testing-patterns, webapp-testing, tdd-workflow
+  - [SEC]      → security-auditor      → vulnerability-scanner, ai-engineering-hygiene, code-review-checklist
+  - [PENTEST]  → penetration-tester   → red-team-tactics, vulnerability-scanner
+  - [PERF]     → performance-optimizer → performance-profiling, system-design-patterns
+  - [DOC]      → documentation-writer  → documentation-templates, knowledge-adaptation
+  - [DEBUG]    → debugger             → systematic-debugging, lint-and-validate
+  - [REFACTOR] → backend-specialist    → clean-code, ai-engineering-hygiene, testing-patterns
+  - [SEO]      → seo-specialist       → seo-fundamentals, geo-fundamentals
+  - [MOBILE]   → mobile-developer     → mobile-design, react-patterns, typescript-expert
+  - [UIUX]     → ui-ux-pro-max        → ui-ux-pro-max, frontend-design, tailwind-patterns
+  - [GAME]     → game-developer       → game-development, systems-programming
+  - [FIN]/[LAW]/[MKT]/[BIZ] → project-planner → plan-writing, semver-versioning, knowledge-adaptation, brainstorming
   ============================================================================
 -->
 

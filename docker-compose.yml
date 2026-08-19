@@ -45,6 +45,8 @@ x-common: &common
     - NODE_OPTIONS=--max-old-space-size=2048
   volumes:
     - ./data:/app/data
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   healthcheck:
     test: ["CMD", "node", "healthcheck.mjs"]
     interval: 30s
@@ -91,6 +93,7 @@ services:
       - "${LIVE_WS_PORT:-20132}:${LIVE_WS_PORT:-20132}"
     profiles:
       - base
+      - client-lite
 
   # ── Profile: web (runner-web + Chromium/Playwright) ────────────────
   # Required for web-cookie providers (gemini-web, claude-web, claude-turnstile).

@@ -44,7 +44,7 @@ ultrathink
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
    - If research.md exists: Extract decisions for setup tasks
-   - **Agent Assignment**: Assign `[AGENT]` tag to each task (see Agent Assignment Rules below)
+   - **Agent & Skill Assignment**: Assign `[AGENT]` tag to each task and map it to the corresponding specialist command file from `.claude/commands/<agent>.md` and domain skills from `.claude/skills/<skill>` (see Agent & Skill Matrix below)
    - **Shared File Extraction**: Scan tasks for overlapping file paths — any file touched by 2+ agents → extract into `[SETUP]` task before the fork point
    - **Dependency Resolution**: Build dependency graph (see Dependency Resolution Rules below)
    - **Lane Generation**: Group dependency chains into parallel lanes by agent flow
@@ -176,6 +176,34 @@ Every task MUST strictly follow this format:
 - `[UIUX]` — only for design-heavy features needing wireframes/mockups before implementation (precedes `[FE]`)
 - `[PENTEST]` — only when spec.md explicitly requires offensive testing (distinct from `[SEC]` defensive audit)
 - `[GAME]` — only when plan.md tech stack includes Unity, Unreal, Godot, Phaser, or Three.js-as-game-engine
+
+### Agent Command & Skill Matrix (REQUIRED)
+
+Every assigned `[AGENT]` tag MUST be mapped in the **Agent Dispatch Plan** table to its exact specialist command file under `.claude/commands/<command>.md` and its domain skills under `.claude/skills/<skill>`:
+
+| Tag          | Specialist Command (`.claude/commands/`)                              | Required & Recommended Skills (`.claude/skills/`)                                                                             |
+| :----------- | :-------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `[SETUP]`    | `orchestrator` (`.claude/commands/orchestrator.md`)                   | `architecture`, `system-design-patterns`, `app-builder`, `clean-code`                                                         |
+| `[DB]`       | `database-architect` (`.claude/commands/database-architect.md`)       | `database-design`, `prisma-expert`, `clean-code`                                                                              |
+| `[BE]`       | `backend-specialist` (`.claude/commands/backend-specialist.md`)       | `api-patterns`, `nodejs-best-practices`, `typescript-expert`, `clean-code`, `nestjs-expert`, `python-patterns`, `mcp-builder` |
+| `[FE]`       | `frontend-specialist` (`.claude/commands/frontend-specialist.md`)     | `react-patterns`, `nextjs-best-practices`, `tailwind-patterns`, `frontend-design`, `ui-ux-pro-max`, `i18n-localization`       |
+| `[OPS]`      | `devops-engineer` (`.claude/commands/devops-engineer.md`)             | `docker-expert`, `server-management`, `deployment-procedures`, `bash-linux`, `powershell-windows`                             |
+| `[E2E]`      | `test-engineer` (`.claude/commands/test-engineer.md`)                 | `testing-patterns`, `webapp-testing`, `tdd-workflow`                                                                          |
+| `[SEC]`      | `security-auditor` (`.claude/commands/security-auditor.md`)           | `vulnerability-scanner`, `ai-engineering-hygiene`, `code-review-checklist`                                                    |
+| `[PENTEST]`  | `penetration-tester` (`.claude/commands/penetration-tester.md`)       | `red-team-tactics`, `vulnerability-scanner`                                                                                   |
+| `[PERF]`     | `performance-optimizer` (`.claude/commands/performance-optimizer.md`) | `performance-profiling`, `system-design-patterns`                                                                             |
+| `[DEBUG]`    | `debugger` (`.claude/commands/debugger.md`)                           | `systematic-debugging`, `lint-and-validate`                                                                                   |
+| `[REFACTOR]` | `backend-specialist` / `clean-code`                                   | `clean-code`, `ai-engineering-hygiene`, `testing-patterns`                                                                    |
+| `[SEO]`      | `seo-specialist` (`.claude/commands/seo-specialist.md`)               | `seo-fundamentals`, `geo-fundamentals`                                                                                        |
+| `[MOBILE]`   | `mobile-developer` (`.claude/commands/mobile-developer.md`)           | `mobile-design`, `react-patterns`, `typescript-expert`                                                                        |
+| `[UIUX]`     | `ui-ux-pro-max` (`.claude/commands/ui-ux-pro-max.md`)                 | `ui-ux-pro-max`, `frontend-design`, `tailwind-patterns`                                                                       |
+| `[GAME]`     | `game-developer` (`.claude/commands/game-developer.md`)               | `game-development`, `systems-programming`                                                                                     |
+| `[DOC]`      | `documentation-writer` (`.claude/commands/documentation-writer.md`)   | `documentation-templates`, `knowledge-adaptation`                                                                             |
+| `[FIN]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `semver-versioning`, `knowledge-adaptation`                                                                   |
+| `[LAW]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `code-review-checklist`                                                                                       |
+| `[MKT]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `brainstorming`, `knowledge-adaptation`                                                                                       |
+| `[QA]`       | `test-engineer` (`.claude/commands/test-engineer.md`)                 | `webapp-testing`, `testing-patterns`                                                                                          |
+| `[BIZ]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `brainstorming`                                                                                               |
 
 ### Shared file extraction
 
