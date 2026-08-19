@@ -41,6 +41,13 @@ ultrathink
 3. **Execute task generation workflow**:
    - Load plan.md and extract tech stack, libraries, project structure
    - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
+   - **Micro-Decomposition ("Правило одного фитинга")**: Break all work into small, self-contained subtasks sized **15–30 minutes of work (<500 LOC per task)**. Never output giant "implement auth" monolithic tasks.
+   - **Strict Layer-by-Layer Sequence**: For each user story, generate tasks strictly in this sequence:
+     1. `[DB]` Schema & Migration
+     2. `[BE]` Service layer & typed contract interfaces
+     3. `[BE]` Endpoint & schema validation (Zod/Pydantic)
+     4. `[FE]` UI integration & components
+     5. `[BE]`/`[FE]` Unit & integration tests
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
    - If research.md exists: Extract decisions for setup tasks

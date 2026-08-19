@@ -56,8 +56,9 @@ Act as a Principal Staff Engineer, SRE, and Security Auditor.
    Race conditions, unhandled Promise rejections, non-atomic mutations, event loop blocking.
 4. **Pass 4: SRE, Leaks & Resource Boundaries**  
    Missing timeouts on network/DB calls, unbounded collections/caches, open connections/file handles, unindexed DB queries.
-5. **Pass 5: Test Gaps & Anti-Slop**  
-   Untested critical edge cases introduced in diff, empty/swallowed `catch {}` blocks, redundant AI hallucinations.
+5. **Pass 5: Test Gaps, Simplicity & Anti-Slop**
+   - Untested critical edge cases introduced in diff, empty/swallowed `catch {}` blocks, redundant AI hallucinations.
+   - **Human Readability & Simplicity Gate ("Понимаю ли я, как эта херня работает?")**: Ask if the code design is clear to a human reviewer. If code works but is an unnecessarily complex, unreadable AI spaghetti-monster, REJECT (Confidence 85+) and mandate a simpler, readable implementation.
 
 ---
 

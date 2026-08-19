@@ -25,6 +25,7 @@ ultrathink
 ### Argument parsing
 
 Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>"`). If present:
+
 - Append entry to `FEATURE_DIR/reviews/_gate-override.md` (create if missing): `\n## <ISO timestamp>\n- override_reason: <reason>\n- triggered_by: <git config user.name>\n- commit: <git rev-parse HEAD>\n`
 - Skip the rest of this gate, proceed to step 2.
 - WARN the user once, in caps: "GATE OVERRIDDEN — implementation proceeds despite missing/failing reviews. Reason logged to reviews/_gate-override.md."
@@ -34,12 +35,14 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
 1. **Locate review files**: glob `FEATURE_DIR/reviews/*.md` (excluding `_gate-override.md` and any underscore-prefixed file).
 
 2. **Parse VERDICT block** at the END of each review file. Expected YAML shape:
+
    ```yaml
    verdict: PASS | MEDIUM | HIGH | CRITICAL | OVERRIDDEN
    reviewer: <name>
    reviewed_at: <ISO timestamp>
    commit: <git SHA>
    ```
+
    If a file has no parseable VERDICT block, treat as INVALID and ignore for gate purposes (warn user but don't fail).
 
 3. **Required gate conditions**:
@@ -47,6 +50,7 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
    - **B. External-review gate**: At least **2 distinct external reviewers** (anything not `analyze` and not `claude` if Claude was the author of the spec — to avoid same-model groupthink) MUST exist with verdict ∈ {PASS, OVERRIDDEN}. Acceptable external reviewers: `codex`, `antigravity`, `gemini`, `copilot`, `claude` (if independent session).
 
 4. **If gate FAILS**, refuse to proceed. Print:
+
    ```
    ❌ Cross-AI Review Gate FAILED. Cannot proceed to implementation.
 
@@ -64,14 +68,16 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
      • If a reviewer flagged CRITICAL/HIGH issues, address them and rerun the relevant review.
      • If override is justified (research spike, urgent rollback prep, etc.), pass `--override-gate "<reason>"`.
    ```
+
    Then exit (do not proceed to step 2).
 
 5. **If gate PASSES**, print a one-liner summary and proceed to step 2:
+
    ```
    ✓ Cross-AI Review Gate PASSED — analyze + <N> external reviewers approved. Proceeding to implementation.
    ```
 
-2. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
+6. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
    - Scan all checklist files in the checklists/ directory
    - For each checklist, count:
      - Total items: All lines matching `- [ ]` or `- [X]` or `- [x]`
@@ -102,7 +108,7 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
      - Display the table showing all checklists passed
      - Automatically proceed to step 3
 
-3. Load and analyze the implementation context:
+7. Load and analyze the implementation context:
    - **REQUIRED**: Read tasks.md for the complete task list, dependency graph, parallel lanes, and agent summary
    - **REQUIRED**: Read plan.md for tech stack, architecture, and file structure
    - **IF EXISTS**: Read data-model.md for entities and relationships
@@ -110,7 +116,7 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read quickstart.md for integration scenarios
 
-4. **Project Setup Verification**:
+8. **Project Setup Verification**:
    - **REQUIRED**: Create/verify ignore files based on actual project setup:
 
    **Detection & Creation Logic**:
@@ -154,7 +160,7 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
    - **Terraform**: `.terraform/`, `*.tfstate*`, `*.tfvars`, `.terraform.lock.hcl`
    - **Kubernetes/k8s**: `*.secret.yaml`, `secrets/`, `.kube/`, `kubeconfig*`, `*.key`, `*.crt`
 
-5. **Parse tasks.md structure** and extract:
+9. **Parse tasks.md structure** and extract:
    - **Task list**: All tasks with IDs, agent tags, story labels, descriptions, file paths
    - **Dependency Graph**: Parse `→` (unlock) and `+` (join) relationships
    - **Parallel Lanes**: Read lane table for execution groups
@@ -162,106 +168,113 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
    - **Phase boundaries**: Identify sync barriers between phases
    - **Task statuses**: `[ ]` pending, `[→]` in progress, `[X]` completed, `[!]` failed, `[~]` blocked
 
-6. **Execute implementation phase by phase** (phases are sync barriers):
+10. **Execute implementation phase by phase** (phases are sync barriers):
 
-   **For each phase:**
+    **For each phase:**
 
-   a. **Identify ready tasks**: Find all tasks with status `[ ]` whose dependencies (from Dependency Graph) are all `[X]` completed
-   b. **Group by agent**: Cluster ready tasks by their `[AGENT]` tag
-   c. **Dispatch execution**:
-      - **`[SETUP]` tasks**: Execute directly in current context (no subagent)
-      - **Single-agent tasks**: Execute sequentially within agent domain
-      - **Multi-agent parallel tasks** (Claude Code only): If multiple agents have ready tasks simultaneously:
-        - Launch via `Agent` tool with `subagent_type` matching the agent:
-          - **Core agents**:
-            - `[BE]` → `Agent(subagent_type="backend-specialist", isolation="worktree")`
-            - `[FE]` → `Agent(subagent_type="frontend-specialist", isolation="worktree")`
-            - `[DB]` → `Agent(subagent_type="database-architect", isolation="worktree")`
-            - `[OPS]` → `Agent(subagent_type="devops-engineer", isolation="worktree")`
-            - `[SEC]` → `Agent(subagent_type="security-auditor", isolation="worktree")`
-            - `[E2E]` → `Agent(subagent_type="test-engineer", isolation="worktree")`
-            - `[PERF]` → `Agent(subagent_type="performance-optimizer", isolation="worktree")`
-            - `[DOC]` → `Agent(subagent_type="documentation-writer", isolation="worktree")`
-            - `[DEBUG]` → `Agent(subagent_type="debugger", isolation="worktree")`
-            - `[REFACTOR]` → `Agent(subagent_type="general-purpose", isolation="worktree")` (legacy-code skill loaded via prompt)
-          - **Conditional agents** (only if tasks exist):
-            - `[SEO]` → `Agent(subagent_type="seo-specialist", isolation="worktree")`
-            - `[MOBILE]` → `Agent(subagent_type="mobile-developer", isolation="worktree")`
-            - `[UIUX]` → `Agent(subagent_type="general-purpose", isolation="worktree")` (ui-ux-pro-max skill loaded via prompt)
-            - `[PENTEST]` → `Agent(subagent_type="penetration-tester", isolation="worktree")`
-            - `[GAME]` → `Agent(subagent_type="game-developer", isolation="worktree")`
-        - Each agent prompt includes: task description, file paths, relevant context from plan.md/data-model.md/contracts/
-        - **Skills hint**: Prompt the spawned agent to load its declared skills (from agent frontmatter `skills:` field). Examples:
-          - `[PERF]` → load `performance-profiling`, `clean-code`
-          - `[DOC]` → load `documentation-templates`, `clean-code`
-          - `[DEBUG]` → load `systematic-debugging`, `clean-code`
-          - `[REFACTOR]` → load `legacy-code` (command), `testing-patterns`, `tdd-workflow`
-          - `[UIUX]` → load `ui-ux-pro-max`, `frontend-design`, `tailwind-patterns`
-          - `[SEO]` → load `seo-fundamentals`, `geo-fundamentals`
-          - `[MOBILE]` → load `mobile-design` + framework-specific (e.g., `react-patterns` for RN)
-          - `[GAME]` → load `game-development`
-          - `[PENTEST]` → load `red-team-tactics`, `vulnerability-scanner`
-        - Use `isolation="worktree"` for parallel agents to prevent file conflicts
-        - Use `run_in_background=true` for non-blocking dispatch where possible
-   d. **On task completion**: Mark `[X]` in tasks.md, merge worktree if applicable
-   e. **On task failure**: Mark `[!]` in tasks.md, then cascade-block all dependents:
-      - Walk dependency graph forward from failed task
-      - Mark all downstream tasks as `[~]` (BLOCKED)
-      - Independent lanes continue unaffected
-   f. **Phase complete** when all tasks in phase are `[X]`, `[!]`, or `[~]`
-   g. **Sync barrier**: Wait for phase completion before starting next phase
+    a. **Identify ready tasks**: Find all tasks with status `[ ]` whose dependencies (from Dependency Graph) are all `[X]` completed
+    b. **Group by agent**: Cluster ready tasks by their `[AGENT]` tag
+    c. **Dispatch execution**:
+    - **`[SETUP]` tasks**: Execute directly in current context (no subagent)
+    - **Single-agent tasks**: Execute sequentially within agent domain
+    - **Multi-agent parallel tasks** (Claude Code only): If multiple agents have ready tasks simultaneously:
+      - Launch via `Agent` tool with `subagent_type` matching the agent:
+        - **Core agents**:
+          - `[BE]` → `Agent(subagent_type="backend-specialist", isolation="worktree")`
+          - `[FE]` → `Agent(subagent_type="frontend-specialist", isolation="worktree")`
+          - `[DB]` → `Agent(subagent_type="database-architect", isolation="worktree")`
+          - `[OPS]` → `Agent(subagent_type="devops-engineer", isolation="worktree")`
+          - `[SEC]` → `Agent(subagent_type="security-auditor", isolation="worktree")`
+          - `[E2E]` → `Agent(subagent_type="test-engineer", isolation="worktree")`
+          - `[PERF]` → `Agent(subagent_type="performance-optimizer", isolation="worktree")`
+          - `[DOC]` → `Agent(subagent_type="documentation-writer", isolation="worktree")`
+          - `[DEBUG]` → `Agent(subagent_type="debugger", isolation="worktree")`
+          - `[REFACTOR]` → `Agent(subagent_type="general-purpose", isolation="worktree")` (legacy-code skill loaded via prompt)
+        - **Conditional agents** (only if tasks exist):
+          - `[SEO]` → `Agent(subagent_type="seo-specialist", isolation="worktree")`
+          - `[MOBILE]` → `Agent(subagent_type="mobile-developer", isolation="worktree")`
+          - `[UIUX]` → `Agent(subagent_type="general-purpose", isolation="worktree")` (ui-ux-pro-max skill loaded via prompt)
+          - `[PENTEST]` → `Agent(subagent_type="penetration-tester", isolation="worktree")`
+          - `[GAME]` → `Agent(subagent_type="game-developer", isolation="worktree")`
+      - Each agent prompt includes: task description, file paths, relevant context from plan.md/data-model.md/contracts/
+      - **Skills hint**: Prompt the spawned agent to load its declared skills (from agent frontmatter `skills:` field). Examples:
+        - `[PERF]` → load `performance-profiling`, `clean-code`
+        - `[DOC]` → load `documentation-templates`, `clean-code`
+        - `[DEBUG]` → load `systematic-debugging`, `clean-code`
+        - `[REFACTOR]` → load `legacy-code` (command), `testing-patterns`, `tdd-workflow`
+        - `[UIUX]` → load `ui-ux-pro-max`, `frontend-design`, `tailwind-patterns`
+        - `[SEO]` → load `seo-fundamentals`, `geo-fundamentals`
+        - `[MOBILE]` → load `mobile-design` + framework-specific (e.g., `react-patterns` for RN)
+        - `[GAME]` → load `game-development`
+        - `[PENTEST]` → load `red-team-tactics`, `vulnerability-scanner`
+      - Use `isolation="worktree"` for parallel agents to prevent file conflicts
+      - Use `run_in_background=true` for non-blocking dispatch where possible
+        d. **Mandatory Pressure Testing ("Опрессовка системы") & Task Completion**:
+        Before marking any task `[X]`:
+    - **Unit Tests**: Ensure unit tests exist for all new services/functions/components.
+    - **CLI Verification**: Run test runner and typecheck (`npm test`, `npm run validate`, `vitest run`, `tsc --noEmit`).
+    - **Auto-Fix**: If tests or typecheck fail, fix issues immediately before submitting. Task CANNOT be marked `[X]` until CLI passes green.
+    - **Atomic Git Commit ("1 задача = 1 коммит")**: Create a clean, single-task git commit (`git commit -m "<AGENT>: <TaskID> <Description>"`). Enables instant 1-second rollback (`git reset --hard HEAD~1`) if subsequent steps regress.
+    - **Siphon Cleaning (Context Reset)**: Clear subagent/session memory between tasks so context pollution does not accumulate.
+    - Mark `[X]` in tasks.md, merge worktree if applicable.
+      e. **On task failure**: Mark `[!]` in tasks.md, then cascade-block all dependents:
+    - Walk dependency graph forward from failed task
+    - Mark all downstream tasks as `[~]` (BLOCKED)
+    - Independent lanes continue unaffected
+      f. **Phase complete** when all tasks in phase are `[X]`, `[!]`, or `[~]`
+      g. **Sync barrier**: Wait for phase completion before starting next phase
 
-   **Graceful degradation** (non-Claude Code platforms):
-   - Execute tasks sequentially following dependency graph order
-   - Agent tags serve as role context hints ("now acting as [BE]")
-   - Parallel Lanes table serves as manual multi-session guide for human operators
+    **Graceful degradation** (non-Claude Code platforms):
+    - Execute tasks sequentially following dependency graph order
+    - Agent tags serve as role context hints ("now acting as [BE]")
+    - Parallel Lanes table serves as manual multi-session guide for human operators
 
-7. Implementation execution rules:
-   - **Setup first**: Initialize project structure, dependencies, configuration
-   - **Tests before code**: If TDD requested, write tests for contracts/entities first
-   - **Core development**: Models → Services → Endpoints → UI (following dependency graph)
-   - **Integration work**: Database connections, middleware, logging, external services
-   - **Polish and validation**: E2E tests, performance optimization, security audit, documentation
+11. Implementation execution rules:
+    - **Setup first**: Initialize project structure, dependencies, configuration
+    - **Tests before code**: If TDD requested, write tests for contracts/entities first
+    - **Core development**: Models → Services → Endpoints → UI (following dependency graph)
+    - **Integration work**: Database connections, middleware, logging, external services
+    - **Polish and validation**: E2E tests, performance optimization, security audit, documentation
 
-8. **Progress tracking and error handling**:
-   - Report progress after each completed task
-   - Update task status markers in tasks.md immediately:
-     - `[→]` when starting a task
-     - `[X]` when task completes successfully
-     - `[!]` when task fails
-     - `[~]` for cascade-blocked tasks
-   - On failure: provide clear error messages with context for debugging
-   - On cascade block: list all blocked tasks and the failure they depend on
-   - Suggest next steps if implementation cannot proceed
+12. **Progress tracking and error handling**:
+    - Report progress after each completed task
+    - Update task status markers in tasks.md immediately:
+      - `[→]` when starting a task
+      - `[X]` when task completes successfully
+      - `[!]` when task fails
+      - `[~]` for cascade-blocked tasks
+    - On failure: provide clear error messages with context for debugging
+    - On cascade block: list all blocked tasks and the failure they depend on
+    - Suggest next steps if implementation cannot proceed
 
-   **End-of-execution report**:
+    **End-of-execution report**:
 
-   ```text
-   | Status | Count | Details |
-   |--------|-------|---------|
-   | [X] Completed | N | tasks successfully implemented |
-   | [!] Failed | N | tasks with errors (list task IDs + error summary) |
-   | [~] Blocked | N | tasks blocked by failures (list dependency chains) |
-   | [ ] Remaining | N | tasks not yet attempted (if execution stopped early) |
-   ```
+    ```text
+    | Status | Count | Details |
+    |--------|-------|---------|
+    | [X] Completed | N | tasks successfully implemented |
+    | [!] Failed | N | tasks with errors (list task IDs + error summary) |
+    | [~] Blocked | N | tasks blocked by failures (list dependency chains) |
+    | [ ] Remaining | N | tasks not yet attempted (if execution stopped early) |
+    ```
 
-9. **Completion validation**:
-   - Verify all required tasks are completed (`[X]`)
-   - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
-   - Confirm the implementation follows the technical plan
-   - Report final status with summary per agent:
+13. **Completion validation**:
+    - Verify all required tasks are completed (`[X]`)
+    - Check that implemented features match the original specification
+    - Validate that tests pass and coverage meets requirements
+    - Confirm the implementation follows the technical plan
+    - Report final status with summary per agent:
 
-   ```text
-   | Agent | Completed | Failed | Blocked |
-   |-------|-----------|--------|---------|
-   | [DB]     | 4 | 0 | 0 |
-   | [BE]     | 5 | 0 | 0 |
-   | [FE]     | 3 | 1 | 0 |
-   | [E2E]    | 0 | 0 | 1 |
-   | [PERF]   | 2 | 0 | 0 |
-   | [DOC]    | 1 | 0 | 0 |
-   | [DEBUG]  | 0 | 0 | 0 |
-   ```
+    ```text
+    | Agent | Completed | Failed | Blocked |
+    |-------|-----------|--------|---------|
+    | [DB]     | 4 | 0 | 0 |
+    | [BE]     | 5 | 0 | 0 |
+    | [FE]     | 3 | 1 | 0 |
+    | [E2E]    | 0 | 0 | 1 |
+    | [PERF]   | 2 | 0 | 0 |
+    | [DOC]    | 1 | 0 | 0 |
+    | [DEBUG]  | 0 | 0 | 0 |
+    ```
 
 Note: This command assumes a complete task breakdown exists in tasks.md with agent tags and dependency graph. If tasks are missing these, suggest running `/speckit.tasks` first to regenerate the task list.
