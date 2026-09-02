@@ -11,7 +11,7 @@ handoffs:
 
 # /internet-research
 
-Execute a rigorous, adversarial OSINT and forensic internet research pipeline based on the Master Forensic OSINT Framework (`docs/Эталонный OSINT Промпт-Шаблон.md`).
+Execute a rigorous, adversarial OSINT and forensic internet research pipeline
 
 ## User Input
 
