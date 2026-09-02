@@ -179,6 +179,63 @@ Every generated audit MUST incorporate these core methodologies:
 
 ---
 
+### 2b. Advanced Forensic Audit & Turnaround Diagnostic Framework (questions-for-businesses synthesis)
+
+When executing a business audit or turnaround plan, the audit MUST evaluate and encode the **5-Category Forensic Diagnostic Framework** and **Advanced PE/VC Metrics**:
+
+#### 1. Liquidity, Runway & Financial Leaks (13-Week Cash Flow & TWCF)
+
+- **Net Liquid Runway:** $\text{Runway} = \frac{\text{Cash \& Cash Equivalents} - \text{Restricted Cash}}{\text{Weekly Net Cash Burn}}$.
+  - _Emergency Threshold:_ **< 4 Weeks** → Enforce **Code Red & Cash Czar** protocol (centralized payout control under CFO/turnaround lead, freeze non-essential disbursements).
+- **Operating Cash Flow to EBITDA Conversion:** $\text{Ratio} = \frac{\text{Direct Operating Cash Flow}}{\text{EBITDA}}$.
+  - _Emergency Threshold:_ **< 0.5** or negative OCF with positive EBITDA → paper profits, uncollected debt, or fake revenue recognition.
+- **Cash Conversion Cycle ($CCC$) & AR Aging:** $CCC = \text{DIO} + \text{DSO} - \text{DPO}$.
+  - _Emergency Threshold:_ $\text{AR}_{90+} > 15\%$ of receivables → mandatory bad-debt write-off. $CCC > 90$ days → working capital trapped.
+
+#### 2. Profitability & SKU/Client Rationalization (Contribution Margin & ABC/XYZ)
+
+- **Contribution Margin ($CM_1, CM_2$):** $CM_2 = (\text{Revenue} - \text{Direct COGS}) - \text{Direct Variable Selling \& Logistics}$.
+  - _Emergency Threshold:_ $CM_2 \le 0$ on any SKU → immediate product delisting or repricing regardless of volume.
+- **Tail SKU Margin Share:** Category C SKUs (bottom 50% volume) giving $<5\%$ margin while locking $>30\%$ inventory and $40\%$ warehouse OPEX → mandatory delisting.
+- **Net Customer Margin Post Cost-to-Serve:** Top revenue clients with negative margin post-service costs → immediate contract renegotiation or termination.
+
+#### 3. Bottleneck Identification & Process Flow (TOC & Lean Flow)
+
+- **WIP Accumulation Factor:** $\text{WIP Factor} = \frac{\text{WIP in front of Station}}{\text{Daily Output Capacity of Station}}$.
+  - _Emergency Threshold:_ **> 3 days** of work queued in front of a station → primary TOC constraint (Drum-Buffer-Rope violation).
+- **Process Cycle Efficiency ($PCE$):** $PCE = \frac{\text{Value-Add Time}}{\text{Total Lead Time}} \times 100\%$.
+  - _Emergency Threshold:_ **< 5%** → 95%+ of lead time is non-value-add waiting and queueing (Lean Muda).
+- **First Pass Yield ($FPY$):** **< 80%** on critical nodes → 20%+ of operational capacity wasted in rework loops.
+
+#### 4. Churn Forensics & Lost-Customer Analysis
+
+- **Net Revenue Retention ($NRR$):** Threshold **< 85%** B2B Enterprise / **< 95%** Mid-Market → churn exceeds CAC payback period.
+- **Operational Churn Ratio ($\text{OpChurn\%}$):** Lost ARR due to delivery/SLA failures **> 30%** → systemic operational defect.
+- **Customer Concentration Risk Index:** Single client **> 25%** revenue or Top 3 **> 50%** → extreme concentration risk requiring Ship-or-Pay contracts.
+
+#### 5. Retrenchment & Cost-Cutting Filter (ZBB & Asset Liquidation)
+
+- **Zombie Project Cash Drain Ratio:** Unprofitable R&D/projects burning **> 20%** free cash → immediate project freeze.
+- **Dead Stock Working Capital Ratio:** Inventory with no movement $>90$ days **> 25%** → deep discount liquidation to release working capital.
+- **Non-Core Overhead Burden Ratio:** Non-essential G&A **> 35%** of OPEX → Zero-Based Budgeting (ZBB) audit.
+
+#### 6. Advanced VC & PE Due Diligence Metrics
+
+- **Burn Multiple:** $\frac{\text{Net Cash Burn}}{\text{Net New ARR}}$. Threshold: **> 3.0x** → unsustainable cash burn.
+- **SaaS Magic Number:** $\frac{(\text{Quarterly Rev}_Q - \text{Quarterly Rev}_{Q-1}) \times 4}{\text{S\&M Spend}_{Q-1}}$. Threshold: **< 0.5** → immediate freeze on GTM hiring.
+- **Debt Service Coverage Ratio ($DSCR$):** $\frac{\text{EBITDA} - \text{CAPEX} - \text{Taxes}}{\text{Interest} + \text{Principal}}$. Threshold: **< 1.1x** → technical default risk.
+- **Maintenance CAPEX vs Depreciation:** $\frac{\text{Maintenance CAPEX}}{\text{D\&A}}$. Threshold: **< 0.5x** → deferred maintenance / fake short-term EBITDA.
+- **Bus Factor & Single-Source Supplier Exposure:** Key person single point of failure OR $>30\%$ supply dependency with $>3$ months switching lead time → critical risk.
+
+#### 7. Deep Forensic & Hydraulic Telemetry Valves (Из книги «Сантехника бытия»)
+
+- **WoT Sink-Faucet Macro-Balance:** При наличии внутренней квазивалюты (кредиты, баллы, токены) аудит обязан свести баланс генерации (Faucets) и обязательного утилизационного сжигания (Sinks). Запрещено масштабировать эмиссию без дефляционных затворов (Tier X Repair Drain).
+- **Stoll 75-Cent Anomaly Gate:** Расхождение между данными платежного шлюза, CRM и банковской выписки даже на $0.75 запрещено списывать на погрешность округления. Требуется 100% трассировка Root Cause.
+- **SCADA Watchdog & Dashboard Staleness:** Запрещено выносить аудиторское заключение по агрегированным BI-дашбордам без проверки свежести сырых логов (Heartbeat SLA <= 15 мин). Зависший дашборд приравнивается к слепоте диспетчеров блэкаута 2003 года.
+- **Sleipner A Non-Linear Stress Gate:** Стресс-тест чувствительности финансовой модели обязан рассчитываться в узловых точках максимального сдвигового напряжения (отвал ТОП-1 клиента + задержка дебиторки на 60 дней), а не по усредненным линейным выборкам NASTRAN.
+
+---
+
 ### 3. Review Policy
 
 Business-audit quality uses **three layers**:

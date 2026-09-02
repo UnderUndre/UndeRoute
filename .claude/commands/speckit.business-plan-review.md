@@ -52,19 +52,21 @@ Same table as `/speckit.review`: `claude` | `codex` | `antigravity` | `gemini` |
 - Perform targeted queries for market sizing, competitor pricing models, average CAC/churn in target ICP, and tax/payment traps.
 - Document ground truth links/facts to benchmark against plan claims.
 
-### 3. Audit Dimensions (Lenses A–I)
+### 3. Audit Dimensions (Lenses A–K)
 
-| ID    | Lens                   | Stress Probes & Mandatory Checks                                                                                                                                                                                            |
-| :---- | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A** | **Traction honesty**   | Fake "Production Ready"? Paper letters of intent treated as real ARR?                                                                                                                                                       |
-| **B** | **Unit econ stress**   | **Mandatory Pessimistic Recalculation**: Run scenario with **CAC ×2**, **Conversion −30%**, +15% payment gateway/refund/chargeback leakage, and full employer tax burden. Is margin positive? Where is the real Break-even? |
-| **C** | **Focus law**          | Dual-front distraction, lab leak, secondary brand engineering before primary revenue gate?                                                                                                                                  |
-| **D** | **Pricing / SKU**      | Price floors, killed SKUs still offered, unpaid custom discovery, race-to-the-bottom pricing?                                                                                                                               |
-| **E** | **GTM spine**          | Realistic ICP, concrete acquisition channels (not generic "SEO/Viral"), convert KPIs, kill-criteria?                                                                                                                        |
-| **F** | **Legal rails**        | Corporate entity, sales tax/VAT, merchant of record, 5472/TOS traps on micro-revenue, GDPR/data processing liabilities?                                                                                                     |
-| **G** | **Brand isolation**    | Narrative bleed between sub-products, reputation contamination?                                                                                                                                                             |
-| **H** | **Operational valves** | ERP lock-in, unscalable manual ops, inventory/catalog limits, client stall SLA?                                                                                                                                             |
-| **I** | **Market claims**      | Claims factchecked against live web search. Did author ignore entrenched competitors? Hallucinated TAM?                                                                                                                     |
+| ID    | Lens                    | Stress Probes & Mandatory Checks                                                                                                                                                                                            |
+| :---- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | **Traction honesty**    | Fake "Production Ready"? Paper letters of intent treated as real ARR? Has validation passed The Mom Test (past behavior proof vs hypothetical promises)?                                                                    |
+| **B** | **Unit econ stress**    | **Mandatory Pessimistic Recalculation**: Run scenario with **CAC ×2**, **Conversion −30%**, +15% payment gateway/refund/chargeback leakage, and full employer tax burden. Is margin positive? Where is the real Break-even? |
+| **C** | **Focus law**           | Dual-front distraction, lab leak, secondary brand engineering before primary revenue gate?                                                                                                                                  |
+| **D** | **Pricing / SKU**       | Price floors, killed SKUs still offered, unpaid custom discovery, race-to-the-bottom pricing?                                                                                                                               |
+| **E** | **GTM spine**           | Realistic ICP, concrete acquisition channels (not generic "SEO/Viral"), convert KPIs, kill-criteria?                                                                                                                        |
+| **F** | **Legal rails**         | Corporate entity, sales tax/VAT, merchant of record, 5472/TOS traps on micro-revenue, GDPR/data processing liabilities?                                                                                                     |
+| **G** | **Brand isolation**     | Narrative bleed between sub-products, reputation contamination?                                                                                                                                                             |
+| **H** | **Operational valves**  | ERP lock-in, unscalable manual ops, inventory/catalog limits, client stall SLA?                                                                                                                                             |
+| **I** | **Market claims**       | Claims factchecked against live web search. Did author ignore entrenched competitors? Hallucinated TAM?                                                                                                                     |
+| **J** | **Enterprise XY-Valve** | Solo-founder attempting enterprise B2B (SOC 2, SAML/SCIM, 24/7 SLA, 12-mo sales cycle) without applying 1 of 4 Redirect Strategies (Wedge PLG, Productized Service, Marketplace Plugin, Fast-Track)?                        |
+| **K** | **7 Powers Moat**       | Does the business model prove at least 1 durable moat (Switching Costs, Counter-Positioning, Process Power, Scale Economies) protecting against big tech / API wrapper copycats?                                            |
 
 ### 4. Severity Rules
 

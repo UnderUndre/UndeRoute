@@ -161,12 +161,16 @@ Before marking done, verify and encode:
 | **Grand Slam Offer Integrity**        | Offers must decompose via Hormozi Value Equation (Time-to-Value <= 72h, Done-For-You packaging, risk reversal guarantee).                                                   |
 | **Beachhead Whole Product Gate**      | Banned expanding to new niches until >= 3 paid contracts closed in a single narrow beachhead market with a complete Whole Product.                                          |
 | **Prepayment Validation Gate**        | Banned building custom infrastructure before proving willingness-to-pay via paid deposit or prepay smoke test.                                                              |
+| **Chesterton MVP Scope Gate**         | Banned removing traditional process safety/verification/legal steps from MVP without proof of redundancy (avoids product pellagra).                                         |
+| **Vasa Scope-Creep Interlock**        | Banned adding a 2nd deck of features/SKUs to in-flight Phase A before basic hull passes acceptance tests (preserves metacentric height).                                    |
+| **Balatro EV Scaling**                | Must pair additive (+Mult) ad channels with multiplicative (xMult) viral/expansion loops before Phase B scaling.                                                            |
+| **Substrate Sovereignty**             | Core value asset (user data, billing, proprietary algorithm) MUST be isolated from single-platform ToS 24h shutdown risks.                                                  |
 
 If a claim fails stress → fix plan text, don’t ship vibes.
 
 ### 2a. Canonical Business Mental Models & Strategic Frameworks
 
-Every generated or updated business plan MUST pass through these 9 core mental models:
+Every generated or updated business plan MUST pass through these 13 core mental models:
 
 1. **Lean Canvas & One-Page Business Model:**
    - Eliminate 50-page corporate fluff. Map Problem, Segment, Solution, UVP, Channels, Revenue, Costs onto a single 1-page framework.
@@ -199,6 +203,57 @@ Every generated or updated business plan MUST pass through these 9 core mental m
 9. **Wartime Execution & Hard Kill Criteria (Ben Horowitz & Eric Ries):**
    - **Wartime Execution Mode:** Pre-revenue status triggers an immediate lockdown on non-revenue engineering.
    - **Hard Kill Criteria:** Numeric metrics (spend limit, contact capacity, calendar timeframe, min closed deals) that automatically trigger a freeze, pivot, or shutdown ("Red Button").
+
+10. **Забор Честертона & Никстамализация (MVP Scope Safety):**
+    - Запрещено выбрасывать из MVP базовые этапы традиционного процесса (верификация, ручной бэкап, прогрев, юридический контур), пока не доказана их функциональная избыточность. Срезание критического узла ведет к системной пеллагре продукта.
+
+11. **Галеон Vasa Scope-Creep Interlock (1628):**
+    - Запрещено доврезать второй ярус фич/SKU в разрабатываемый продукт до прохождения приемо-сдаточных испытаний базового корпуса. Любая смена спецификации на ходу опрокидывает метацентрическую высоту проекта.
+
+12. **Математика Balatro (GTM Scaling Engine):**
+    - Модель привлечения обязана комбинировать базовые аддитивные каналы (+Mult: платный трафик/холодный аутрич) с мультипликативными множителями (xMult: виральный K-фактор, Expansion Revenue, интеграции), иначе рост CAC обнулит маржу к 3-му спринту.
+
+13. **McDonald's Real Estate Substrate Rule:**
+    - Бизнес-план обязан изолировать якорный суверенный актив (прямая база контактов, собственный биллинг, закрытый алгоритм) от платформенных надстроек (API OpenAI, боты TG, плагины Shopify), исключая риск внезапного перекрытия вентиля владельцем платформы.
+
+### 2d. Greenfield Discovery Questionnaire & Enterprise Solo-Founder Redirect (questions-for-businesses synthesis)
+
+When building or updating a Greenfield business plan (0-to-1 stage), the plan MUST incorporate the **5-Category Greenfield Discovery Framework** and enforce the **Solo-Founder Enterprise Redirect (XY-Valve)**:
+
+#### 1. Greenfield Discovery Questionnaire Framework (Zero-to-One)
+
+- **Category 1: Past Behavior & Acute Pain (The Mom Test Standard)**
+  - _Recency Check:_ Validate that the target user experienced the problem within the last 30–60 days. Reject hypothetical answers ("We usually...").
+  - _Sunk Cost & Friction Check:_ Quantify past time, money, and custom workarounds spent trying to fix the pain. Zero spent = zero urgency = reject feature.
+  - _Switching Triggers:_ Identify what frustrates the user in their status quo and what switching costs exist (legacy lock-in, inertia).
+- **Category 2: Budget & Economic Buyer Identification**
+  - _Budget Source & Signing Authority:_ Identify who holds the budget (Economic Buyer) and which budget line item (OPEX/CAPEX) funds the purchase.
+  - _Procurement & Security Audit Length:_ Map the approval cycle (Security Review, Procurement, Legal). If sales cycle > 6 months for a <$1k/mo ticket, reject sales channel.
+  - _Personal Stake:_ Identify the user's personal career KPI / bonus impacted by this pain.
+- **Category 3: Smoke Test & Skin-in-the-Game Validation**
+  - _Prepayment / LOI Gate:_ Validate demand via 50% prepay deposit or non-refundable LOI before writing custom code.
+  - _Resource Commitment:_ Demand client commitment of raw data and engineering team hours for onboarding.
+  - _Concierge / Wizard of Oz MVP:_ Verify if client buys the outcome via manual/semi-automated backend rather than requiring shiny UI.
+- **Category 4: Unit Economics Feasibility (CAC, LTV, Gross Margin Floor)**
+  - _CAC Discovery Channel:_ Identify exact channels where clients actively search for solutions.
+  - _Value-Based Pricing:_ Quantify monthly net savings/revenue created by the solution to set price ceiling.
+  - _COGS & Gross Margin Floor:_ Ensure margin remains >80% after accounting for onboarding, support, and infrastructure costs.
+- **Category 5: Scoping the MVP (Core Value Loop)**
+  - _80/20 Core Value Loop:_ Isolate the single step generating 80% of pain; defer all non-essential features (multi-role RBAC, dashboards, complex exports) to Phase 2.
+  - _Off-the-Shelf vs Custom Build:_ Banned building custom engines if off-the-shelf tools (n8n, Supabase, Airtable, FOSS stack) can deliver the outcome.
+
+#### 2. Solo-Founder Enterprise Trap & The 4 Redirect Strategies (XY-Valve)
+
+If a solo developer proposes building an Enterprise B2B platform from scratch (targeting Fortune 500 / Banks / Retailers with complex SAML/SCIM, SOC 2 Type II, 9-18 mo sales cycles, and 24/7 SLAs):
+
+- **Diagnose the Trap:** Solo founders will collapse under compliance, 200+ question security questionnaires, legal redlining, and SLA penalties.
+- **Enforce One of 4 Redirect Strategies:**
+  1. **Wedge / Bottom-Up PLG Strategy:** Build a micro-utility ($20–$100/mo) for single team leads payable via corporate credit card without IT procurement.
+  2. **Productized Service (Concierge MVP):** Package the outcome as a fixed-scope Done-For-You service ($3.5k–$5k/sprint) delivered via ready scripts and workflows.
+  3. **Ecosystem / Marketplace Plugin Strategy:** Build a plugin inside trusted ecosystems (Salesforce AppExchange, Atlassian Marketplace, Shopify Plus) where auth, billing, and SOC 2 compliance are inherited from the host platform.
+  4. **Enterprise Fast-Track Stack:** Require integration of off-the-shelf auth/compliance building blocks (WorkOS, Clerk, BoxyHQ, Logto) instead of custom code.
+
+---
 
 ### 2b. Forensic Architecture & Legal Guardrails
 
