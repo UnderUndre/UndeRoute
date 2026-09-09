@@ -11,6 +11,9 @@ handoffs:
   - label: Full Spec Combo
     agent: speckit.full-spec
     prompt: Specify + clarify the next feature under the current business plan
+  - label: Forensic Web Research
+    agent: internet-research
+    prompt: Run forensic OSINT web research to ground the business plan in empirical market data, competitors, and unit economics
 ---
 
 ## User Input
@@ -83,6 +86,7 @@ Classic 50-page business plans with 5-year financial projections are **strictly 
 - Invent fake traction, 5-year fantasy forecasts, or “Production Ready” at 0 revenue
 - Hardcode specific third-party vendor or SaaS brand names (keep as abstract operational patterns: off-the-shelf landing engine, payment gateway/MoR, messaging channel, CRM)
 - Mix crypto/polity narrative into sterile B2B agency plans (brand isolation)
+- Invent unverified market sizes, competitors, or unit economics benchmarks without grounding via `/internet-research` Dorking vectors and Level 1/2 data (regulatory registries, audited filings, peer-reviewed benchmarks). Never rely on Level 3 marketing PR.
 
 ## Detection Logic
 

@@ -1,5 +1,9 @@
 ---
 description: Independent external adversarial audit of docs/*business-plan*.md with mandatory live web-search ground truth. Writes docs/reviews/business-plan-<provider>.md. Recommended on CREATE and major bumps — NOT a Principle VI implement gate by itself.
+handoffs:
+  - label: Forensic Web Research
+    agent: internet-research
+    prompt: Run forensic OSINT web research to verify market claims, competitors, and unit economics benchmarks
 ---
 
 ## User Input
@@ -27,12 +31,17 @@ Identify unverified assumptions, hidden burn, unit-economics leaks, and regulato
 
 1. **READ-ONLY** on plan content. Do not edit `docs/business-plan.md` directly. Provide actionable patches for `/speckit.business-plan --update`.
 2. **NO FLATTERY / RADICAL HONESTY**: Zero polite fluff. Reject ungrounded optimism.
-3. **MANDATORY LIVE WEB SEARCH (Ground Truth)**:
-   You are FORBIDDEN from relying solely on static training memory for market dynamics, competition, and benchmarks. You MUST query the web for:
-   - **Real Competitors**: Direct/indirect players currently active in the niche/region, pricing, and live offerings.
-   - **TAM / SAM / SOM & Trends**: Up-to-date reports and niche dynamics.
-   - **Unit Econ Benchmarks**: Current realistic CAC, conversion rates, CPM/CPC, payment gateway fees, SaaS churn rates.
-   - **Legal / Tax / Compliance**: Local tax rates, mandatory filings, payment processing restrictions.
+3. **MANDATORY LIVE WEB SEARCH & FORENSIC RESEARCH (Ground Truth)**:
+   Integrate the `/internet-research` OSINT & Forensic Framework (`docs/Эталонный OSINT Промпт-Шаблон.md`):
+   - Enforce the **Data Sanitization Pyramid**: Level 1 (Raw court/SEC/Git data) > Level 2 (Specs/Whitepapers) > Level 3 (Unreliable media noise).
+   - Use the **Subtractive Dorking Engine** (`site:`, `filetype:pdf/csv/json/log`, `-promo`, `-marketing`).
+   - You are FORBIDDEN from relying solely on static training memory for market dynamics, competition, and benchmarks. You MUST query the web for:
+     - **Real Competitors**: Direct/indirect players currently active in the niche/region, pricing, and live offerings.
+     - **TAM / SAM / SOM & Trends**: Up-to-date reports and niche dynamics.
+     - **Unit Econ Benchmarks**: Current realistic CAC, conversion rates, CPM/CPC, payment gateway fees, SaaS churn rates.
+     - **Legal / Tax / Compliance**: Local tax rates, mandatory filings, payment processing restrictions.
+   - **Bayesian Base Rate Calibration**: Calibrate growth and market claims against empirical industry base rates ($P(A)$).
+   - **Scam & Bubble Detection**: Check for FOMO urgency, non-falsifiability, and asymmetric yield claims.
      _(Fallback: If Web Search tool is unavailable, explicitly tag every unverified claim as `[UNVERIFIED_ASSUMPTION]` and elevate severity to at least HIGH)._
 
 ## Provider tag
@@ -47,10 +56,12 @@ Same table as `/speckit.review`: `claude` | `codex` | `antigravity` | `gemini` |
 - Read related `specs/**/spec.md` only for drift context.
 - Read Constitution Principle VII-B.
 
-### 2. Live Web Search & Ground Truth Probe
+### 2. Live Web Search & Ground Truth Probe (via `/internet-research` Engine)
 
-- Perform targeted queries for market sizing, competitor pricing models, average CAC/churn in target ICP, and tax/payment traps.
-- Document ground truth links/facts to benchmark against plan claims.
+- Execute targeted queries using the `/internet-research` Dorking vectors (Registries, raw test results, post-mortems).
+- Benchmark claims against Level 1 / Level 2 evidence: market sizing, competitor pricing models, average CAC/churn in target ICP, and tax/payment traps.
+- Document ground truth links/facts with deterministic identifiers (DOI / URL / Case Number) to benchmark against plan claims.
+- Flag any ungrounded claim or Level 3 media quote as `[UNRELIABLE: LEVEL 3]` or `[UNVERIFIED_ASSUMPTION]`.
 
 ### 3. Audit Dimensions (Lenses A–K)
 

@@ -1,5 +1,9 @@
 ---
 description: Independent external adversarial audit of docs/*business-audit*.md with mandatory live web-search ground truth. Writes docs/reviews/business-audit-<provider>.md. Recommended on CREATE and major turnaround pivots.
+handoffs:
+  - label: Forensic Web Research
+    agent: internet-research
+    prompt: Run forensic OSINT web research to verify suspect audit claims and market ground truth
 ---
 
 ## User Input
@@ -27,12 +31,17 @@ Identify unverified financial optimism, paper profits, hidden cash leaks, unaddr
 
 1. **READ-ONLY** on audit content. Do not edit `docs/business-audit.md` directly. Provide actionable patches for `/speckit.business-audit --update`.
 2. **NO FLATTERY / RADICAL HONESTY**: Zero polite fluff. Reject management optimism.
-3. **MANDATORY LIVE WEB SEARCH (Ground Truth)**:
-   You are FORBIDDEN from relying solely on static training memory for market dynamics, interest rates, industry DSO/DIO benchmarks, and competitor pricing. You MUST query the web for:
-   - **Industry Cash Cycle Benchmarks**: DSO, DIO, DPO norms for target industry.
-   - **Supplier & Debt Realities**: Current interest rates, refinancing norms, debt covenants.
-   - **Market Alternatives**: Solutions churned clients are switching to.
-   - **Legal / Regulatory Limits**: Local bankruptcy triggers, labor severance laws, tax audit penalties.
+3. **MANDATORY LIVE WEB SEARCH & FORENSIC RESEARCH (Ground Truth)**:
+   Integrate the `/internet-research` OSINT & Forensic Framework (`docs/Эталонный OSINT Промпт-Шаблон.md`):
+   - Enforce the **Data Sanitization Pyramid**: Level 1 (Raw court/SEC/Git data) > Level 2 (Specs/Whitepapers) > Level 3 (Unreliable media noise).
+   - Use the **Subtractive Dorking Engine** (`site:`, `filetype:pdf/csv/json/log`, `-promo`, `-marketing`).
+   - You are FORBIDDEN from relying solely on static training memory for market dynamics, interest rates, industry DSO/DIO benchmarks, and competitor pricing. You MUST query the web for:
+     - **Industry Cash Cycle Benchmarks**: DSO, DIO, DPO norms for target industry.
+     - **Supplier & Debt Realities**: Current interest rates, refinancing norms, debt covenants.
+     - **Market Alternatives**: Solutions churned clients are switching to.
+     - **Legal / Regulatory Limits**: Local bankruptcy triggers, labor severance laws, tax audit penalties.
+   - **Bayesian Base Rate Calibration**: Calibrate turnaround and recovery claims against empirical industry default/turnaround base rates ($P(A)$).
+   - **Scam & Bubble Detection**: Check for FOMO urgency, non-falsifiability, and asymmetric yield claims.
      _(Fallback: If Web Search tool is unavailable, explicitly tag every unverified claim as `[UNVERIFIED_ASSUMPTION]` and elevate severity to at least HIGH)._
 
 ## Provider tag
@@ -47,10 +56,12 @@ Same table as `/speckit.review`: `claude` | `codex` | `antigravity` | `gemini` |
 - Read related `specs/**/spec.md` and `docs/*business-plan*` only for context.
 - Read Constitution Principle VII-B.
 
-### 2. Live Web Search & Ground Truth Probe
+### 2. Live Web Search & Ground Truth Probe (via `/internet-research` Engine)
 
-- Perform targeted queries for industry DSO/DIO benchmarks, current debt refinancing rates, and lost-customer alternative tools.
-- Document ground truth links/facts to benchmark against audit claims.
+- Execute targeted queries using the `/internet-research` Dorking vectors (Registries, raw test results, post-mortems).
+- Benchmark claims against Level 1 / Level 2 evidence: industry DSO/DIO norms, current refinancing rates, and lost-customer alternative tools.
+- Document ground truth links/facts with deterministic identifiers (DOI / URL / Case Number) to benchmark against audit claims.
+- Flag any ungrounded claim or Level 3 media quote as `[UNRELIABLE: LEVEL 3]` or `[UNVERIFIED_ASSUMPTION]`.
 
 ### 3. Audit Dimensions (Lenses A–K)
 

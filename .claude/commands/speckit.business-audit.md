@@ -11,6 +11,9 @@ handoffs:
   - label: Audit & Turnaround Review
     agent: speckit.business-audit-review
     prompt: Run an independent forensic review of the business audit and turnaround plan
+  - label: Forensic Web Research
+    agent: internet-research
+    prompt: Run forensic OSINT web research to benchmark turnaround metrics and verify vendor/market ground truth
 ---
 
 ## User Input
@@ -92,6 +95,7 @@ In an operating business, **value destruction must be stopped before value creat
 - Recommend generic corporate restructurings without quantified unit-margin impact
 - Hardcode specific proprietary SaaS vendor names (use architectural patterns: cloud billing, unified CRM, pipeline orchestrator)
 - Ignore customer churn data in favor of internal executive opinions
+- Base industry benchmarks (DSO, DIO, supplier pricing, market alternatives) on unverified memory — MUST ground via `/internet-research` Dorking vectors and Level 1/2 evidence (SEC filings, bankruptcy court records, verified post-mortems). Never rely on Level 3 marketing PR.
 
 ## Detection Logic
 
