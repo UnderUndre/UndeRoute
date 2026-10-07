@@ -83,6 +83,8 @@ description: "Task list template for feature implementation with agent routing a
 **Purpose**: Project initialization, basic structure, shared dependency installs
 
 - [ ] T001 [SETUP] Create project structure per implementation plan
+- [ ] T00X [OPS] Run dependency vulnerability scan and license compliance audit (npm audit / license-checker)
+- [ ] T00Y [SETUP] Spike disposal: Remove temporary prototype fixtures, spike branches, and exploratory scripts
 - [ ] T002 [SETUP] Initialize project with all shared dependencies
 - [ ] T003 [OPS] Configure linting and formatting tools
 
@@ -96,7 +98,9 @@ description: "Task list template for feature implementation with agent routing a
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 [DB] Setup database schema and migrations framework
+- [ ] T004 [DB] [Expand] Setup database schema, additive migrations, and migration framework
+- [ ] T00X [SEC] Conduct STRIDE threat analysis and implement core security boundaries (conditional)
+- [ ] T00Y [BE] Implement structured logging, request correlation IDs, and /health probes
 - [ ] T005 [BE] Implement authentication/authorization framework
 - [ ] T006 [BE] Setup API routing and middleware structure
 - [ ] T007 [DB] Create base models/entities that all stories depend on
@@ -167,7 +171,9 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [BE] Code cleanup and refactoring
 - [ ] TXXX [FE] Performance optimization across all stories
 - [ ] TXXX [E2E] Additional E2E tests in tests/e2e/
-- [ ] TXXX [SEC] Security hardening and audit
+- [ ] TXXX [DB] [Contract] Drop legacy deprecated columns/tables and remove dual-write adapters (Expand/Contract Phase 4)
+- [ ] TXXX [OPS] Test and verify rollback down-migration and killswitch procedure in test environment
+- [ ] TXXX [SEC] Conduct final supply chain and transitive dependency review (SBOM & license verification)
 - [ ] TXXX [OPS] Run quickstart.md validation
 
 ---

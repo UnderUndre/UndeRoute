@@ -43,11 +43,13 @@ ultrathink
    - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
    - **Micro-Decomposition ("Правило одного фитинга")**: Break all work into small, self-contained subtasks sized **15–30 minutes of work (<500 LOC per task)**. Never output giant "implement auth" monolithic tasks.
    - **Strict Layer-by-Layer Sequence**: For each user story, generate tasks strictly in this sequence:
-     1. `[DB]` Schema & Migration
-     2. `[BE]` Service layer & typed contract interfaces
+     1. `[DB]` [Expand] Schema & Additive Migration (nullable columns / new tables / backward-compatible contracts)
+     2. `[BE]` [Dual-Write] Service layer & typed contract interfaces (with Zod/Pydantic validation)
      3. `[BE]` Endpoint & schema validation (Zod/Pydantic)
      4. `[FE]` UI integration & components
      5. `[BE]`/`[FE]` Unit & integration tests
+     6. `[DB]` [Contract] Deprecation & cleanup migration (in Polish phase)
+     7. `[OPS]` Telemetry, observability, and rollback down-migration verification (in Polish phase)
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
    - If research.md exists: Extract decisions for setup tasks
@@ -60,7 +62,7 @@ ultrathink
 
 4. **Generate tasks.md**: Use `.specify/templates/tasks-template.md` as structure, fill with:
    - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization, shared dependency installs)
+   - Phase 1: Setup tasks (project initialization, dependency vulnerability & license audit, spike disposal, shared installs)
    - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
    - Phase 3+: One phase per user story (in priority order from spec.md)
    - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks

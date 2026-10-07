@@ -152,17 +152,26 @@ Read-only check against loaded business plan(s). **Skip** only if `business-plan
 
 Flag when `spec.md` / `plan.md` / `tasks.md`:
 
-| Drift | Typical severity |
-| :--- | :--- |
-| Implements or tasks a **SKU / price / offer** that contradicts plan floors or killed SKUs | **CRITICAL** |
-| Builds work **forbidden by focus/hard law** (e.g. secondary brand eng while frozen; Lab while gated; dual-front) | **CRITICAL** |
-| Opens **paid cold CAC / ads** tasks while plan says $0 cold until gate | **HIGH** |
-| Ignores **brand isolation** (crypto/polity copy in sterile B2B surface, or reverse) | **HIGH** |
-| Adds monetization surface with **no** plan update path and plan file missing | **HIGH** |
-| GTM/sales artifacts required by plan (sample pack, SOW knives) never appear in tasks though feature is the hero offer | **MEDIUM** |
-| Terminology: plan hero name vs spec product name drift without alias | **MEDIUM** |
+| Drift                                                                                                                 | Typical severity |
+| :-------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| Implements or tasks a **SKU / price / offer** that contradicts plan floors or killed SKUs                             | **CRITICAL**     |
+| Builds work **forbidden by focus/hard law** (e.g. secondary brand eng while frozen; Lab while gated; dual-front)      | **CRITICAL**     |
+| Opens **paid cold CAC / ads** tasks while plan says $0 cold until gate                                                | **HIGH**         |
+| Ignores **brand isolation** (crypto/polity copy in sterile B2B surface, or reverse)                                   | **HIGH**         |
+| Adds monetization surface with **no** plan update path and plan file missing                                          | **HIGH**         |
+| GTM/sales artifacts required by plan (sample pack, SOW knives) never appear in tasks though feature is the hero offer | **MEDIUM**       |
+| Terminology: plan hero name vs spec product name drift without alias                                                  | **MEDIUM**       |
 
 Do **not** re-litigate full unit-econ tables here — that is `/speckit.business-plan` Stress Pass + optional external biz review. Here only **consistency / drift**.
+
+#### I. Supply Chain & Dependency Licensing Validation
+
+- Scan `plan.md` and `research.md` for newly introduced external libraries and dependencies
+- Flag viral copyleft licenses (AGPL-3.0, GPL without open-source intent) as **CRITICAL**
+- Flag missing lockfile validation or unpinned floating dependency ranges as **HIGH**
+- Flag dependencies with known critical CVEs or deprecated status as **HIGH**
+- Verify that features modifying database schemas explicitly define 4-phase Expand/Contract migrations (flag non-backward-compatible DDL as **CRITICAL**)
+- Verify that features modifying auth, network endpoints, or sensitive data include STRIDE threat mitigations (flag missing STRIDE as **HIGH**)
 
 ### 5. Severity Assignment
 
@@ -177,12 +186,12 @@ Use this heuristic to prioritize findings:
 
 Map findings to a single gate verdict using this heuristic:
 
-| Verdict | Condition |
-|---|---|
-| **PASS** | Zero CRITICAL findings AND zero HIGH findings |
-| **MEDIUM** | At least one HIGH finding but no CRITICAL — proceed only with explicit user acceptance |
-| **HIGH** | Multiple HIGH findings — implement should not proceed without rework |
-| **CRITICAL** | Any CRITICAL finding — implement is blocked |
+| Verdict      | Condition                                                                              |
+| ------------ | -------------------------------------------------------------------------------------- |
+| **PASS**     | Zero CRITICAL findings AND zero HIGH findings                                          |
+| **MEDIUM**   | At least one HIGH finding but no CRITICAL — proceed only with explicit user acceptance |
+| **HIGH**     | Multiple HIGH findings — implement should not proceed without rework                   |
+| **CRITICAL** | Any CRITICAL finding — implement is blocked                                            |
 
 If `--override` was passed in `$ARGUMENTS`, verdict is `OVERRIDDEN: <reason>` regardless of detection results.
 
@@ -192,7 +201,7 @@ Compute `FEATURE_DIR` from prerequisites step. Ensure `FEATURE_DIR/reviews/` exi
 
 Report structure:
 
-```markdown
+````markdown
 # SpecKit Analyze: <feature-slug>
 
 **Reviewer**: analyze (Claude self-consistency)
@@ -202,16 +211,16 @@ Report structure:
 
 ## Findings
 
-| ID | Category | Severity | Location(s) | Summary | Recommendation |
-|----|----------|----------|-------------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements … | Merge phrasing; keep clearer version |
+| ID  | Category    | Severity | Location(s)      | Summary                    | Recommendation                       |
+| --- | ----------- | -------- | ---------------- | -------------------------- | ------------------------------------ |
+| A1  | Duplication | HIGH     | spec.md:L120-134 | Two similar requirements … | Merge phrasing; keep clearer version |
 
 (Add one row per finding; generate stable IDs prefixed by category initial. Limit 50 rows; aggregate remainder in overflow note.)
 
 ## Coverage Summary
 
 | Requirement Key | Has Task? | Task IDs | Notes |
-|-----------------|-----------|----------|-------|
+| --------------- | --------- | -------- | ----- |
 
 ## Constitution Alignment Issues
 
@@ -253,6 +262,8 @@ high_count: <N>
 medium_count: <N>
 low_count: <N>
 ```
+````
+
 ```
 
 ### 8. Provide Next Actions
@@ -290,3 +301,4 @@ Ask the user: "Would you like me to suggest concrete remediation edits for the t
 ## Context
 
 $ARGUMENTS
+```

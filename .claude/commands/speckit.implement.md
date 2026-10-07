@@ -259,6 +259,8 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
     ```
 
 13. **Completion validation**:
+    - **Spike Disposal & Dead Code Cleanup**: Confirm all temporary throwaway spike prototypes, exploratory scripts, and experimental code branches from research.md have been formally decommissioned or deleted, and not leaked into the production codebase.
+    - **Supply Chain Security**: Verify dependency vulnerability audit (`npm audit` / `cargo audit`) passes with 0 high/critical issues.
     - Verify all required tasks are completed (`[X]`)
     - Check that implemented features match the original specification
     - Validate that tests pass and coverage meets requirements

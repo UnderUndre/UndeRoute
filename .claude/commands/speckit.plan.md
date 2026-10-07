@@ -1,6 +1,6 @@
 ---
 description: Execute the implementation planning workflow using the plan template to generate design artifacts.
-handoffs: 
+handoffs:
   - label: Create Tasks
     agent: speckit.tasks
     prompt: Break the plan into tasks
@@ -27,8 +27,8 @@ ultrathink
 1. **Setup**: Run `.specify/scripts/powershell/setup-plan.ps1 -Json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).  
-   **Also load** any `docs/**/*business-plan*.md` / `docs/business-plan.md`. Treat active focus laws, price floors, Phase A sole SKU, legal gates, and brand isolation as **hard commercial constraints**. If the feature plan would violate them, STOP and either:  
-   - narrow technical scope to fit the business plan, or  
+   **Also load** any `docs/**/*business-plan*.md` / `docs/business-plan.md`. Treat active focus laws, price floors, Phase A sole SKU, legal gates, and brand isolation as **hard commercial constraints**. If the feature plan would violate them, STOP and either:
+   - narrow technical scope to fit the business plan, or
    - require `/speckit.business-plan --update` + explicit user approval before continuing.
 
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
@@ -64,6 +64,7 @@ ultrathink
    - Decision: [what was chosen]
    - Rationale: [why chosen]
    - Alternatives considered: [what else evaluated]
+   - Spike Disposal Path: [throwaway criteria ensuring no prototype code leaks into production]
 
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
@@ -78,6 +79,9 @@ ultrathink
 
 2. **Define interface contracts** (if project has external interfaces) → `/contracts/`:
    - Identify what interfaces the project exposes to users or other systems
+   - STRIDE Threat Model: If feature adds/modifies network endpoints, auth/tokens, cryptography, or handles sensitive data (PII, payments), document the STRIDE matrix in plan.md (or mark N/A for UI-only)
+   - Database Migration Strategy: If feature modifies existing database schemas, define the 4-phase Expand/Contract strategy in plan.md
+   - Observability & Rollback Plan: Document structured logging, telemetry metrics, and rollback down-migration procedures
    - Document the contract format appropriate for the project type
    - Examples: public APIs for libraries, command schemas for CLI tools, endpoints for web services, grammars for parsers, UI contracts for applications
    - Skip if project is purely internal (build scripts, one-off tools, etc.)
