@@ -45,13 +45,13 @@
   "author": "UnderUndre",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/UnderUndre/ai.git",
+    "url": "git+https://github.com/UnderUndre/UndeRoute.git",
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/UnderUndre/ai/issues"
+    "url": "https://github.com/UnderUndre/UndeRoute/issues"
   },
-  "homepage": "https://github.com/UnderUndre/ai/tree/main/packages/cli#readme",
+  "homepage": "https://github.com/UnderUndre/UndeRoute/tree/main/packages/cli#readme",
   "dependencies": {
     "giget": "^2.0.0",
     "c12": "^2.0.0",

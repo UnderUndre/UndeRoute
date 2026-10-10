@@ -19,16 +19,133 @@ export function defineHelpersConfig(config: HelpersConfig): HelpersConfig {
  */
 export async function loadManifest(
   sourceDir: string,
-  overridePath?: string,
+  overridePath?: string
 ): Promise<HelpersConfig> {
   const { config } = await loadConfig<HelpersConfig>({
     cwd: sourceDir,
     name: "helpers",
-    defaults: { version: 1, sources: [], targets: {} },
-    ...(overridePath ? { overrides: { configFile: overridePath } as unknown as HelpersConfig } : {}),
+    configFile: overridePath,
   });
 
-  const manifest = config as HelpersConfig;
+  let manifest = config as HelpersConfig;
+  if (!manifest || !manifest.sources || manifest.sources.length === 0) {
+    manifest = {
+      version: 1,
+      sources: [
+        ".claude/**/*",
+        "commands/**/*.md",
+        "agents/**/*.md",
+        "CLAUDE.md",
+        "AGENTS.md",
+        "settings.json",
+        ".specify/**/*",
+      ],
+      targets: {
+        claude: {
+          pipelines: [
+            {
+              transformer: "identity",
+              match: ".claude/**/*",
+              output: "{{relativePath}}",
+            },
+            {
+              transformer: "identity",
+              match: "commands/**/*.md",
+              output: ".claude/commands/{{name}}.md",
+            },
+            {
+              transformer: "identity",
+              match: "agents/**/*.md",
+              output: ".claude/agents/{{name}}.md",
+            },
+            {
+              transformer: "identity",
+              match: "settings.json",
+              output: ".claude/settings.json",
+            },
+            {
+              transformer: "identity",
+              match: "CLAUDE.md",
+              output: "CLAUDE.md",
+            },
+            {
+              transformer: "identity",
+              match: "AGENTS.md",
+              output: "AGENTS.md",
+            },
+          ],
+        },
+        copilot: {
+          pipelines: [
+            {
+              transformer: "claude-to-copilot-prompt",
+              match: ".claude/commands/**/*.md",
+              output: ".github/prompts/{{name}}.prompt.md",
+            },
+            {
+              transformer: "claude-to-copilot-prompt",
+              match: "commands/**/*.md",
+              output: ".github/prompts/{{name}}.prompt.md",
+            },
+            {
+              transformer: "claude-to-copilot-instructions",
+              match: ".claude/agents/**/*.md",
+              output: ".github/instructions/{{name}}.instructions.md",
+            },
+            {
+              transformer: "claude-to-copilot-instructions",
+              match: "agents/**/*.md",
+              output: ".github/instructions/{{name}}.instructions.md",
+            },
+            {
+              transformer: "claude-to-copilot-root-instructions",
+              match: "CLAUDE.md",
+              output: ".github/copilot-instructions.md",
+            },
+          ],
+        },
+        gemini: {
+          pipelines: [
+            {
+              transformer: "claude-to-gemini-command",
+              match: ".claude/commands/**/*.md",
+              output: ".gemini/commands/{{name}}.toml",
+            },
+            {
+              transformer: "claude-to-gemini-command",
+              match: "commands/**/*.md",
+              output: ".gemini/commands/{{name}}.toml",
+            },
+            {
+              transformer: "claude-to-gemini-agent",
+              match: ".claude/agents/**/*.md",
+              output: ".gemini/agents/{{name}}.md",
+            },
+            {
+              transformer: "claude-to-gemini-agent",
+              match: "agents/**/*.md",
+              output: ".gemini/agents/{{name}}.md",
+            },
+            {
+              transformer: "claude-to-gemini-root",
+              match: "CLAUDE.md",
+              output: "GEMINI.md",
+            },
+          ],
+        },
+        speckit: {
+          pipelines: [
+            {
+              transformer: "identity",
+              match: ".specify/**/*",
+              output: "{{relativePath}}",
+            },
+          ],
+        },
+      },
+    };
+  }
+
   validateManifest(manifest);
   return manifest;
 }
@@ -52,12 +169,10 @@ function validateManifest(manifest: HelpersConfig): void {
   for (const [targetName, target] of Object.entries(manifest.targets)) {
     for (const pipeline of target.pipelines) {
       // Validate match is subset of sources (simple check: at least one source pattern could match)
-      const matchesAny = manifest.sources.some((src) =>
-        patternsOverlap(src, pipeline.match),
-      );
+      const matchesAny = manifest.sources.some((src) => patternsOverlap(src, pipeline.match));
       if (!matchesAny) {
         throw new Error(
-          `Pipeline match "${pipeline.match}" in target "${targetName}" is not covered by any source pattern.`,
+          `Pipeline match "${pipeline.match}" in target "${targetName}" is not covered by any source pattern.`
         );
       }
 
@@ -67,7 +182,7 @@ function validateManifest(manifest: HelpersConfig): void {
       const invalidVars = stripped.match(/\{\{(\w+)\}\}/);
       if (invalidVars) {
         throw new Error(
-          `Invalid template variable "{{${invalidVars[1]}}}" in output "${pipeline.output}" of target "${targetName}".`,
+          `Invalid template variable "{{${invalidVars[1]}}}" in output "${pipeline.output}" of target "${targetName}".`
         );
       }
 

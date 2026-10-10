@@ -66,14 +66,14 @@ npx clai-helpers sync --upgrade
 helpers init [опции]
 ```
 
-| Флаг                     | Тип     | По умолчанию                | Описание                                       |
-| ------------------------ | ------- | --------------------------- | ---------------------------------------------- |
-| `--source <url>`         | string  | `github:underundre/helpers` | URL source-репозитория                         |
-| `--version <tag>`        | string  | последний тег               | Привязка к версии                              |
-| `--ref <ref>`            | string  | --                          | Ветка или SHA (перебивает `--version`)         |
-| `--targets <list>`       | string  | `claude,copilot,gemini`     | Таргеты через запятую                          |
-| `--source-config <path>` | string  | --                          | Локальный оверрайд манифеста                   |
-| `--trust-custom`         | boolean | `false`                     | Автоматически доверять кастомным трансформерам |
+| Флаг                     | Тип     | По умолчанию                    | Описание                                       |
+| ------------------------ | ------- | ------------------------------- | ---------------------------------------------- |
+| `--source <url>`         | string  | `github:UnderUndre/UndeRoute`   | URL source-репозитория                         |
+| `--version <tag>`        | string  | последний тег                   | Привязка к версии                              |
+| `--ref <ref>`            | string  | --                              | Ветка или SHA (перебивает `--version`)         |
+| `--targets <list>`       | string  | `claude,copilot,gemini,speckit` | Таргеты через запятую                          |
+| `--source-config <path>` | string  | --                              | Локальный оверрайд манифеста                   |
+| `--trust-custom`         | boolean | `false`                         | Автоматически доверять кастомным трансформерам |
 
 ### `helpers sync`
 
@@ -218,6 +218,7 @@ helpers recover <--resume | --rollback | --abandon>
 # Управляемая секция (обновляется при sync)
 
 <!-- HELPERS:CUSTOM START -->
+
 Ваш проектный контент.
 Этот блок сохраняется при каждом sync.
 <!-- HELPERS:CUSTOM END -->
@@ -259,12 +260,7 @@ import { defineHelpersConfig } from "clai-helpers";
 export default defineHelpersConfig({
   version: 1,
 
-  sources: [
-    "commands/**/*.md",
-    "agents/**/*.md",
-    "CLAUDE.md",
-    "settings.json",
-  ],
+  sources: ["commands/**/*.md", "agents/**/*.md", "CLAUDE.md", "settings.json"],
 
   targets: {
     claude: {
@@ -412,14 +408,16 @@ export default transform;
 ## Программный API
 
 ```ts
-import {
-  defineHelpersConfig,
-  FileKind, FileClass, FileStatus, ExitCode,
-} from "clai-helpers";
+import { defineHelpersConfig, FileKind, FileClass, FileStatus, ExitCode } from "clai-helpers";
 
 import type {
-  HelpersConfig, TargetConfig, TransformerPipeline,
-  TransformerFn, ParsedFile, RenderedFile, TransformContext,
+  HelpersConfig,
+  TargetConfig,
+  TransformerPipeline,
+  TransformerFn,
+  ParsedFile,
+  RenderedFile,
+  TransformContext,
 } from "clai-helpers";
 ```
 

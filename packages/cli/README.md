@@ -68,18 +68,18 @@ Bootstrap a new project from the source repo.
 helpers init [options]
 ```
 
-| Flag                     | Type    | Default                     | Description                           |
-| ------------------------ | ------- | --------------------------- | ------------------------------------- |
-| `--source <url>`         | string  | `github:underundre/helpers` | Source repo URL                       |
-| `--version <tag>`        | string  | latest tag                  | Pin to specific version tag           |
-| `--ref <ref>`            | string  | --                          | Branch or SHA (overrides `--version`) |
-| `--targets <list>`       | string  | `claude,copilot,gemini`     | Comma-separated target names          |
-| `--source-config <path>` | string  | --                          | Local manifest override               |
-| `--trust-custom`         | boolean | `false`                     | Pre-approve custom transformers       |
+| Flag                     | Type    | Default                         | Description                           |
+| ------------------------ | ------- | ------------------------------- | ------------------------------------- |
+| `--source <url>`         | string  | `github:UnderUndre/UndeRoute`   | Source repo URL                       |
+| `--version <tag>`        | string  | latest tag                      | Pin to specific version tag           |
+| `--ref <ref>`            | string  | --                              | Branch or SHA (overrides `--version`) |
+| `--targets <list>`       | string  | `claude,copilot,gemini,speckit` | Comma-separated target names          |
+| `--source-config <path>` | string  | --                              | Local manifest override               |
+| `--trust-custom`         | boolean | `false`                         | Pre-approve custom transformers       |
 
 ### `helpers regen`
 
-Regenerate downstream targets **in-place** from the local `helpers.config.ts`. No network fetch, no lockfile. Intended for **upstream template repos** that maintain generated outputs alongside sources (like UnderUndre/ai itself) and need to refresh them after editing the `.claude/` tree.
+Regenerate downstream targets **in-place** from the local `helpers.config.ts`. No network fetch, no lockfile. Intended for **upstream template repos** that maintain generated outputs alongside sources (like UnderUndre/UndeRoute itself) and need to refresh them after editing the `.claude/` tree.
 
 ```bash
 helpers regen                   # all targets
@@ -89,11 +89,11 @@ helpers regen --dry-run         # preview
 
 Refuses to run if no `helpers.config.ts` is found in cwd. Consumer projects should use `sync` (or `init` for first setup) instead.
 
-| Flag                     | Type    | Default | Description                                   |
-| ------------------------ | ------- | ------- | --------------------------------------------- |
-| `--targets <list>`       | string  | ALL     | Comma-separated target names                  |
-| `--source-config <path>` | string  | --      | Override `helpers.config.ts` location         |
-| `--trust-custom`         | boolean | false   | Pre-approve custom transformers               |
+| Flag                     | Type    | Default | Description                           |
+| ------------------------ | ------- | ------- | ------------------------------------- |
+| `--targets <list>`       | string  | ALL     | Comma-separated target names          |
+| `--source-config <path>` | string  | --      | Override `helpers.config.ts` location |
+| `--trust-custom`         | boolean | false   | Pre-approve custom transformers       |
 
 ### `helpers sync`
 
@@ -259,12 +259,12 @@ Discover all GitHub repos with clai-helpers installed and display their status.
 helpers fleet list [options]
 ```
 
-| Flag         | Type    | Default | Description                      |
-| ------------ | ------- | ------- | -------------------------------- |
-| `--filter`   | string  | --      | Glob pattern to filter repos     |
-| `--json`     | boolean | `false` | Output as JSON                   |
-| `--no-color` | boolean | `false` | Disable colored output           |
-| `--verbose`  | boolean | `false` | Extended logging                 |
+| Flag         | Type    | Default | Description                  |
+| ------------ | ------- | ------- | ---------------------------- |
+| `--filter`   | string  | --      | Glob pattern to filter repos |
+| `--json`     | boolean | `false` | Output as JSON               |
+| `--no-color` | boolean | `false` | Disable colored output       |
+| `--verbose`  | boolean | `false` | Extended logging             |
 
 Running `helpers fleet` without a subcommand delegates to `fleet list`.
 
@@ -276,25 +276,25 @@ Sync clai-helpers across selected GitHub repos. Three modes available:
 helpers fleet sync [options]
 ```
 
-| Flag             | Type    | Default | Description                                  |
-| ---------------- | ------- | ------- | -------------------------------------------- |
-| `--all`          | boolean | `false` | Sync all active repos                        |
-| `--repo <name>`  | string  | --      | Sync specific repo(s). Repeatable            |
-| `--filter <pat>` | string  | --      | Sync repos matching glob pattern             |
-| `--mode`         | string  | `pr`    | Sync mode: `pr`, `push`, or `patch`          |
+| Flag             | Type    | Default            | Description                         |
+| ---------------- | ------- | ------------------ | ----------------------------------- |
+| `--all`          | boolean | `false`            | Sync all active repos               |
+| `--repo <name>`  | string  | --                 | Sync specific repo(s). Repeatable   |
+| `--filter <pat>` | string  | --                 | Sync repos matching glob pattern    |
+| `--mode`         | string  | `pr`               | Sync mode: `pr`, `push`, or `patch` |
 | `--patch-output` | string  | `./.fleet-patches` | Output directory for patch files    |
-| `--yes`          | boolean | `false` | Auto-confirm (non-interactive)               |
-| `--dry-run`      | boolean | `false` | Preview without making changes               |
+| `--yes`          | boolean | `false`            | Auto-confirm (non-interactive)      |
+| `--dry-run`      | boolean | `false`            | Preview without making changes      |
 
 Selection flags (`--all`, `--repo`, `--filter`) are mutually exclusive. In interactive mode (TTY), a picker UI is shown when no selection flag is provided.
 
 #### Sync modes
 
-| Mode    | Description                                                        |
-| ------- | ------------------------------------------------------------------ |
-| `pr`    | Create a pull request per repo (default). Safe for protected branches. |
+| Mode    | Description                                                                          |
+| ------- | ------------------------------------------------------------------------------------ |
+| `pr`    | Create a pull request per repo (default). Safe for protected branches.               |
 | `push`  | Commit and push directly to the default branch. Requires `--yes` in non-interactive. |
-| `patch` | Generate `.patch` files to disk. No git operations. Useful for review. |
+| `patch` | Generate `.patch` files to disk. No git operations. Useful for review.               |
 
 #### Examples
 
@@ -330,13 +330,13 @@ helpers fleet remove-org <org>
 
 ### Common errors
 
-| Error                              | Likely cause                                       | Fix                                                                  |
-| ---------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------- |
-| `auth required: ...`               | No token in env or `gh auth`                       | `export GH_TOKEN=...` or `gh auth login`                            |
-| `github/rate-limited`              | >5000 API calls/h hit                              | Wait until reset (printed in error message)                         |
-| `git/push-rejected (branch protection)` | Branch protection requires reviewers          | Use `--mode pr` instead of `--mode push`                            |
-| `lockfile/malformed`               | A repo's `helpers-lock.json` is broken             | Open the repo, fix manually, re-run                                 |
-| `config/malformed`                 | Typo in `~/.config/clai-helpers/fleet.json`        | Error message names the field; fix and re-run                       |
+| Error                                   | Likely cause                                | Fix                                           |
+| --------------------------------------- | ------------------------------------------- | --------------------------------------------- |
+| `auth required: ...`                    | No token in env or `gh auth`                | `export GH_TOKEN=...` or `gh auth login`      |
+| `github/rate-limited`                   | >5000 API calls/h hit                       | Wait until reset (printed in error message)   |
+| `git/push-rejected (branch protection)` | Branch protection requires reviewers        | Use `--mode pr` instead of `--mode push`      |
+| `lockfile/malformed`                    | A repo's `helpers-lock.json` is broken      | Open the repo, fix manually, re-run           |
+| `config/malformed`                      | Typo in `~/.config/clai-helpers/fleet.json` | Error message names the field; fix and re-run |
 
 For deeper documentation, see [`specs/003-fleet-sync/quickstart.md`](../../specs/003-fleet-sync/quickstart.md).
 
@@ -379,6 +379,7 @@ Wrap your custom content with slot markers:
 # Some managed section (updated on sync)
 
 <!-- HELPERS:CUSTOM START -->
+
 Your project-specific content here.
 This block is preserved across every sync.
 <!-- HELPERS:CUSTOM END -->
@@ -411,13 +412,7 @@ import { defineHelpersConfig } from "clai-helpers";
 export default defineHelpersConfig({
   version: 1,
 
-  sources: [
-    "commands/**/*.md",
-    "agents/**/*.md",
-    "skills/**/*.md",
-    "CLAUDE.md",
-    "settings.json",
-  ],
+  sources: ["commands/**/*.md", "agents/**/*.md", "skills/**/*.md", "CLAUDE.md", "settings.json"],
 
   targets: {
     claude: {
@@ -487,12 +482,12 @@ export default defineHelpersConfig({
 
 ### Template variables
 
-| Variable           | Expands to                                                                 | Example                                                        |
-| ------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `{{name}}`         | Filename stem (no extension)                                               | `commit` from `.claude/commands/commit.md`                     |
-| `{{relativePath}}` | Full source path verbatim                                                  | `.claude/commands/commit.md`                                   |
-| `{{subpath}}`      | Source path minus the match's non-wildcard prefix (re-root a subtree)      | `commit.md` (match `.claude/commands/**/*`, source as above)   |
-| `{{ext}}`          | Original extension with dot                                                | `.md`                                                          |
+| Variable           | Expands to                                                            | Example                                                      |
+| ------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `{{name}}`         | Filename stem (no extension)                                          | `commit` from `.claude/commands/commit.md`                   |
+| `{{relativePath}}` | Full source path verbatim                                             | `.claude/commands/commit.md`                                 |
+| `{{subpath}}`      | Source path minus the match's non-wildcard prefix (re-root a subtree) | `commit.md` (match `.claude/commands/**/*`, source as above) |
+| `{{ext}}`          | Original extension with dot                                           | `.md`                                                        |
 
 Use `{{subpath}}` when you want to **move** a directory tree to a new root while preserving the relative structure underneath. E.g. `{ match: ".claude/agents/**/*", output: ".agent/agents/{{subpath}}" }` turns `.claude/agents/x/y.md` into `.agent/agents/x/y.md` — not `.agent/agents/.claude/agents/x/y.md` (which is what `{{relativePath}}` would produce).
 
@@ -536,7 +531,10 @@ A custom transformer is a `.ts` or `.js` file that exports a default function ma
 import type { TransformerFn, ParsedFile, RenderedFile, TransformContext } from "clai-helpers";
 import { FileKind } from "clai-helpers";
 
-const transform: TransformerFn = (source: ParsedFile, ctx: TransformContext): RenderedFile | null => {
+const transform: TransformerFn = (
+  source: ParsedFile,
+  ctx: TransformContext
+): RenderedFile | null => {
   // Skip files that don't apply
   if (source.extension !== ".md") return null;
 

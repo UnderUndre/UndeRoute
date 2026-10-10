@@ -206,7 +206,7 @@ describe("github-api", () => {
     it("returns tag_name from latest release", async () => {
       fetchMock.mockResolvedValueOnce(mockResponse({ tag_name: "v0.5.0", name: "Release 0.5.0" }));
 
-      const tag = await getLatestRelease("UnderUndre", "ai", AUTH, fetchMock);
+      const tag = await getLatestRelease("UnderUndre", "UndeRoute", AUTH, fetchMock);
       expect(tag).toBe("v0.5.0");
     });
   });

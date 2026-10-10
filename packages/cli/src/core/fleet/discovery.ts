@@ -22,11 +22,7 @@ const log = createConsola().withTag("fleet");
 
 // ── Concurrency pool ────────────────────────────────────────────────
 
-async function pool<T>(
-  items: T[],
-  fn: (item: T) => Promise<void>,
-  limit: number,
-): Promise<void> {
+async function pool<T>(items: T[], fn: (item: T) => Promise<void>, limit: number): Promise<void> {
   const executing = new Set<Promise<void>>();
   for (const item of items) {
     const p = fn(item).then(() => {
@@ -82,15 +78,18 @@ function resolveRepoState(repo: GitHubRepo): RepoState {
 export async function discoverFleet(
   config: FleetConfig,
   auth: string,
-  fetchFn: FetchLike = globalThis.fetch as FetchLike,
+  fetchFn: FetchLike = globalThis.fetch as FetchLike
 ): Promise<FleetEntry[]> {
   // Step 1: Resolve latest release once
   let latestRef: string;
   try {
-    latestRef = await getLatestRelease("UnderUndre", "ai", auth, fetchFn);
+    latestRef = await getLatestRelease("UnderUndre", "UndeRoute", auth, fetchFn);
   } catch (e) {
     // If we can't resolve latest release, use "unknown" — drift will show true
-    log.warn("Failed to resolve latest clai-helpers release:", e instanceof Error ? e.message : String(e));
+    log.warn(
+      "Failed to resolve latest clai-helpers release:",
+      e instanceof Error ? e.message : String(e)
+    );
     latestRef = "unknown";
   }
 
@@ -113,7 +112,10 @@ export async function discoverFleet(
       allRepos.push(...orgRepos);
     } catch (e) {
       if (e instanceof FleetError && e.code === "github/rate-limited") throw e;
-      log.warn(`Failed to enumerate org "${org}" repos:`, e instanceof Error ? e.message : String(e));
+      log.warn(
+        `Failed to enumerate org "${org}" repos:`,
+        e instanceof Error ? e.message : String(e)
+      );
     }
   }
 
@@ -144,7 +146,7 @@ export async function discoverFleet(
           repo.name,
           repo.default_branch,
           auth,
-          fetchFn,
+          fetchFn
         );
         pinnedRef = lockfile.ref;
         pinnedSource = lockfile.source;
@@ -187,7 +189,7 @@ export async function discoverFleet(
           repo.name,
           "helpers-lock.json",
           auth,
-          fetchFn,
+          fetchFn
         );
       } catch {
         // Non-critical: just leave null
@@ -208,7 +210,7 @@ export async function discoverFleet(
         unreadableReason: null,
       });
     },
-    config.discoveryConcurrency,
+    config.discoveryConcurrency
   );
 
   // Sort by fullName
