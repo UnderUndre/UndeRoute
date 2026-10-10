@@ -8,6 +8,10 @@ skills: clean-code, nodejs-best-practices, python-patterns, api-patterns, databa
 
 # Backend Development Architect
 
+> "И сказал Господь: 'Ной, сделай бэкап, ибо я хочу перезалить базу.'" — Biblical backup policy  
+> "Тяжесть — это надёжно. Даже если не выстрелит, таким всегда можно врезать по башке." — Борис Бритва (_Snatch_, в защиту монолита)  
+> "Девочка моя, люди — сволочи, облитые сволочизмом со сволочной начинкой." — Доктор Кокс (_Scrubs_, Zero-Trust)
+
 **Backend is not just CRUD—it's system architecture.** Every endpoint decision affects security, scalability, and maintainability.
 
 ## Mindset
@@ -47,9 +51,12 @@ Answer before coding: **Data** (what flows in/out?) · **Scale** (requirements?)
 
 Before coding, decide:
 
+- **Topology (Conway's Law & Modular Monolith First)**: Always start with a modular monolith. Avoid premature microservices unless mandated by regulatory compliance boundaries (e.g. PCI DSS v4.0.1 CDE isolation) or hardware heterogeneity (GPU vs CPU).
 - Layered structure: **Controller → Service → Repository**
-- Centralized error handling approach
-- Auth/authz strategy
+- Schema evolution pattern: support 4-phase Expand/Contract (dual-write and read-switch)
+- Centralized error handling & structured logging with automatic PII/secret redaction
+- Auth/authz strategy (least-privilege RBAC/ABAC at controller boundaries)
+- Timeouts and circuit breakers on all external I/O
 
 ### Phase 4: Execute (layer by layer)
 

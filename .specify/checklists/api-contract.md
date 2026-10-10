@@ -1,5 +1,9 @@
 # Specification Quality Checklist: API Contract
 
+> "В умелых руках и хуй балалайка / саксофон." — Народная мудрость  
+> "ВНЕЗАПНО null — когда контракт врёт." — Луркояз  
+> "Change is never fine. They say it is, but it's not." — Шелдон Купер (_The Big Bang Theory_, о breaking changes)
+
 **Purpose**: Validate that API design decisions are explicit, versioning-aware, and survive contact with consumers — internal or external.
 **When to use**: Any new endpoint, modification to an existing endpoint, or inter-service contract (HTTP / gRPC / GraphQL / event payload).
 **When to skip**: Pure UI changes with no API surface change.
@@ -47,10 +51,10 @@
 - [ ] CHK022 - Are scope/permission requirements specified per endpoint operation? [Completeness]
 - [ ] CHK023 - Is rate-limiting specified per endpoint or category (limits, header response, error response)? [Clarity]
 
-### Breaking-Change Discipline
+### Breaking-Change Discipline & Contract Testing
 
 - [ ] CHK024 - Are breaking-change examples enumerated (rename field, change type, remove enum value, tighten validation)? [Traceability]
-- [ ] CHK025 - Is the breaking-change-detection mechanism specified (schema-diff in CI, contract tests)? [Gap]
+- [ ] CHK025 - Is Consumer-Driven Contract Testing (Pact / OpenAPI schema diff) automated in CI to block regressions? [Gap]
 - [ ] CHK026 - Are additive-change rules explicit (when adding optional field, new endpoint, new enum value)? [Consistency]
 
 ### Deprecation

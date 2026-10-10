@@ -79,9 +79,9 @@ function Test-FeatureBranch {
         return $true
     }
     
-    if ($Branch -notmatch '^[0-9]{3}-') {
+    if ($Branch -notmatch '^[0-9]{3}-' -and $Branch -notmatch '^specs/' -and $Branch -notmatch '^feature/') {
         Write-Output "ERROR: Not on a feature branch. Current branch: $Branch"
-        Write-Output "Feature branches should be named like: 001-feature-name"
+        Write-Output "Feature branches should be named like: specs/slug, 001-feature-name, or feature/slug"
         return $false
     }
     return $true
@@ -89,7 +89,8 @@ function Test-FeatureBranch {
 
 function Get-FeatureDir {
     param([string]$RepoRoot, [string]$Branch)
-    Join-Path $RepoRoot "specs/$Branch"
+    $cleanBranch = $Branch -replace '^specs/', '' -replace '^feature/', ''
+    Join-Path $RepoRoot "specs/$cleanBranch"
 }
 
 function Get-FeaturePathsEnv {
@@ -99,17 +100,19 @@ function Get-FeaturePathsEnv {
     $featureDir = Get-FeatureDir -RepoRoot $repoRoot -Branch $currentBranch
     
     [PSCustomObject]@{
-        REPO_ROOT     = $repoRoot
+        REPO_ROOT      = $repoRoot
         CURRENT_BRANCH = $currentBranch
-        HAS_GIT       = $hasGit
-        FEATURE_DIR   = $featureDir
-        FEATURE_SPEC  = Join-Path $featureDir 'spec.md'
-        IMPL_PLAN     = Join-Path $featureDir 'plan.md'
-        TASKS         = Join-Path $featureDir 'tasks.md'
-        RESEARCH      = Join-Path $featureDir 'research.md'
-        DATA_MODEL    = Join-Path $featureDir 'data-model.md'
-        QUICKSTART    = Join-Path $featureDir 'quickstart.md'
-        CONTRACTS_DIR = Join-Path $featureDir 'contracts'
+        HAS_GIT        = $hasGit
+        FEATURE_DIR    = $featureDir
+        FEATURE_SPEC   = Join-Path $featureDir 'spec.md'
+        IMPL_PLAN      = Join-Path $featureDir 'plan.md'
+        TASKS          = Join-Path $featureDir 'tasks.md'
+        RESEARCH       = Join-Path $featureDir 'research.md'
+        DATA_MODEL     = Join-Path $featureDir 'data-model.md'
+        QUICKSTART     = Join-Path $featureDir 'quickstart.md'
+        CONTRACTS_DIR  = Join-Path $featureDir 'contracts'
+        CHECKLISTS_DIR = Join-Path $featureDir 'checklists'
+        REVIEWS_DIR    = Join-Path $featureDir 'reviews'
     }
 }
 

@@ -72,16 +72,21 @@ check_feature_branch() {
         return 0
     fi
 
-    if [[ ! "$branch" =~ ^[0-9]{3}- ]]; then
+    if [[ ! "$branch" =~ ^[0-9]{3}- ]] && [[ ! "$branch" =~ ^specs/ ]] && [[ ! "$branch" =~ ^feature/ ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
-        echo "Feature branches should be named like: 001-feature-name" >&2
+        echo "Feature branches should be named like: specs/slug, 001-feature-name, or feature/slug" >&2
         return 1
     fi
 
     return 0
 }
 
-get_feature_dir() { echo "$1/specs/$2"; }
+get_feature_dir() { 
+    local clean_branch="$2"
+    clean_branch="${clean_branch#specs/}"
+    clean_branch="${clean_branch#feature/}"
+    echo "$1/specs/$clean_branch"
+}
 
 # Find feature directory by numeric prefix instead of exact branch match
 # This allows multiple branches to work on the same spec (e.g., 004-fix-bug, 004-add-feature)
@@ -90,10 +95,15 @@ find_feature_dir_by_prefix() {
     local branch_name="$2"
     local specs_dir="$repo_root/specs"
 
+    # Normalize branch name by removing specs/ or feature/ prefix
+    local clean_name="$branch_name"
+    clean_name="${clean_name#specs/}"
+    clean_name="${clean_name#feature/}"
+
     # Extract numeric prefix from branch (e.g., "004" from "004-whatever")
-    if [[ ! "$branch_name" =~ ^([0-9]{3})- ]]; then
-        # If branch doesn't have numeric prefix, fall back to exact match
-        echo "$specs_dir/$branch_name"
+    if [[ ! "$clean_name" =~ ^([0-9]{3})- ]]; then
+        # If branch doesn't have numeric prefix, fall back to exact match on clean name
+        echo "$specs_dir/$clean_name"
         return
     fi
 
@@ -112,7 +122,7 @@ find_feature_dir_by_prefix() {
     # Handle results
     if [[ ${#matches[@]} -eq 0 ]]; then
         # No match found - return the branch name path (will fail later with clear error)
-        echo "$specs_dir/$branch_name"
+        echo "$specs_dir/$clean_name"
     elif [[ ${#matches[@]} -eq 1 ]]; then
         # Exactly one match - perfect!
         echo "$specs_dir/${matches[0]}"
@@ -120,7 +130,7 @@ find_feature_dir_by_prefix() {
         # Multiple matches - this shouldn't happen with proper naming convention
         echo "ERROR: Multiple spec directories found with prefix '$prefix': ${matches[*]}" >&2
         echo "Please ensure only one spec directory exists per numeric prefix." >&2
-        echo "$specs_dir/$branch_name"  # Return something to avoid breaking the script
+        echo "$specs_dir/$clean_name"  # Return something to avoid breaking the script
     fi
 }
 
@@ -148,6 +158,8 @@ RESEARCH='$feature_dir/research.md'
 DATA_MODEL='$feature_dir/data-model.md'
 QUICKSTART='$feature_dir/quickstart.md'
 CONTRACTS_DIR='$feature_dir/contracts'
+CHECKLISTS_DIR='$feature_dir/checklists'
+REVIEWS_DIR='$feature_dir/reviews'
 EOF
 }
 

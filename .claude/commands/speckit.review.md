@@ -14,7 +14,9 @@ Optional argument: `<feature-slug>` to target a specific feature directory. Defa
 
 ultrathink
 
-> "Чужой глаз видит трещину, которую свой не замечает." — Valera, on independent review.
+> "Давай по новой, Миша, всё хуйня." — Кернес / Добкин  
+> "Your code is like a toddler with a loaded gun: it's not a question of _if_ it causes damage, but _how much_." — Гилфойл (_Silicon Valley_)  
+> "Do you want to hear a lie? I think you're very good at your job." — Стэнли (_The Office_)
 
 Independent **critical** review of the SpecKit artifacts (`spec.md`, `plan.md`, `tasks.md`) by a non-author AI tool. Unlike `/speckit.analyze` (which checks consistency), `/speckit.review` actively **looks for what the original author missed**: hidden assumptions, weak invariants, missing failure modes, alternative approaches that weren't considered, security/perf threats, and stakeholder ambiguity.
 
@@ -30,13 +32,13 @@ This command is **mandatory** before `/speckit.implement` per constitution Princ
 
 Before writing the review file, identify yourself by tool. Use the **first applicable** rule:
 
-| Signal | Provider tag |
-|---|---|
-| Running inside Claude Code, Claude Desktop, or claude.ai/code | `claude` |
-| Running inside Codex Desktop App, Codex CLI, ChatGPT Desktop with Codex | `codex` |
-| Running inside Google Antigravity IDE | `antigravity` |
-| Running inside Gemini CLI / `gemini -p` | `gemini` |
-| Running inside GitHub Copilot Chat / VS Code Copilot | `copilot` |
+| Signal                                                                  | Provider tag  |
+| ----------------------------------------------------------------------- | ------------- |
+| Running inside Claude Code, Claude Desktop, or claude.ai/code           | `claude`      |
+| Running inside Codex Desktop App, Codex CLI, ChatGPT Desktop with Codex | `codex`       |
+| Running inside Google Antigravity IDE                                   | `antigravity` |
+| Running inside Gemini CLI / `gemini -p`                                 | `gemini`      |
+| Running inside GitHub Copilot Chat / VS Code Copilot                    | `copilot`     |
 
 If none of the above and you're a Claude variant — default to `claude`. If you're an unknown tool, prompt the user: "Identify yourself: claude/codex/antigravity/gemini/copilot/<other>".
 
@@ -54,6 +56,7 @@ Abort if `FEATURE_DIR/spec.md` doesn't exist with: "No SpecKit feature found. Ru
 ### 2. Load Artifacts
 
 Read in this order (skip if missing):
+
 - `FEATURE_DIR/spec.md` (REQUIRED)
 - `FEATURE_DIR/plan.md` (REQUIRED if exists; if missing, flag CRITICAL — review of spec only)
 - `FEATURE_DIR/tasks.md` (REQUIRED if exists; if missing, flag CRITICAL — review of spec+plan only)
@@ -70,39 +73,49 @@ Read in this order (skip if missing):
 Apply each lens. For each finding, capture: severity, area, finding, recommendation.
 
 #### A. Logical consistency (cross-document)
+
 Are the requirements in `spec.md` faithfully translated into the architecture in `plan.md` and the tasks in `tasks.md`? Find requirements with NO corresponding plan element. Find plan elements with NO motivating requirement.
 
 #### B. Hidden assumptions
+
 What does the spec/plan **assume** without saying? (e.g., "users are authenticated" — but the spec never says how. "data fits in memory" — but no size estimate.) Surface every implicit invariant.
 
 #### C. Missing edge cases
+
 What inputs / states / orderings would break this? Concurrency, empty input, max input, partial failures, network partitions, retries, idempotency. The spec author probably listed 2-3; you find the other 5.
 
 #### D. Failure modes
+
 For each external dependency (DB, API, file system, queue), what happens when it's down/slow/inconsistent? Is there a fallback? A timeout? A circuit breaker? Are these specified or hand-waved?
 
 #### E. Security & privacy threats
+
 - AuthN/AuthZ gaps: who can call what? Is it specified per endpoint?
 - Injection surfaces: every user input that hits a query/command/template
 - Secret handling: API keys, tokens, PII paths
 - Audit/log leakage: does logging accidentally write secrets?
 
 #### F. Performance & scale
+
 - Where are the N+1 queries hiding?
 - What's the worst-case latency for the slowest user flow?
 - Bundle size, render budget, query budget — specified or assumed?
 - What load was the design tested for?
 
 #### G. Alternative approaches not considered
+
 Is there a meaningfully different way to solve this that the author didn't explore? (E.g., async vs sync, push vs pull, denormalize vs join, server-side vs client-side.) Don't recommend rewrites — just flag genuinely-unconsidered options for the author to weigh.
 
 #### H. Stakeholder clarity
+
 Re-read `spec.md` as a non-technical stakeholder (product manager, designer, support). What's ambiguous? What term is overloaded? What "obvious" thing isn't actually defined?
 
 #### I. Constitution alignment
+
 Cross-check every plan/task element against principles in `.specify/memory/constitution.md`. Flag any violation as CRITICAL.
 
 #### J. Commercial / GTM drift vs business plan
+
 Probe money path and focus — **not** a full redo of unit-econ stress (that is `/speckit.business-plan` + optional external biz review).
 
 - Does the feature **reopen a killed SKU**, undercut a **price floor**, or ignore **Phase A sole-hero / hard law**?
@@ -113,29 +126,52 @@ Probe money path and focus — **not** a full redo of unit-econ stress (that is 
 
 Severity: hard-law / killed-SKU / missing plan on monetized work → **CRITICAL** or **HIGH**; artifact gaps → **MEDIUM**.
 
+#### K. Zero-Downtime Data Architecture & Expand/Contract Safety
+
+- Does the schema modification follow the 4-phase Expand/Contract pattern?
+- Are there non-backward-compatible DDL migrations (dropping columns, 1-step renames, non-nullable additions)? Flag as **CRITICAL**.
+- Are there rollback down-migrations and lock-free concurrency indexes defined?
+
+#### L. Spike Governance & Prototype Deprecation (ISO/IEC/IEEE 12207)
+
+- If the feature relies on an exploratory spike or PoC: is there a documented Spike Disposal Path?
+- Is prototype code explicitly destroyed rather than leaked/merged into production? Flag prototype code reuse as **HIGH**.
+
+#### M. Regulatory Compliance & Trust Boundary Isolation (PCI DSS / GDPR / ISO 27001)
+
+- Are sensitive data flows (PII, tokens, credit card data) isolated to reduce audit surface (e.g. CDE scope reduction per PCI DSS v4.0.1)?
+- Is there any plain-text PII or credential logging?
+- Does the design adhere to Conway's Law (modular monolith default; no unjustified microservice sprawl)?
+
+#### N. Operational Readiness & Disaster Recovery (ORR/DR)
+
+- Are RTO/RPO targets and SLA/SLO metrics defined?
+- Are there runbooks, health endpoints, and graceful degradation modes for dependency outages?
+- Are structured logs, OpenTelemetry traces, and rollback procedures specified?
+
 ### 4. Severity Heuristic
 
-| Severity | Meaning |
-|---|---|
+| Severity     | Meaning                                                                                                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CRITICAL** | Constitution violation, missing core artifact, security hole, data-loss path, design flaw that blocks baseline functionality, or **hard commercial gate breach** vs business plan |
-| **HIGH** | Significant gap (missing edge case in main flow, weak invariant, ambiguous requirement that will need rework mid-implementation), **commercial drift** (CAC/brand/focus) |
-| **MEDIUM** | Quality concern (missing minor edge case, unclear naming, undocumented assumption, missing GTM artifact for hero offer) |
-| **LOW** | Polish (terminology, formatting, suggestion that improves but doesn't block) |
+| **HIGH**     | Significant gap (missing edge case in main flow, weak invariant, ambiguous requirement that will need rework mid-implementation), **commercial drift** (CAC/brand/focus)          |
+| **MEDIUM**   | Quality concern (missing minor edge case, unclear naming, undocumented assumption, missing GTM artifact for hero offer)                                                           |
+| **LOW**      | Polish (terminology, formatting, suggestion that improves but doesn't block)                                                                                                      |
 
 ### 5. Compute Verdict
 
-| Verdict | Condition |
-|---|---|
-| **PASS** | Zero CRITICAL findings AND zero HIGH findings (HIGH-only would be a near-pass — be strict here) |
-| **MEDIUM** | At least one HIGH finding but no CRITICAL — author should address before implement, but not strictly blocking if overridden |
-| **HIGH** | Multiple HIGH findings or one near-CRITICAL — implement should not proceed without rework |
-| **CRITICAL** | Any CRITICAL finding — implement is blocked |
+| Verdict      | Condition                                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| **PASS**     | Zero CRITICAL findings AND zero HIGH findings (HIGH-only would be a near-pass — be strict here)                             |
+| **MEDIUM**   | At least one HIGH finding but no CRITICAL — author should address before implement, but not strictly blocking if overridden |
+| **HIGH**     | Multiple HIGH findings or one near-CRITICAL — implement should not proceed without rework                                   |
+| **CRITICAL** | Any CRITICAL finding — implement is blocked                                                                                 |
 
 ### 6. Write Review File
 
 Write to `FEATURE_DIR/reviews/<provider>.md` (create the `reviews/` directory if missing). Overwrite if exists. Format:
 
-```markdown
+````markdown
 # SpecKit Review: <feature-slug>
 
 **Reviewer**: <provider>
@@ -149,11 +185,11 @@ Write to `FEATURE_DIR/reviews/<provider>.md` (create the `reviews/` directory if
 
 ## Findings
 
-| ID | Severity | Area | Finding | Recommendation |
-|---|---|---|---|---|
-| F1 | CRITICAL | Security | <specific finding with file:line where possible> | <concrete action> |
-| F2 | HIGH | Commercial/GTM | … | … |
-| … | … | … | … | … |
+| ID  | Severity | Area           | Finding                                          | Recommendation    |
+| --- | -------- | -------------- | ------------------------------------------------ | ----------------- |
+| F1  | CRITICAL | Security       | <specific finding with file:line where possible> | <concrete action> |
+| F2  | HIGH     | Commercial/GTM | …                                                | …                 |
+| …   | …        | …              | …                                                | …                 |
 
 ## Commercial / business plan notes
 
@@ -177,7 +213,9 @@ high_count: <N>
 medium_count: <N>
 low_count: <N>
 ```
-```
+````
+
+````
 
 ### 7. Report to User
 
@@ -207,7 +245,7 @@ After the review file is written, tag the pipeline stage (only the FIRST reviewe
 
 ```bash
 .specify/scripts/bash/snapshot-stage.sh review <slug>
-```
+````
 
 ```powershell
 .specify\scripts\powershell\snapshot-stage.ps1 -Stage review -Slug <slug>

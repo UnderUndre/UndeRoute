@@ -16,7 +16,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ultrathink
 
-> "В системе нет багов, есть только аномалии." — Valera, philosophical debug mode.
+> "В системе нет багов, есть только аномалии." — _S.T.A.L.K.E.R._  
+> "It must be humbling to suck on so many levels." («Должно быть, унизительно лажать на стольких уровнях сразу.») — Шелдон Купер (_The Big Bang Theory_)  
+> "Ай, мля, я маслину поймал!" — _S.T.A.L.K.E.R._ (Bandits)
 
 Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/speckit.tasks` has successfully produced a complete `tasks.md`.
 
@@ -170,8 +172,36 @@ Do **not** re-litigate full unit-econ tables here — that is `/speckit.business
 - Flag viral copyleft licenses (AGPL-3.0, GPL without open-source intent) as **CRITICAL**
 - Flag missing lockfile validation or unpinned floating dependency ranges as **HIGH**
 - Flag dependencies with known critical CVEs or deprecated status as **HIGH**
-- Verify that features modifying database schemas explicitly define 4-phase Expand/Contract migrations (flag non-backward-compatible DDL as **CRITICAL**)
-- Verify that features modifying auth, network endpoints, or sensitive data include STRIDE threat mitigations (flag missing STRIDE as **HIGH**)
+
+#### J. Zero-Downtime Data Architecture & Expand/Contract Validation
+
+- Verify that features modifying database schemas explicitly define 4-phase Expand/Contract migrations:
+  1. Expand (additive, nullable, backward compatible)
+  2. Dual-Write (service writes old + new)
+  3. Backfill & Read-Switch (background migration)
+  4. Contract (cleanup, drop old schema elements)
+- Flag any non-backward-compatible DDL (dropping columns/tables, column renames in 1 step, adding NOT NULL without default) as **CRITICAL**
+- Flag missing down-migration rollback plan as **HIGH**
+
+#### K. Spike Governance & Prototype Deprecation Validation (ISO/IEC/IEEE 12207)
+
+- Check if research spikes are documented in `research.md`
+- Verify that every spike has:
+  1. Explicit numerical verification metrics (latency p95/p99, throughput, memory)
+  2. Mandatory Spike Disposal Path (throwaway protocol ensuring experimental prototype code is discarded)
+- Flag any plan or task that attempts to merge or keep raw exploratory spike code in production as **HIGH**
+
+#### L. Regulatory Compliance & Trust Boundary Isolation (ISO 12207 Phase 0 / PCI DSS v4.0.1 / GDPR)
+
+- Verify that features handling PII, tokens, or financial data isolate trust boundaries (e.g. CDE scope reduction)
+- Verify that logging does not record unmasked PII or secrets (PCI DSS Req 10 / ISO 27001)
+- Flag unjustified distributed microservices architectures that violate Conway's law (without compliance/hardware boundaries) as **HIGH**
+
+#### M. Operational Readiness, Rollback & Observability
+
+- Verify tasks include structured logging, OpenTelemetry traces, and metric emission
+- Verify that operational runbooks and disaster recovery (RTO/RPO) considerations exist
+- Flag missing rollback verification or missing telemetry tasks as **HIGH**
 
 ### 5. Severity Assignment
 

@@ -1,5 +1,9 @@
 # Specification Quality Checklist: Performance
 
+> "Измерять продуктивность строчками кода — как оценивать самолёт по весу." — Programmer Wisdom  
+> "О gravity, thou art a heartless bitch." («Ах ты, гравитация, бессердечная ты сука!») — Шелдон Купер (_The Big Bang Theory_)  
+> "Чуть помедленнее, кони, чуть помедленнее!" — Владимир Высоцкий (_Rate Limiting_)
+
 **Purpose**: Validate that performance requirements are quantified, measurable, and tied to user-facing outcomes — not vibes.
 **When to use**: Any user-facing feature, data-heavy backend, hot-path change, or anything affecting Core Web Vitals.
 **When to skip**: Pure refactors with no behavioral or data-volume change.
@@ -39,12 +43,13 @@
 - [ ] CHK017 - Are render-blocking resources explicitly minimized (font display, critical CSS, deferred JS)? [Gap]
 - [ ] CHK018 - Is hydration / interactivity strategy specified (SSR / RSC / partial / island)? [Clarity]
 
-### Measurement & SLO
+### Measurement & SLO (ISO/IEC/IEEE 29148)
 
-- [ ] CHK019 - Are metrics defined that map to user experience (not just system metrics)? [Measurability]
-- [ ] CHK020 - Is the SLO documented (target + window + breach action)? [Completeness]
-- [ ] CHK021 - Is performance regression detection specified (CI benchmark, prod monitoring, alert threshold)? [Gap]
-- [ ] CHK022 - Is the load-testing approach specified before launch (tool, scenarios, pass criteria)? [Coverage]
+- [ ] CHK019 - Are Non-Functional Requirements (NFR) quantified with strict percentiles (p95 < 100ms, p99 < 200ms) per ISO 29148? [Measurability]
+- [ ] CHK020 - Is the SLO documented (target + window + breach action + error budget burn policy)? [Completeness]
+- [ ] CHK021 - Is performance regression detection specified in CI/CD before staging deployment? [Gap]
+- [ ] CHK022 - Is distributed tracing coverage specified via OpenTelemetry for end-to-end latency diagnostics? [Coverage]
+- [ ] CHK023 - Is the stress/load-testing approach specified before launch under peak simulated concurrency? [Coverage]
 
 ### Failure & Degradation
 

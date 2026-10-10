@@ -74,14 +74,14 @@ Every pipeline stage that mutates a feature artifact (specify, clarify, plan, ta
 
 Product/agency work MUST keep a living business plan under `docs/**/*business-plan*.md` (template: `.specify/templates/business-plan-template.md`).
 
-1. **First commercial feature:** `/speckit.business-plan` **CREATE** (or specify step 0 CREATE gate) **before** or as hard prerequisite to the first `spec.md`.  
-2. **Second+ features:** `/speckit.business-plan` **UPDATE** when the feature changes ICP, pricing, packaging, focus gates, legal/payment rails, or unit economics — normally after specify/clarify, before plan hardens.  
-3. Plans MUST include honest traction, stress unit economics, explicit Phase focus laws, and a **GTM spine** (ICP, offer ladder, Phase A channels, CAC, convert KPIs, sales artifacts, kill-criteria). “Production Ready” at zero revenue is a defect. Full sales playbooks/content calendars are optional satellites (`docs/sales-playbook.md`, etc.), not day-one canon.  
-4. Technical `/speckit.plan` MUST NOT silently violate active business-plan gates; conflict → update plan with approval or narrow scope.  
-5. Chore-only features may waive via `specs/<slug>/business-plan-waiver.md` + reason.  
-6. **Review hybrid (not a second Principle VI):**  
-   - **(A)** Stress Pass inside `/speckit.business-plan` on every write;  
-   - **(B)** Commercial-drift lens inside `/speckit.analyze` + `/speckit.review` (plan vs feature artifacts);  
+1. **First commercial feature:** `/speckit.business-plan` **CREATE** (or specify step 0 CREATE gate) **before** or as hard prerequisite to the first `spec.md`.
+2. **Second+ features:** `/speckit.business-plan` **UPDATE** when the feature changes ICP, pricing, packaging, focus gates, legal/payment rails, or unit economics — normally after specify/clarify, before plan hardens.
+3. Plans MUST include honest traction, stress unit economics, explicit Phase focus laws, and a **GTM spine** (ICP, offer ladder, Phase A channels, CAC, convert KPIs, sales artifacts, kill-criteria). “Production Ready” at zero revenue is a defect. Full sales playbooks/content calendars are optional satellites (`docs/sales-playbook.md`, etc.), not day-one canon.
+4. Technical `/speckit.plan` MUST NOT silently violate active business-plan gates; conflict → update plan with approval or narrow scope.
+5. Chore-only features may waive via `specs/<slug>/business-plan-waiver.md` + reason.
+6. **Review hybrid (not a second Principle VI):**
+   - **(A)** Stress Pass inside `/speckit.business-plan` on every write;
+   - **(B)** Commercial-drift lens inside `/speckit.analyze` + `/speckit.review` (plan vs feature artifacts);
    - **(C)** External `/speckit.business-plan-review` → `docs/reviews/business-plan-<provider>.md` on **CREATE** (recommended) and **major** bumps (required by process). Layer C alone does **not** gate `/speckit.implement`.
 
 ### VIII. Self-Maintaining Knowledge
@@ -130,6 +130,26 @@ This replaces the old `feature/<N>-<slug>` convention. Existing `feature/<N>-<sl
 - `/speckit.implement` creates `<slug>` implementation branches from `main` after planning merge.
 - Branch auto-cleanup targets `specs/<slug>` branches after merge (via CI workflow).
 
+### X. Zero-Downtime Data Architecture & Expand/Contract (NON-NEGOTIABLE)
+
+All database schema modifications MUST follow the 4-phase Expand/Contract zero-downtime protocol:
+
+1. **Phase 1 (Expand)**: Additive schema changes only (new nullable columns or new tables); non-locking concurrent DDL (`CREATE INDEX CONCURRENTLY`); application code remains 100% backward-compatible simultaneously with versions $N$ and $N-1$.
+2. **Phase 2 (Dual-Write & Backfill)**: Service layer writes to both old and new schema representations, continues reading from old; rate-limited background backfill script migrates historical data.
+3. **Phase 3 (Cutover)**: Application reads switch to new schema; monitor telemetry for zero regression.
+4. **Phase 4 (Contract)**: Drop deprecated columns/tables and remove dual-write adapters in a dedicated cleanup migration.
+
+Single-step breaking DDL (`DROP COLUMN`, 1-step rename, `NOT NULL` without default on hot tables) is strictly prohibited on production schemas.
+
+### XI. Spike Governance & Prototype Deprecation (ISO/IEC/IEEE 12207)
+
+Exploratory research spikes and Proof-of-Concepts (PoC) MUST adhere to formal Decision Management:
+
+1. **Timeboxed bounds**: Spikes must have a strictly bounded timebox (<= 2 days).
+2. **Numerical validation**: Acceptance must be verified by quantitative metrics (latency quantiles p95/p99, throughput, memory overhead).
+3. **Mandatory Code Disposal**: Prototype code and exploratory branches MUST be completely discarded. Merging or copy-pasting raw spike code into production files is strictly prohibited. Production deliverables must be implemented clean-room from scratch against typed contracts and automated test suites.
+4. **No fake TDD ballast**: Rigid TDD test suites are prohibited on temporary spike code to prevent accumulating throwaway abstraction debt.
+
 ## Technical Constraints
 
 > Moved to [`../../specs/main/requirements.md`](../../specs/main/requirements.md) §2.1 (single source of truth). Constitution governs **principles**; concrete tech-stack constraints live alongside requirements where they belong.
@@ -158,6 +178,8 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 - `npm test` — all pass.
 - `npm run build` — produces `dist/`.
 - `npx clai-helpers status --strict` — no drift between `.claude/` source and generated targets.
+- Dependency supply-chain audit: zero High/Critical unmitigated CVEs (`npm audit`) and zero copyleft AGPL-3.0/GPL contamination.
+- Security & log hygiene: zero unmasked PII, credentials, or session tokens in structured telemetry (PCI DSS Req 10 / ISO 27001).
 
 ### Release gate
 
@@ -171,10 +193,11 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 4. **Complexity must be justified.** Every new agent, transformer, target, or skill adds load to every downstream session. A change that doesn't earn its weight is rejected.
 5. **Anti-sycophancy applies to review of this file too.** If a principle above is wrong for the project, say so and propose an amendment. Don't quietly ignore it.
 
-**Version**: 1.6.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-08-13
+**Version**: 1.7.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-10
 
 ### Changelog
 
+- **1.7.0** (2026-10-10) — Added Principle **X: Zero-Downtime Data Architecture & Expand/Contract** and Principle **XI: Spike Governance & Prototype Deprecation** aligned to ISO/IEC/IEEE 12207:2017/2026 and NIST SP 800-218 SSDF. Added supply-chain license checks (zero AGPL) and PII/token log sanitization gates (PCI DSS Req 10 / ISO 27001) to quality gates before done.
 - **1.6.0** (2026-08-13) — Added Principle **VII-B: Business Plan Stage**. `/speckit.business-plan` CREATE before first commercial `spec.md`; UPDATE on later features with commercial delta; stage tag `bizplan`; technical plan must not silently violate business gates. Template: `.specify/templates/business-plan-template.md`. Wired into `speckit.start|specify|full-spec|clarify|plan`. Hybrid review (stress + analyze/review drift lens + `/speckit.business-plan-review` on create/major). GTM spine mandatory in plan; full marketing playbook optional satellite.
 - **1.5.0** (2026-05-25) — Added Principle IX: Two-Phase Review Flow. Formalizes `specs/<slug>` planning branch → `<slug>` implementation branch pattern with hotfix carve-out and drift policy. Breaking change from `feature/<N>-<slug>` convention. Companion to 004-devx-bundle-v1.
 - **1.4.0** (2026-05-06) — Added Principle VIII: Self-Maintaining Knowledge. Documents the May 2026 self-maintaining workflow infrastructure (Intent Routing + `/dispatch` + 3 hooks + `/learn` + `/improve` + `specs/main/`). NOT NON-NEGOTIABLE — fuzzy signals only, no `/speckit.implement` block. Hybrid enforcement: soft baseline transpiles everywhere; CC ratchet (hooks) lives upstream-only. Companion build-out: brainstorm Option B implemented over Steps 1-7.

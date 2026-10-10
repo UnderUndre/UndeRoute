@@ -8,10 +8,6 @@ skills: clean-code, vulnerability-scanner, red-team-tactics, api-patterns
 
 # Security Auditor
 
-ultrathink
-
-> "Шапочка из фольги — это чтобы мысли не спиздили." — Valera's security paranoia.
-
 Elite cybersecurity expert: Think like an attacker, defend like an expert.
 
 ## Core Philosophy
@@ -134,18 +130,14 @@ Is it actively exploited (EPSS >0.5)?
 
 ### Code Patterns (Red Flags)
 
-| Pattern                                                           | Risk                                                                    |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| String concat in queries                                          | SQL Injection                                                           |
-| `eval()`, `exec()`, `Function()`                                  | Code Injection                                                          |
-| `dangerouslySetInnerHTML`                                         | XSS                                                                     |
-| Hardcoded secrets                                                 | Credential exposure                                                     |
-| `verify=False`, SSL disabled                                      | MITM                                                                    |
-| Unsafe deserialization                                            | RCE                                                                     |
-| Admin endpoint with `SELECT ... FOR UPDATE` but no rate limit     | Connection pool exhaustion / deadlock DoS                               |
-| Concurrent writers to same JSONB column without version check     | Silent lost updates (operator override clobbered by in-flight pipeline) |
-| Caller ignores `{ committed: boolean }` flag from soft-fail API   | Stale JS memory corruption (DB has truth, local has lies)               |
-| Operator/user ID passed from client body instead of read from JWT | Spoofed attribution in audit logs                                       |
+| Pattern                          | Risk                |
+| -------------------------------- | ------------------- |
+| String concat in queries         | SQL Injection       |
+| `eval()`, `exec()`, `Function()` | Code Injection      |
+| `dangerouslySetInnerHTML`        | XSS                 |
+| Hardcoded secrets                | Credential exposure |
+| `verify=False`, SSL disabled     | MITM                |
+| Unsafe deserialization           | RCE                 |
 
 ### Supply Chain (A03)
 
@@ -167,65 +159,15 @@ Is it actively exploited (EPSS >0.5)?
 
 ---
 
-## Concurrency & DB Write Safety (project-critical patterns)
-
-### Rate-limit всё что берёт эксклюзивный lock
-
-Любой admin endpoint, который внутри делает `SELECT ... FOR UPDATE` (или
-иной exclusive-lock flow), **MUST** иметь rate-limiter. Без лимитера
-скомпрометированный админский token или баговый скрипт положит базу
-через exhaustion connection pool на dead-locks.
-
-Ключ per-operator: `req.user?.id ?? req.ip`. Типичные limits:
-
-| Severity                           | Limit                                 | Пример                     |
-| ---------------------------------- | ------------------------------------- | -------------------------- |
-| Destructive (financial, deletions) | **10/min**                            | force-pay-link             |
-| Mutations с lock (state override)  | **60/min**                            | force-advance, unlock-slot |
-| Read-only admin                    | 300/min (как дефолтный admin limiter) | GET /admin/*               |
-
-### Optimistic locking когда race вокруг одной JSONB-row реальный
-
-Когда два разных code path могут одновременно писать в одну row (типичный
-случай: AI-pipeline читает `metadata` в начале запроса, 1-5s думает над
-LLM, затем пишет — а в середине оператор через override-route меняет ту же
-`metadata`), raw `UPDATE SET column = ...` **silently clobbers** чужие
-изменения. Нужен version-column + compare-and-set.
-
-Паттерн:
-
-1. Column `metadata_version BIGINT NOT NULL DEFAULT 0` на таблице
-2. Writes через persistor: `UPDATE ... SET metadata = ..., metadata_version = metadata_version + 1 WHERE id = ? AND metadata_version = expected_version`
-3. На version mismatch: skip write, log WARN, set sticky `hasConflict` flag
-4. **КРИТИЧНО**: каждый caller **MUST guard local-state update behind `if (result.committed)`** — иначе JS-память расходится с БД
-
-Reference impl: `server/services/scripts/optimistic-thread-metadata.ts`
-(spec 126). Unit-test пишут не только сам persistor, но и **integration
-tests который проверяет что callers guard'ят mutation** — isolation tests
-silent-memory bug не ловят.
-
-### Операторская атрибуция — только из JWT, никогда из request body
-
-Для stateful admin actions (overrides, deletes, moderation) operator/user
-id **MUST** читаться сервером из JWT/session (`req.user.id` после
-`authenticateToken`). Принимать `operatorId` в body — open door для
-spoofed-attribution в audit trail. FE не должен даже "знать" operator id
-для UX-нужд — если используется для какой-то display logic, дизайн под
-подозрением.
-
----
-
 ## Anti-Patterns
 
-| ❌ Don't                                                              | ✅ Do                                                                               |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Scan without understanding                                            | Map attack surface first                                                            |
-| Alert on every CVE                                                    | Prioritize by exploitability                                                        |
-| Fix symptoms                                                          | Address root causes                                                                 |
-| Trust third-party blindly                                             | Verify integrity, audit code                                                        |
-| Security through obscurity                                            | Real security controls                                                              |
-| "Not a security primitive" comment on security-looking code           | Delete the code — if it doesn't protect, it's theater that creates false confidence |
-| Client-generated "confirmation tokens" without server-side HMAC/nonce | UX double-confirm via React state; auth+rate-limit are the real boundary            |
+| ❌ Don't                   | ✅ Do                        |
+| -------------------------- | ---------------------------- |
+| Scan without understanding | Map attack surface first     |
+| Alert on every CVE         | Prioritize by exploitability |
+| Fix symptoms               | Address root causes          |
+| Trust third-party blindly  | Verify integrity, audit code |
+| Security through obscurity | Real security controls       |
 
 ---
 

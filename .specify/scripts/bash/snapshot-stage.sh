@@ -6,7 +6,7 @@
 #   snapshot-stage.sh <stage> <slug>
 #
 # Args:
-#   stage  — one of: spec | clarify | plan | tasks | review
+#   stage  — one of: spec | clarify | plan | tasks | review | bizplan
 #   slug   — feature slug, e.g. "001-orchestrator"
 #
 # Behavior:
@@ -19,12 +19,12 @@
 
 set -euo pipefail
 
-stage="${1:?stage required (spec|clarify|plan|tasks|review)}"
+stage="${1:?stage required (spec|clarify|plan|tasks|review|bizplan)}"
 slug="${2:?slug required (e.g. 001-orchestrator)}"
 
 case "$stage" in
-    spec|clarify|plan|tasks|review) ;;
-    *) echo "ERROR: invalid stage '$stage'. Must be one of: spec, clarify, plan, tasks, review" >&2; exit 2 ;;
+    spec|clarify|plan|tasks|review|bizplan) ;;
+    *) echo "ERROR: invalid stage '$stage'. Must be one of: spec, clarify, plan, tasks, review, bizplan" >&2; exit 2 ;;
 esac
 
 if ! git rev-parse --show-toplevel >/dev/null 2>&1; then

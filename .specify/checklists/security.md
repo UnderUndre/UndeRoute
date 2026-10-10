@@ -54,13 +54,16 @@
 - [ ] CHK023 - Are security-event logging + alerting requirements specified (failed auth, AuthZ deny, anomaly)? [Coverage]
 - [ ] CHK024 - Are "fail closed" requirements explicit for security-critical paths (don't degrade to no-auth on error)? [Edge Case]
 
-### Threat Model
+### Threat Model & Trust Boundaries (NIST SP 800-218)
 
-- [ ] CHK025 - Is a STRIDE / OWASP Top 10 (2025) threat-mapping included or referenced? [Traceability]
-- [ ] CHK026 - Are attacker personas + attack surfaces enumerated (external, authenticated, insider, compromised dependency)? [Completeness]
-- [ ] CHK027 - Are explicit non-goals listed (e.g., "we accept risk X because Y")? [Clarity]
+- [ ] CHK025 - Is a STRIDE / OWASP Top 10 (2025) threat-mapping included or referenced per NIST SP 800-218 Practice PW.1.1? [Traceability]
+- [ ] CHK026 - Are Data Flow Diagrams (DFD Level 1/2) with explicit trust boundaries and network segmentation defined? [Coverage]
+- [ ] CHK027 - Are architectural countermeasures against Insecure Design (OWASP A04:2021) documented for threats undetected by SAST? [Completeness]
+- [ ] CHK028 - Are attacker personas + attack surfaces enumerated (external, authenticated, insider, compromised dependency)? [Completeness]
+- [ ] CHK029 - Is Cardholder Data Environment (CDE) or PII scope reduction architecturally enforced (PCI DSS v4.0.1 / ISO 27001)? [Coverage]
+- [ ] CHK030 - Are explicit non-goals listed (e.g., "we accept risk X because Y")? [Clarity]
 
 ## Notes
 
-- References: OWASP Top 10 (2025), CWE, NIST framework. Augment with PCI-DSS / HIPAA / GDPR for regulated domains.
+- References: OWASP Top 10 (2025), CWE, NIST SP 800-218 (SSDF), PCI DSS v4.0.1, ISO/IEC 27001:2022 Controls 8.25 & 8.28.
 - Pair with `/speckit.review` from the `security-auditor` agent for adversarial probing.

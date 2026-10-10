@@ -23,7 +23,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ultrathink
 
-> "Какое ТЗ — такое и ХЗ." — Valera on requirements quality driving task quality.
+> "Какое ТЗ — такое и ХЗ." — Folk Wisdom  
+> "Never half-ass two things. Whole-ass one thing." — Рон Свонсон (_Parks and Recreation_)  
+> "Без синей изоленты тут не обойтись." — Философия СТО
 
 1. **Setup**: Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -47,12 +49,14 @@ ultrathink
      2. `[BE]` [Dual-Write] Service layer & typed contract interfaces (with Zod/Pydantic validation)
      3. `[BE]` Endpoint & schema validation (Zod/Pydantic)
      4. `[FE]` UI integration & components
-     5. `[BE]`/`[FE]` Unit & integration tests
-     6. `[DB]` [Contract] Deprecation & cleanup migration (in Polish phase)
-     7. `[OPS]` Telemetry, observability, and rollback down-migration verification (in Polish phase)
+     5. `[BE]`/`[FE]` Unit & integration tests (Consumer-Driven Contract Testing)
+     6. `[DB]` [Backfill] Background data migration & read-switch (if schema change involves existing data)
+     7. `[DB]` [Contract] Deprecation & cleanup migration (in Polish phase)
+     8. `[OPS]` Telemetry, observability (PII scrubbing per PCI DSS / ISO 27001), Runbooks, and rollback down-migration verification (in Polish phase)
+     9. `[SEC]` Architectural threat mitigation verification, DAST/fuzzing, and dependency license check (in Polish phase)
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
-   - If research.md exists: Extract decisions for setup tasks
+   - If research.md exists: Extract decisions for setup tasks and verify Spike Disposal Path
    - **Agent & Skill Assignment**: Assign `[AGENT]` tag to each task and map it to the corresponding specialist command file from `.claude/commands/<agent>.md` and domain skills from `.claude/skills/<skill>` (see Agent & Skill Matrix below)
    - **Shared File Extraction**: Scan tasks for overlapping file paths — any file touched by 2+ agents → extract into `[SETUP]` task before the fork point
    - **Dependency Resolution**: Build dependency graph (see Dependency Resolution Rules below)
@@ -62,11 +66,11 @@ ultrathink
 
 4. **Generate tasks.md**: Use `.specify/templates/tasks-template.md` as structure, fill with:
    - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization, dependency vulnerability & license audit, spike disposal, shared installs)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
+   - Phase 1: Setup tasks (project initialization, dependency vulnerability & license audit [SBOM SPDX/CycloneDX], spike disposal verification, shared installs)
+   - Phase 2: Foundational tasks (blocking prerequisites for all user stories; if Day 0 infrastructure, include Tracer Bullet deployment)
    - Phase 3+: One phase per user story (in priority order from spec.md)
    - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
+   - Final Phase: Polish & cross-cutting concerns (DB contract cleanup, ORR & DR GameDay verification, telemetry & PII redaction, runbooks, rollback down-migration)
    - All tasks must follow the strict checklist format (see Task Format below)
    - Clear file paths for each task
    - **Dependency Graph section** with validated dependencies

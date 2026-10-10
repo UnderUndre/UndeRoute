@@ -53,16 +53,20 @@ Make the **business plan a lean, hypothesis-driven SpecKit stage**, not a corpor
 
 Does **not** replace `spec.md`. Plan = hypothesis validation / unit econ / GTM / prepay gate / pre-mortem; spec = product behavior.
 
-## Core Mindset & Execution Pipeline (The Plumber's 6-Step Lean Rule)
+## Core Mindset & Execution Pipeline (The Plumber's 6-Step Lean Rule & ISO 12207 Phase 0)
 
-Classic 50-page business plans with 5-year financial projections are **strictly prohibited** at early stages (unless explicitly required for institutional bank loans or government grants). Any early-stage plan MUST follow this lean engineering pipeline:
+Classic 50-page business plans with 5-year financial projections are **strictly prohibited** at early stages (unless explicitly required for institutional bank loans or government grants). Standish Group CHAOS statistics and Flyvbjerg fat-tail analysis confirm that static Excel plans without empirical validation lead to a 95% failure rate. Any early-stage plan MUST follow this lean engineering pipeline grounded in ISO/IEC/IEEE 12207 Clause 6.4.1 (Business/Mission Analysis):
 
 ```text
+[0. Regulatory Screening & Kill Criteria]
+                  │
+                  ▼
 [1. Lean Canvas] ──> [2. CustDev (Mom Test)] ──> [3. Napkin Unit Econ]
                                                          │
 [6. Legal & Infra] <── [5. Prepayment Gate] <── [4. Smoke Test & MVP]
 ```
 
+0. **Regulatory Screening & Kill Criteria (ISO 12207 Phase 0):** Identify mandatory compliance frameworks (PCI DSS v4.0.1, GDPR / 152-ФЗ, licensing) early to avoid massive architectural redesigns. Define Popperian falsifiable criteria: under what exact metrics do we kill this initiative?
 1. **Lean Canvas (Single Page):** Capture the business model on 1 page: Problem, Target Segment, Solution, Unique Value Proposition (UVP), GTM Channels, Revenue & Cost Structure. No corporate filler.
 2. **CustDev Validation (The Mom Test):** Validate real pain before writing code. Interview target users about _past behavior_ ("How did you solve this last week? What did it cost?"). Never ask hypothetical purchase questions ("Would you buy?").
 3. **Napkin Unit Economics:** Verify CAC, LTV / Avg Order Value, and Gross Margin per unit. Golden Rule: If margin is negative on 1 unit, scaling only builds a bigger money leak.

@@ -12,7 +12,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('spec', 'clarify', 'plan', 'tasks', 'review')]
+    [ValidateSet('spec', 'clarify', 'plan', 'tasks', 'review', 'bizplan')]
     [string]$Stage,
 
     [Parameter(Mandatory = $true)]

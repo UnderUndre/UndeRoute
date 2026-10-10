@@ -14,7 +14,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ultrathink
 
-> "Метнулся. Двигаюсь в сторону центра." — Valera is on it, accessing core logic.
+> "Сейчас подскочу / Метнулся. Двигаюсь в сторону центра." — Решала  
+> "Чики-брики и в дамки!" — _S.T.A.L.K.E.R._ (Bandits)  
+> "Кодер, я тебя спас и в код-ревью играть не буду." — Сидорович (_S.T.A.L.K.E.R._)
 
 1. Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -115,6 +117,12 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read quickstart.md for integration scenarios
+
+7a. **Pre-Implementation Quality Gates (ISO 12207 & NIST SSDF)**:
+
+- **Spike Disposal Check**: If `research.md` references an experimental spike/PoC, verify that prototype code is NOT directly copied into production files. Implementation must be coded cleanly from scratch against specs, types, and tests.
+- **Database Expand/Contract Gate**: Ensure database schema changes follow the 4-phase sequence. `[Expand]` tasks must be completed and deployed before service `[Dual-Write]` code, and `[Contract]` cleanup tasks must run only after verifying data consistency.
+- **Security & PII Sanitization Gate**: All service handlers and loggers must ensure zero plain-text PII or credential logging per PCI DSS Req 10 and ISO 27001.
 
 8. **Project Setup Verification**:
    - **REQUIRED**: Create/verify ignore files based on actual project setup:

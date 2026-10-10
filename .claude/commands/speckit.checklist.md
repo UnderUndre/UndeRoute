@@ -43,42 +43,44 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1a. **Offer library templates first** (NEW — before custom generation):
 
-   Scan `.specify/checklists/*.md` for vetted library templates. Currently shipped:
+Scan `.specify/checklists/*.md` for vetted library templates. Currently shipped:
 
-   - `security.md` — OWASP Top 10 (2025), AuthN/AuthZ, secrets, supply chain, threat model
-   - `performance.md` — Core Web Vitals, latency budgets, query budgets, SLO
-   - `accessibility.md` — WCAG 2.2 AA: contrast, keyboard, focus, semantic HTML, ARIA
-   - `i18n.md` — translation pipeline, RTL, formatters, locale detection
-   - `api-contract.md` — versioning, breaking-change discipline, deprecation, schemas
-   - `data-migration.md` — DDL safety, backfill, dual-write, rollback
+- `security.md` — OWASP Top 10 (2025), STRIDE threat modeling, trust boundaries, secrets, supply chain (SBOM), NIST SP 800-218
+- `performance.md` — Latency percentiles (p95/p99), Core Web Vitals, query budgets, throughput RPS, SLO
+- `accessibility.md` — WCAG 2.2 AA: contrast, keyboard, focus, semantic HTML, ARIA
+- `i18n.md` — translation pipeline, RTL, formatters, locale detection
+- `api-contract.md` — versioning, breaking-change discipline, consumer-driven contracts, schemas
+- `data-migration.md` — 4-phase Expand/Contract DDL, backfill, dual-write, lock-free indexes, rollback down-migration
+- `operational-readiness.md` — Runbooks, RTO/RPO disaster recovery, OpenTelemetry tracing, PII log scrubbing
+- `spike-governance.md` — Timebox limits, numerical success metrics, mandatory prototype disposal protocol
 
-   **Decision flow**:
+**Decision flow**:
 
-   - Infer the user's likely domain from `$ARGUMENTS` + spec content (e.g., user says "checklist for security" → security; user says "API checklist" → api-contract; mention of "rollout" or "schema change" → data-migration; etc.).
-   - If ≥1 library template fits, present the user with a compact table:
+- Infer the user's likely domain from `$ARGUMENTS` + spec content (e.g., user says "checklist for security" → security; user says "API checklist" → api-contract; mention of "rollout" or "schema change" → data-migration; etc.).
+- If ≥1 library template fits, present the user with a compact table:
 
-     ```text
-     | Option | Source | When to use |
-     |--------|--------|-------------|
-     | A | library:security | Most security/auth/PII features |
-     | B | library:api-contract | Public/internal API design |
-     | C | custom (skip to step 2) | Domain not covered above, or you want a fully spec-tailored checklist |
-     ```
+  ```text
+  | Option | Source | When to use |
+  |--------|--------|-------------|
+  | A | library:security | Most security/auth/PII features |
+  | B | library:api-contract | Public/internal API design |
+  | C | custom (skip to step 2) | Domain not covered above, or you want a fully spec-tailored checklist |
+  ```
 
-   - User can pick **multiple library templates** (e.g., "A + B") — concatenate them, preserving CHK### IDs by re-numbering globally on output.
-   - User can pick `custom` to fall through to the existing dynamic-generation flow (step 2 onward).
-   - User can pick a library template AND continue to custom generation: copy the library template first, then step 2 generates additional spec-tailored items appended below with continuing CHK### numbering.
+- User can pick **multiple library templates** (e.g., "A + B") — concatenate them, preserving CHK### IDs by re-numbering globally on output.
+- User can pick `custom` to fall through to the existing dynamic-generation flow (step 2 onward).
+- User can pick a library template AND continue to custom generation: copy the library template first, then step 2 generates additional spec-tailored items appended below with continuing CHK### numbering.
 
-   **If library path chosen (no custom augmentation)**:
+**If library path chosen (no custom augmentation)**:
 
-   1. Read the selected template file(s) verbatim from `.specify/checklists/<name>.md`.
-   2. Replace the H1 title with `# Specification Quality Checklist: <feature-slug>` to keep traceability to the feature.
-   3. Re-number CHK### IDs globally if multiple templates merged (otherwise preserve as-is).
-   4. Optionally inject a `## Feature-specific notes` section at the bottom — derived from spec only if there's a clear, non-speculative tie. Skip if no clear tie.
-   5. Write to `FEATURE_DIR/checklists/<name>.md` (e.g., `security.md`, `api-contract.md`). If file exists, abort with: "Existing checklist `<name>.md` found. Re-run `/speckit.checklist <name>` to append, or remove the file first."
-   6. Report file path + item count + which template(s) were used. Skip steps 2-7.
+1.  Read the selected template file(s) verbatim from `.specify/checklists/<name>.md`.
+2.  Replace the H1 title with `# Specification Quality Checklist: <feature-slug>` to keep traceability to the feature.
+3.  Re-number CHK### IDs globally if multiple templates merged (otherwise preserve as-is).
+4.  Optionally inject a `## Feature-specific notes` section at the bottom — derived from spec only if there's a clear, non-speculative tie. Skip if no clear tie.
+5.  Write to `FEATURE_DIR/checklists/<name>.md` (e.g., `security.md`, `api-contract.md`). If file exists, abort with: "Existing checklist `<name>.md` found. Re-run `/speckit.checklist <name>` to append, or remove the file first."
+6.  Report file path + item count + which template(s) were used. Skip steps 2-7.
 
-   **If custom path chosen** OR **if library templates don't fit**: proceed to step 2.
+**If custom path chosen** OR **if library templates don't fit**: proceed to step 2.
 
 2. **Clarify intent (dynamic)**: Derive up to THREE initial contextual clarifying questions (no pre-baked catalog). They MUST:
    - Be generated from the user's phrasing + extracted signals from spec/plan/tasks

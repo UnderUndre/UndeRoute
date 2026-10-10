@@ -16,7 +16,9 @@ Optional arguments:
 
 ultrathink
 
-> "Ищем только реальные свищи и протечки в новом коде. Чужое легаси не трогаем, сомнительные догадки ниже 80% уверенности выбрасываем в ведро." — Valera
+> "Критическая ошибка — что ты пришёл в эту профессию. Остальное можно поправить." — Code Review Roasts  
+> "Всегда пиши код так, будто сопровождать его будет психопат, который знает, где ты живёшь." — Code Review Roasts  
+> "I'm a systems architect. My job is to protect this platform from your code." — Гилфойл (_Silicon Valley_)
 
 ## Goal
 
@@ -49,15 +51,17 @@ Act as a Principal Staff Engineer, SRE, and Security Auditor.
 ## Multi-Pass Inspection Pipeline
 
 1. **Pass 1: Constitution & Architecture Compliance**  
-   Validate changes against `.specify/memory/constitution.md`, `AGENTS.md`, and `CLAUDE.md`. Check for unauthorized patterns or architecture drift.
-2. **Pass 2: Security & Secrets**  
-   Zero unmasked PII, hardcoded secrets, raw SQL concatenation, IDOR, SSRF, or unsanitized shell inputs.
+   Validate changes against `.specify/memory/constitution.md`, `AGENTS.md`, and `CLAUDE.md`. Check for unauthorized patterns, architecture drift, modular monolith boundaries, and verify no raw exploratory spike/PoC code was leaked into production without clean rewrite.
+2. **Pass 2: Security, Compliance & Secrets (ISO 27001 Control 8.28 / PCI DSS v4.0.1)**  
+   Zero unmasked PII in logs or storage, no hardcoded secrets, raw SQL concatenation, IDOR, SSRF, or unsanitized shell inputs. Verify cryptographic posture and input validation at API boundaries (Zod/Pydantic).
 3. **Pass 3: Concurrency, State & Async Hygiene**  
    Race conditions, unhandled Promise rejections, non-atomic mutations, event loop blocking.
 4. **Pass 4: SRE, Leaks & Resource Boundaries**  
-   Missing timeouts on network/DB calls, unbounded collections/caches, open connections/file handles, unindexed DB queries.
-5. **Pass 5: Test Gaps, Simplicity & Anti-Slop**
-   - Untested critical edge cases introduced in diff, empty/swallowed `catch {}` blocks, redundant AI hallucinations.
+   Missing timeouts on network/DB calls, missing circuit breakers, unbounded collections/caches, open connections/file handles, unindexed DB queries.
+5. **Pass 5: Database Zero-Downtime Safety (Expand/Contract Pattern)**  
+   Reject breaking schema changes in 1 step: NO dropping columns, NO renaming columns without dual-write, NO adding NOT NULL without defaults, NO blocking table locks without CONCURRENTLY.
+6. **Pass 6: Test Gaps, Simplicity & Anti-Slop**
+   - Untested critical edge cases introduced in diff, lack of contract tests for public interfaces, empty/swallowed `catch {}` blocks, redundant AI hallucinations.
    - **Human Readability & Simplicity Gate ("Понимаю ли я, как эта херня работает?")**: Ask if the code design is clear to a human reviewer. If code works but is an unnecessarily complex, unreadable AI spaghetti-monster, REJECT (Confidence 85+) and mandate a simpler, readable implementation.
 
 ---

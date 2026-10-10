@@ -4,6 +4,10 @@ description: "Task list template for feature implementation with agent routing a
 
 # Tasks: [FEATURE NAME]
 
+> "Never half-ass two things. Whole-ass one thing." («Никогда не делай два дела вполсилы. Делай одно дело на всю катушку.») — Рон Свонсон (_Parks and Recreation_)  
+> "Чё там с сосисками, Чарли? — Пять минут, Турецкий. — Пять минут назад ты сказал, что будет готово через две минуты!" — _Большой куш / Snatch_ (о дейликах и эстимейтах)  
+> "Первые 90% проекта занимают 90% времени. Оставшиеся 10% — другие 90%." — The 90-90 rule
+
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
@@ -101,6 +105,7 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T004 [DB] [Expand] Setup database schema, additive migrations, and migration framework
 - [ ] T00X [SEC] Conduct STRIDE threat analysis and implement core security boundaries (conditional)
 - [ ] T00Y [BE] Implement structured logging, request correlation IDs, and /health probes
+- [ ] T00Z [OPS] Tracer Bullet: Deploy end-to-end integration path (interface/API to DB) to staging environment
 - [ ] T005 [BE] Implement authentication/authorization framework
 - [ ] T006 [BE] Setup API routing and middleware structure
 - [ ] T007 [DB] Create base models/entities that all stories depend on
@@ -167,13 +172,16 @@ Examples of foundational tasks (adjust based on your project):
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] TXXX [OPS] Documentation updates in docs/
+- [ ] TXXX [OPS] Documentation and operational Runbook updates in docs/
 - [ ] TXXX [BE] Code cleanup and refactoring
 - [ ] TXXX [FE] Performance optimization across all stories
-- [ ] TXXX [E2E] Additional E2E tests in tests/e2e/
+- [ ] TXXX [E2E] Additional E2E and consumer contract tests in tests/
 - [ ] TXXX [DB] [Contract] Drop legacy deprecated columns/tables and remove dual-write adapters (Expand/Contract Phase 4)
 - [ ] TXXX [OPS] Test and verify rollback down-migration and killswitch procedure in test environment
-- [ ] TXXX [SEC] Conduct final supply chain and transitive dependency review (SBOM & license verification)
+- [ ] TXXX [SEC] Conduct final supply chain and transitive dependency review (SBOM SPDX & license verification)
+- [ ] TXXX [SEC] Audit staging telemetry logs for zero plain-text PII or credential leakage (PCI DSS Req 10 / ISO 27001)
+- [ ] TXXX [OPS] Conduct DR GameDay simulation (node/DB outage) verifying RTO/RPO bounds and Runbook
+- [ ] TXXX [OPS] Component Disposal: decommission and archive obsolete assets/endpoints (ISO 12207 Disposal Process)
 - [ ] TXXX [OPS] Run quickstart.md validation
 
 ---

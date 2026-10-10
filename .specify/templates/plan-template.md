@@ -1,5 +1,9 @@
 # Implementation Plan: [FEATURE]
 
+> "Тяжесть — это надёжно. Даже если не выстрелит, таким всегда можно врезать по башке." — Борис Бритва (_Большой куш / Snatch_, в защиту монолита)  
+> "These walls are funny. First you hate 'em, then you get used to 'em. Enough time passes, you get so you depend on them." — _Побег из Шоушенка_  
+> "Scissors cuts paper, paper covers rock, rock crushes lizard... — Распределённый дедлок в микросервисах." — Шелдон Купер (_The Big Bang Theory_)
+
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
@@ -116,22 +120,28 @@ directories captured above]
 
 > **Trigger**: Mandatory for any task modifying existing database schemas, tables, columns, indexes, or contracts. For pure `CREATE TABLE` of isolated new entities: Phase 1 only. For non-DB features: `N/A`.
 
+- **Data Consistency Model**: [ACID vs BASE, transactional boundaries, distributed transaction avoidance]
+- **Capacity & IOPS Bounds**: [Row volume growth, write IOPS overhead during dual-write, replication lag budget]
+- **Compliance & Scope Isolation**: [e.g. PCI DSS v4.0.1 CDE isolation, PII encryption at rest, field-level tokenization]
 - **Phase 1 (Expand)**: Additive schema migration (new nullable columns, new tables, backward-compatible API endpoints). Old code and new code run simultaneously.
 - **Phase 2 (Dual-Write & Backfill)**: Application writes to both old and new storage locations. Idempotent asynchronous backfill script migrates legacy rows.
 - **Phase 3 (Cutover)**: Application reads are switched to the new schema/fields. Verify telemetry for 0 errors.
 - **Phase 4 (Contract)**: Drop deprecated columns, legacy tables, and temporary dual-write adapters (scheduled in Polish phase).
-- **Rollback Path**: Step-by-step per-phase reversal procedures with verified down-migrations.
+- **Rollback Path**: Step-by-step per-phase reversal procedures with verified down-migrations and lock-free indexes.
 
-## Observability & Rollback Plan
+## Observability, Recovery & Rollback Plan
 
 ### Observability & Telemetry
 
-- **Metrics & SLIs**: [Request rate, latency p95/p99, error rate thresholds]
-- **Structured Logging**: [Correlation IDs, log event schema, zero PII/token redaction]
+- **Metrics & SLIs**: [Request rate, latency p95/p99, error rate thresholds, SLO error budget limits]
+- **Structured Logging**: [Correlation IDs, log event schema, verified zero-PII/token redaction (PCI DSS Req 10 / ISO 27001)]
+- **Distributed Tracing**: [OpenTelemetry trace propagation across services and database boundaries]
 - **Health Checks & Probes**: [Liveness and readiness endpoint specifications]
 
-### Rollback Strategy
+### Disaster Recovery & Rollback Strategy
 
+- **Recovery Targets**: [RTO <= X, RPO <= Y, PITR backup window]
+- **DR GameDay Scenario**: [Simulated database failover, network timeout, or pod kill verification]
 - **Rollback Triggers**: [Error rate > 1%, latency degradation > 2x, migration deadlock]
 - **Rollback Procedure**: [Step-by-step down-migration, feature flag killswitch, deploy revert]
 - **Data Recovery Bounds**: [PITR target, max tolerable data drift]

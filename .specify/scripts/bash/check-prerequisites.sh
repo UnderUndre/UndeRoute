@@ -131,6 +131,16 @@ if [[ -d "$CONTRACTS_DIR" ]] && [[ -n "$(ls -A "$CONTRACTS_DIR" 2>/dev/null)" ]]
     docs+=("contracts/")
 fi
 
+# Check checklists directory
+if [[ -d "$CHECKLISTS_DIR" ]] && [[ -n "$(ls -A "$CHECKLISTS_DIR" 2>/dev/null)" ]]; then
+    docs+=("checklists/")
+fi
+
+# Check reviews directory
+if [[ -d "$REVIEWS_DIR" ]] && [[ -n "$(ls -A "$REVIEWS_DIR" 2>/dev/null)" ]]; then
+    docs+=("reviews/")
+fi
+
 [[ -f "$QUICKSTART" ]] && docs+=("quickstart.md")
 
 # Include tasks.md if requested and it exists

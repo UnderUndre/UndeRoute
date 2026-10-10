@@ -48,10 +48,12 @@ ultrathink
    - `npm run validate` (if script exists) → must pass.
 
 7. **Perform the bump**:
+
    ```bash
    cd packages/<pkg>
    npm version <patch|minor|major>
    ```
+
    This updates `package.json` + `package-lock.json`, creates a commit `X.Y.Z`, and creates a git tag `vX.Y.Z` — atomically.
 
    For pre-releases: `npm version prerelease --preid=<alpha|beta|rc>`.

@@ -31,22 +31,26 @@ Use the "explore mode" output template from the skill:
 ## 🧠 Brainstorm: [Topic]
 
 ### Context
+
 [Brief problem statement — echo back what we understood]
 
 ---
 
 ### Option A: [Name]
+
 [Description]
 ✅ **Pros:** …
 ❌ **Cons:** …
 📊 **Effort:** Low | Medium | High
 
 ### Option B: …
+
 ### Option C: …
 
 ---
 
 ## 💡 Recommendation
+
 **Option [X]** because [reasoning].
 
 **Which direction?**

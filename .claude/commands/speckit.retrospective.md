@@ -14,7 +14,9 @@ Optional argument: `<feature-slug>`. Default = current branch's feature director
 
 ultrathink
 
-> "Если не разобрал, почему пайп лопнул — лопнет ещё раз в том же месте." — Valera, on closing the loop.
+> "Мені нравиться, як воно горить." — Полтавський палій  
+> "the end is never the end is never the end..." — _The Stanley Parable_  
+> "Заодно посмотрим, как быстро у тебя башка после митингов прояснится." — Сидорович (_S.T.A.L.K.E.R._)
 
 Close the feedback loop that the SpecKit pipeline is missing today: after `/speckit.implement` finishes (success or partial), capture **what was wrong about the spec/plan/tasks**, **what surprised us during build**, and **what patterns would have saved time if encoded into the constitution or spec template**.
 
@@ -51,13 +53,13 @@ If `tasks/<slug>/v1` tag missing, fall back to first commit touching `tasks.md`.
 
 Parse status markers:
 
-| Marker | Meaning |
-|--------|---------|
-| `[X]` | Completed |
-| `[!]` | Failed |
-| `[~]` | Cascade-blocked (depended on a failed task) |
-| `[→]` | Started but not closed (suspect stale) |
-| `[ ]` | Never attempted |
+| Marker | Meaning                                     |
+| ------ | ------------------------------------------- |
+| `[X]`  | Completed                                   |
+| `[!]`  | Failed                                      |
+| `[~]`  | Cascade-blocked (depended on a failed task) |
+| `[→]`  | Started but not closed (suspect stale)      |
+| `[ ]`  | Never attempted                             |
 
 ### 4. Build Retrospective Sections
 
@@ -72,6 +74,14 @@ Parse status markers:
 - Tasks marked `[~]` — what failure cascaded
 - Scope drift: tasks `[X]` but completed via different files / agents than predicted (sign that the plan was off)
 - Surprises: changes during implement that weren't in any review finding
+
+#### System Engineering & SDLC Health Audit (ISO/IEC/IEEE 12207)
+
+- **Feedback Latency ($\Delta t$)**: Measure the cycle time between spec approval and production verification. Where did latency bottle up?
+- **Zero-Downtime Data Architecture**: Did the 4-phase Expand/Contract migrations proceed with zero downtime and zero locks?
+- **Spike Disposal Audit**: Confirm experimental prototype code was completely discarded and cleanly reimplemented in main.
+- **Observability & Security**: Verify structured telemetry was emitted and confirm zero PII/secret leakage in logs (PCI DSS / ISO 27001).
+- **Decommissioning & Disposal Candidates**: Flag deprecated endpoints, orphaned columns, or obsolete components for removal (ISO 12207 Disposal Process).
 
 #### Constitution Candidates
 
@@ -117,12 +127,12 @@ Format:
 
 ## Outcomes
 
-| Status | Count | Tasks |
-|--------|-------|-------|
-| [X] Completed | N | T1, T2, … |
-| [!] Failed | N | T7 (reason: …) |
-| [~] Blocked | N | T8 (depends on T7) |
-| [ ] Untouched | N | T9 |
+| Status        | Count | Tasks              |
+| ------------- | ----- | ------------------ |
+| [X] Completed | N     | T1, T2, …          |
+| [!] Failed    | N     | T7 (reason: …)     |
+| [~] Blocked   | N     | T8 (depends on T7) |
+| [ ] Untouched | N     | T9                 |
 
 ## Wins
 
@@ -143,7 +153,7 @@ Format:
 ## Reviewer Calibration
 
 | Reviewer | Verdict | TP findings | FN findings | Usefulness |
-|----------|---------|-------------|-------------|------------|
+| -------- | ------- | ----------- | ----------- | ---------- |
 
 ## Suggested Next Actions
 

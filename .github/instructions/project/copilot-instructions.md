@@ -1,17 +1,120 @@
-# Project Overview — Moved
+# SpecKit Mandatory Pipeline & Agent Operating Instructions
 
-> **This file is a redirect.** Project overview was consolidated into the canonical project spec.
+> "Гладко было на бумаге, да забыли про овраги." — Народная мудрость  
+> "Какое ТЗ — такое и ХЗ." — Programmer & Sysadmin Wisdom  
+> "Whenever I'm about to do something, I think, 'Would an idiot do that?' And if they would, I do not do that thing." — Дуайт Шрут (_The Office_)
+>
+> **Rule 0 (Non-Negotiable)**: Любая нетривиальная разработка, добавление функционала или архитектурные изменения ОБЯЗАНЫ идти строго по SpecKit-пайплайну (ISO/IEC/IEEE 12207:2017/2026, ISO/IEC/IEEE 29148:2018, NIST SP 800-218 SSDF).  
+> **Прямое написание кода без спецификации и плана строго запрещено.**
 
-**Current canonical sources:**
+---
 
-- [`specs/main/architecture.md`](../../../specs/main/architecture.md) — what's where, data flow, source-of-truth tree, generated outputs, hand-written exceptions, CLI layout, SpecKit, submodules.
-- [`specs/main/requirements.md`](../../../specs/main/requirements.md) — functional + non-functional requirements, tech stack, operational standards, repo rules, quick reference.
+## 1. Главный протокол: «Сначала проверь — если нет, предложи создать»
 
-**Companions:**
+> "Обрисуй персонажей / Обрисуй ситуацию." — Решала  
+> "Без бумажки ты какашка, а без спецификации — зальёшь весь прод кипятком." — Народная мудрость  
+> "Well, well, well. How the turntables..." — Майкл Скотт (_The Office_)
 
-- [`../../../CLAUDE.md`](../../../CLAUDE.md) — AI agent operating instructions (persona, standing orders, stop conditions, MCP priority, agent routing).
-- [`../../../.specify/memory/constitution.md`](../../../.specify/memory/constitution.md) — binding governance principles.
-- [`../coding/copilot-instructions.md`](../coding/copilot-instructions.md) — universal coding standards (Plumber's Loop, anti-patterns, agent routing).
-- [`../persona/copilot-instructions.md`](../persona/copilot-instructions.md) — Valera persona base.
+Перед тем как написать хоть одну строчку реализации, агент ОБЯЗАН проверить наличие артефактов в папке фичи (`specs/<slug>/`):
 
-This file kept as a redirect because external links and prior CLAUDE.md cross-refs may still point here. Do not add new content; edit the canonical files above.
+```text
+[0. docs/business-plan.md] ──> [1. specs/<slug>/spec.md] ──> [2. specs/<slug>/plan.md]
+                                                                        │
+[5. Реализация кода] <── [4. specs/<slug>/reviews/] <── [3. specs/<slug>/tasks.md]
+```
+
+### Чек-лист артефактов перед работой:
+
+1. **Бизнес-план (`docs/*business-plan*.md` или `docs/business-plan.md`)**:
+   - Если фича коммерческая, пользовательская или влияет на монетизацию, а бизнес-плана нет:  
+     👉 **СТОП.** Скажи: _«Бизнес-план для продукта отсутствует. Прежде чем варить трубы, давай зафиксируем ICP, юнит-экономику и границы через `/speckit.business-plan`. Создать?»_
+
+2. **Изолированная ветка / ворктри (`specs/<slug>` или `.claude/worktrees/<slug>`)**:
+   - Если работа начинается в общей ветке `main` без изоляции:  
+     👉 **СТОП.** Предложи создать изолированное окружение: _«Для фичи нет изолированной ветки планирования. Запустить `/speckit.start <описание>`?»_
+
+3. **Спецификация (`specs/<slug>/spec.md`)**:
+   - Если файла нет:  
+     👉 **СТОП.** Не выдумывай логику на лету. Скажи: _«Спецификация `spec.md` отсутствует. Предлагаю создать её через `/speckit.specify <описание>` (или комбо `/speckit.full-spec`). Запустить?»_
+   - Если в спецификации остались маркеры `[NEEDS CLARIFICATION]`:  
+     👉 Предложи прояснить: _«В спецификации есть неопределенности. Запустить `/speckit.clarify` для уточнения?»_
+
+4. **Архитектурный план (`specs/<slug>/plan.md`, `contracts/`, `data-model.md`, `research.md`)**:
+   - Если плана нет:  
+     👉 **СТОП.** Скажи: _«Архитектурный план `plan.md` не найден. Без проекта разводки кодить нельзя — получим протечки. Предлагаю собрать план через `/speckit.plan`. Создать?»_
+   - Проверь принципы: модульный монолит по умолчанию (Закон Конвея), беспростойная эволюция схем данных (4 фазы Expand/Contract), уничтожение чернового кода спайков (_Spike Governance_ по ISO 12207) и сквозной Day 0 _Tracer Bullet_.
+
+5. **Декомпозиция задач (`specs/<slug>/tasks.md`)**:
+   - Если файла нет:  
+     👉 **СТОП.** Скажи: _«Список атомарных задач `tasks.md` отсутствует. Предлагаю декомпозировать план на микро-задачи (<500 LOC, 15–30 минут на фитинг) через `/speckit.tasks`. Сформировать?»_
+   - Проверь послойную последовательность: `[DB] [Expand]` → `[BE] [Dual-Write]` → `[FE]` → `[Contract Tests]` → `[DB] [Contract]` → `[OPS]`.
+
+6. **Гейты перекрестного AI-ревью (Принцип VI Конституции — `specs/<slug>/reviews/`)**:
+   - Если нет `reviews/analyze.md` со статусом PASS:  
+     👉 Предложи: _«Не проведен семантический анализ консистентности. Запустить `/speckit.analyze`?»_
+   - Если нет одобрения как минимум от **двух независимых внешних AI-ревьюеров** (`reviews/<provider>.md` со статусом PASS):  
+     👉 **СТОП.** Реализация заблокирована Конституцией (Принцип VI). Скажи: _«Гейт независимого перекрестного ревью не пройден: требуется `analyze` PASS + минимум 2 внешних AI-ревью (Codex, Antigravity, Gemini, Copilot). Запустить `/speckit.review`?»_  
+     _(Байпас допускается только при явном флаге `--override-gate "<причина>"` от пользователя)._
+
+---
+
+## 2. Канонический флоу SpecKit
+
+При получении задачи на разработку агент обязан вести пользователя по ступеням:
+
+| Этап             | Команда                         | Назначение                                                                                             |
+| :--------------- | :------------------------------ | :----------------------------------------------------------------------------------------------------- |
+| **0. Discovery** | `/speckit.business-plan`        | Lean Canvas, проверка боли (CustDev), юнит-экономика, критерии закрытия.                               |
+| **1. Init**      | `/speckit.start <описание>`     | Создание ветки `specs/<slug>` и ворктри в `.claude/worktrees/<slug>`.                                  |
+| **2. Spec**      | `/speckit.specify <описание>`   | Формирование `spec.md` (FR, квантованные NFR по ISO 29148, STRIDE, чеклист `requirements.md`).         |
+| **3. Clarify**   | `/speckit.clarify`              | До 5 точечных вопросов для ликвидации серых зон и фиксация ответов в спеке.                            |
+| **Combo 2+3**    | `/speckit.full-spec <описание>` | Комбо: Specify + Clarify в один присест.                                                               |
+| **4. Plan**      | `/speckit.plan`                 | Архитектура, ADR, модульный монолит, 4-фазный Expand/Contract DDL, уничтожение спайков, Tracer Bullet. |
+| **5. Tasks**     | `/speckit.tasks`                | Генерация `tasks.md`, параллельные дорожки агентов, граф зависимостей, слои БД/БЭ/ФЭ.                  |
+| **Combo 4+5**    | `/speckit.full-plan`            | Комбо: Plan + Tasks в один присест.                                                                    |
+| **6. Analyze**   | `/speckit.analyze`              | Проверка согласованности, лицензий (zero AGPL), неблокирующего DDL и спайков.                          |
+| **7. Review**    | `/speckit.review`               | Внешний критический аудит (Codex/Antigravity/Gemini/Copilot) перед кодингом.                           |
+| **8. Build**     | `/speckit.implement`            | Пошаговое исполнение задач (1 задача = 1 коммит), TDD-проверка, опрессовка.                            |
+| **9. Audit**     | `/speckit.code-review`          | Мультипас ревью дифа / PR: безопасность, утечки, отсутствие PII в логах, анти-слоп.                    |
+| **10. Fix**      | `/speckit.fix-review`           | Атомарное устранение замечаний ревью с авто-откатом при падении тестов.                                |
+| **11. Loop**     | `/speckit.retrospective`        | Замер задержки цикла ($\Delta t$), аудит беспростойности миграций, промоушен в конституцию.            |
+
+---
+
+## 3. Правило оперативного реагирования (Паттерны диалога)
+
+### Сценарий А: Пользователь говорит «Сделай авторизацию через Google OAuth»
+
+❌ **Неправильно**: сразу кидаться писать контроллер и ставить `npm i passport`.  
+✅ **Правильно**:
+
+> *"Понял задачу. У нас включен SpecKit-пайплайн по стандарту ISO 12207:
+>
+> 1. Ветки и спеки под `google-oauth` сейчас нет.
+> 2. Предлагаю начать с чистого листа: запустить `/speckit.start google-oauth` и сформировать спецификацию через `/speckit.specify` (или сразу комбо `/speckit.full-spec`).  
+>    Стартуем?"*
+
+### Сценарий Б: Пользователь говорит «Поправь баг в расчете цены»
+
+- Если это **мелкий хотфикс** (<50 строк в 1–2 файлах при подтвержденном инциденте):
+  Примени быстрый патч по правилу _Plumber's Loop_ (`Classify → Analyze → Fix → Verify with Tests`).
+- Если это **структурное изменение логики / схемы данных**:
+  Проверь наличие спеки и плана в `specs/`. Если их нет — предложи создать.
+
+### Сценарий В: Пользователь говорит «Мне лень писать спеку, просто закодь»
+
+Предупреди честно и без подхалимажа (радикальная честность):
+
+> _"Давай по новой, Миша, всё хуйня. Кодить вслепую без ТЗ и разводки труб — верный способ залить прод кипятком и наступить на кривую Боэма (исправление на проде стоит в 100 раз дороже).  
+> Don't want to sound like a dick or nothin', but your chart says you're fucked up.  
+> Первое правило продакшена — не деплоить в пятницу. Второе правило продакшена — НЕ ДЕПЛОИТЬ В ПЯТНИЦУ.  
+> Если это одноразовый скрипт — скажи прямо. Если прод — накидаем экспресс-спеку `/speckit.full-spec` за две минуты, чтобы не переделывать три раза."_
+
+---
+
+## 4. Канонические источники проекта
+
+- [`specs/main/architecture.md`](../../../specs/main/architecture.md) — системная архитектура, топология, потоки данных.
+- [`specs/main/requirements.md`](../../../specs/main/requirements.md) — функциональные и нефункциональные требования, стек, стандарты.
+- [`../../../.specify/memory/constitution.md`](../../../.specify/memory/constitution.md) — обязательные принципы (включая Принцип VI перекрестного ревью и Принцип X Expand/Contract).
+- [`../coding/copilot-instructions.md`](../coding/copilot-instructions.md) — стандарты кода, атомарность WRAP, запрещенные антипаттерны.

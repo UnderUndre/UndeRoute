@@ -1,17 +1,23 @@
 # Specification Quality Checklist: Data Migration
 
+> "'Ну и запросы у вас...' — сказала база данных и зависла." — Database philosophy  
+> "Страх убивает разум." — _Дюна_ (перед миграцией боевой базы)  
+> "В чём сила, кодер? Сила в бэкапах." — _Брат_  
+> "И сказал Господь: 'Ной, сделай бэкап, ибо я хочу перезалить базу.'" — Biblical backup policy
+
 **Purpose**: Validate that schema or data-shape changes have a safe rollout path, a rollback path, and a verification step. Migrations are the leading cause of preventable production outages.
 **When to use**: Any change to a database schema (DDL), large-scale data transformation, breaking change to event-payload shape, or move between storage backends.
 **When to skip**: Pure additive changes to internal fixtures, dev-only seed data.
 
 ## Validation Items
 
-### Migration Strategy
+### Migration Strategy (4-Phase Expand/Contract Protocol)
 
-- [ ] CHK001 - Is the migration approach specified (in-place online, expand-and-contract, dual-write, blue/green)? [Clarity]
-- [ ] CHK002 - Is the expected downtime explicit (zero-downtime / planned-window / acceptable-degradation)? [Completeness]
-- [ ] CHK003 - Are migration phases enumerated (deploy code that handles both shapes → backfill → switch reads → drop old)? [Completeness]
-- [ ] CHK004 - Is per-phase rollback path specified for each phase? [Coverage]
+- [ ] CHK001 - Is the migration approach specified following the 4-phase Expand/Contract zero-downtime protocol? [Clarity]
+- [ ] CHK002 - Is simultaneous backward-compatibility guaranteed with both application version N and N-1? [Completeness]
+- [ ] CHK003 - Are the 4 migration phases explicitly structured (Phase 1 Expand -> Phase 2 Dual-Write & Backfill -> Phase 3 Cutover -> Phase 4 Contract)? [Completeness]
+- [ ] CHK004 - Are transactional boundaries and consistency models (ACID vs BASE) defined without distributed transaction locks? [Coverage]
+- [ ] CHK005 - Is per-phase rollback path specified for each phase with down-migrations? [Coverage]
 
 ### Schema Changes (DDL)
 
