@@ -1,8 +1,9 @@
 export interface HealthCheck {
   name: string;
-  category: "system" | "tools" | "mcp" | "keys" | "structure" | "drift";
+  category: "system" | "tools" | "mcp" | "keys" | "structure" | "drift" | "stack";
   status: "pass" | "warn" | "fail" | "unknown";
   detail: string;
+  remediation?: string;
   critical: boolean;
 }
 

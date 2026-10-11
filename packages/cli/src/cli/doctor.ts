@@ -1,11 +1,17 @@
 import { defineCommand } from "citty";
 import { registerCheck, runAllChecks, clearChecks } from "./doctor/runner.js";
-import { checkNodeVersion, checkNpmVersion, checkGitVersion, checkOSInfo } from "./doctor/checks/system.js";
+import {
+  checkNodeVersion,
+  checkNpmVersion,
+  checkGitVersion,
+  checkOSInfo,
+} from "./doctor/checks/system.js";
 import { checkGhCli, checkHermesBinary } from "./doctor/checks/tools.js";
 import { checkMcpServers } from "./doctor/checks/mcp.js";
 import { checkApiKeys } from "./doctor/checks/keys.js";
 import { checkStructure } from "./doctor/checks/structure.js";
 import { checkDrift } from "./doctor/checks/drift.js";
+import { checkStackDrift } from "./doctor/checks/stack.js";
 import { renderTable, renderJson, renderQuiet } from "./doctor/formatters.js";
 
 export default defineCommand({
@@ -24,20 +30,30 @@ export default defineCommand({
       default: false,
       description: "Failures only",
     },
+    stack: {
+      type: "boolean",
+      default: false,
+      description: "Only evaluate stack drift against package manifests",
+    },
   },
   async run({ args }) {
     clearChecks();
 
-    registerCheck(checkNodeVersion);
-    registerCheck(checkNpmVersion);
-    registerCheck(checkGitVersion);
-    registerCheck(checkOSInfo);
-    registerCheck(checkGhCli);
-    registerCheck(checkHermesBinary);
-    registerCheck(checkMcpServers);
-    registerCheck(checkApiKeys);
-    registerCheck(checkStructure);
-    registerCheck(checkDrift);
+    if (args.stack) {
+      registerCheck(checkStackDrift);
+    } else {
+      registerCheck(checkNodeVersion);
+      registerCheck(checkNpmVersion);
+      registerCheck(checkGitVersion);
+      registerCheck(checkOSInfo);
+      registerCheck(checkGhCli);
+      registerCheck(checkHermesBinary);
+      registerCheck(checkMcpServers);
+      registerCheck(checkApiKeys);
+      registerCheck(checkStructure);
+      registerCheck(checkDrift);
+      registerCheck(checkStackDrift);
+    }
 
     const result = await runAllChecks();
 

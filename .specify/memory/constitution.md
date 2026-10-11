@@ -24,6 +24,7 @@ New AI-tool target = one new transformer in `packages/cli/src/transformers/` + r
 Project-specific overrides inside managed files MUST use `<!-- HELPERS:CUSTOM START --> … <!-- HELPERS:CUSTOM END -->` markers. These survive `sync`. Unmarked hand-edits to managed files are lost silently on next sync — by design.
 
 - Consumer projects never edit generated trees directly.
+- CLI-computed fields recorded in `helpers-lock.json` (e.g. the stack binding of an agent's `skills:` frontmatter line) are pipeline output, not overrides: the CLI writes them, sync re-applies them, and drift checks catch hand edits.
 - Upstream improvements that would benefit every consumer go through `UnderUndre/ai` + `sync`, not local patch.
 
 ### IV. SemVer Discipline in the 0.x Zone (NON-NEGOTIABLE)
@@ -193,9 +194,11 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 4. **Complexity must be justified.** Every new agent, transformer, target, or skill adds load to every downstream session. A change that doesn't earn its weight is rejected.
 5. **Anti-sycophancy applies to review of this file too.** If a principle above is wrong for the project, say so and propose an amendment. Don't quietly ignore it.
 
-**Version**: 1.7.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-10
+**Version**: 1.7.1 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-11
 
 ### Changelog
+
+- **1.7.1** (2026-10-11) — Clarified Principle III: CLI-computed, lock-recorded fields (stack binding of `skills:`) are pipeline output, not project overrides. No behavioral change. Raised by 003-stack-aware-agents analyze D3.
 
 - **1.7.0** (2026-10-10) — Added Principle **X: Zero-Downtime Data Architecture & Expand/Contract** and Principle **XI: Spike Governance & Prototype Deprecation** aligned to ISO/IEC/IEEE 12207:2017/2026 and NIST SP 800-218 SSDF. Added supply-chain license checks (zero AGPL) and PII/token log sanitization gates (PCI DSS Req 10 / ISO 27001) to quality gates before done.
 - **1.6.0** (2026-08-13) — Added Principle **VII-B: Business Plan Stage**. `/speckit.business-plan` CREATE before first commercial `spec.md`; UPDATE on later features with commercial delta; stage tag `bizplan`; technical plan must not silently violate business gates. Template: `.specify/templates/business-plan-template.md`. Wired into `speckit.start|specify|full-spec|clarify|plan`. Hybrid review (stress + analyze/review drift lens + `/speckit.business-plan-review` on create/major). GTM spine mandatory in plan; full marketing playbook optional satellite.

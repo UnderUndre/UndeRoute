@@ -1,4 +1,4 @@
-# clai-helpers
+# underoute-clai
 
 CLI-инструмент, который использует `.claude/` как единый источник истины для конфигурации AI-инструментов и транспилирует её в форматы GitHub Copilot (`.github/`), Google Gemini (`.gemini/`) и другие.
 
@@ -27,7 +27,7 @@ CLI-инструмент, который использует `.claude/` как 
 ### Инициализация проекта
 
 ```bash
-npx clai-helpers init
+npx underoute-clai init
 ```
 
 Что происходит:
@@ -41,19 +41,19 @@ npx clai-helpers init
 ### Привязка к версии
 
 ```bash
-npx clai-helpers init --version v1.0.0
+npx underoute-clai init --version v1.0.0
 ```
 
 ### Только определённые таргеты
 
 ```bash
-npx clai-helpers init --targets claude,copilot
+npx underoute-clai init --targets claude,copilot
 ```
 
 ### Обновление до последней версии
 
 ```bash
-npx clai-helpers sync --upgrade
+npx underoute-clai sync --upgrade
 ```
 
 ## Команды
@@ -66,14 +66,14 @@ npx clai-helpers sync --upgrade
 helpers init [опции]
 ```
 
-| Флаг                     | Тип     | По умолчанию                    | Описание                                       |
-| ------------------------ | ------- | ------------------------------- | ---------------------------------------------- |
-| `--source <url>`         | string  | `github:UnderUndre/UndeRoute`   | URL source-репозитория                         |
-| `--version <tag>`        | string  | последний тег                   | Привязка к версии                              |
-| `--ref <ref>`            | string  | --                              | Ветка или SHA (перебивает `--version`)         |
-| `--targets <list>`       | string  | `claude,copilot,gemini,speckit` | Таргеты через запятую                          |
-| `--source-config <path>` | string  | --                              | Локальный оверрайд манифеста                   |
-| `--trust-custom`         | boolean | `false`                         | Автоматически доверять кастомным трансформерам |
+| Флаг                     | Тип     | По умолчанию                | Описание                                       |
+| ------------------------ | ------- | --------------------------- | ---------------------------------------------- |
+| `--source <url>`         | string  | `github:underundre/helpers` | URL source-репозитория                         |
+| `--version <tag>`        | string  | последний тег               | Привязка к версии                              |
+| `--ref <ref>`            | string  | --                          | Ветка или SHA (перебивает `--version`)         |
+| `--targets <list>`       | string  | `claude,copilot,gemini`     | Таргеты через запятую                          |
+| `--source-config <path>` | string  | --                          | Локальный оверрайд манифеста                   |
+| `--trust-custom`         | boolean | `false`                     | Автоматически доверять кастомным трансформерам |
 
 ### `helpers sync`
 
@@ -88,6 +88,7 @@ helpers sync [опции]
 | `--upgrade`              | boolean | `false`      | Обновить до последней версии                   |
 | `--version <tag>`        | string  | --           | Обновить до конкретной версии                  |
 | `--ref <ref>`            | string  | --           | Ветка или SHA                                  |
+| `--update-stack`         | boolean | `false`      | Пересканировать манифесты и обновить скиллы    |
 | `--source-config <path>` | string  | --           | Локальный оверрайд манифеста                   |
 | `--trust-custom`         | boolean | `false`      | Автоматически доверять кастомным трансформерам |
 
@@ -156,16 +157,17 @@ helpers list-transformers [--json]
 
 ### `helpers doctor`
 
-Проверка целостности lock-файла и хешей файлов на диске.
+Комплексная диагностика системы, инструментов, MCP, API-ключей, структуры и стекового дрифта.
 
 ```bash
-helpers doctor [--fix] [--clean]
+helpers doctor [--stack] [--json] [--quiet]
 ```
 
-| Флаг      | Описание                                                       |
-| --------- | -------------------------------------------------------------- |
-| `--fix`   | Автоматически исправить безопасные проблемы (пересчитать хеши) |
-| `--clean` | Удалить оставшиеся `.helpers_new` файлы                        |
+| Флаг      | Описание                                                      |
+| --------- | ------------------------------------------------------------- |
+| `--stack` | Проверить только стековый дрифт агентов по манифестам проекта |
+| `--json`  | Машиночитаемый JSON-вывод                                     |
+| `--quiet` | Показывать только ошибки                                      |
 
 ### `helpers recover`
 
@@ -255,7 +257,7 @@ Source-репозиторий предоставляет `helpers.config.ts` (и
 ### Пример
 
 ```ts
-import { defineHelpersConfig } from "clai-helpers";
+import { defineHelpersConfig } from "underoute-clai";
 
 export default defineHelpersConfig({
   version: 1,
@@ -335,8 +337,8 @@ helpers sync --source-config ./helpers.local.config.ts
 ### Кастомный трансформер
 
 ```ts
-import type { TransformerFn, ParsedFile, RenderedFile } from "clai-helpers";
-import { FileKind } from "clai-helpers";
+import type { TransformerFn, ParsedFile, RenderedFile } from "underoute-clai";
+import { FileKind } from "underoute-clai";
 
 const transform: TransformerFn = (source, ctx): RenderedFile | null => {
   if (source.extension !== ".md") return null;
@@ -394,7 +396,7 @@ export default transform;
 ```yaml
 # GitHub Actions
 - name: Проверка дрифта AI-конфигурации
-  run: npx clai-helpers status --strict
+  run: npx underoute-clai status --strict
 ```
 
 Код выхода `2` -- кто-то руками отредактировал управляемый файл. Инструмент по умолчанию неинтерактивный, работает в CI без дополнительных флагов.
@@ -408,7 +410,7 @@ export default transform;
 ## Программный API
 
 ```ts
-import { defineHelpersConfig, FileKind, FileClass, FileStatus, ExitCode } from "clai-helpers";
+import { defineHelpersConfig, FileKind, FileClass, FileStatus, ExitCode } from "underoute-clai";
 
 import type {
   HelpersConfig,
@@ -418,7 +420,7 @@ import type {
   ParsedFile,
   RenderedFile,
   TransformContext,
-} from "clai-helpers";
+} from "underoute-clai";
 ```
 
 ## Разработка

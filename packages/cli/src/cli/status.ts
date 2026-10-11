@@ -12,6 +12,7 @@ import { ExitCode } from "../types/common.js";
 import { readLock } from "../core/lock.js";
 import { detectDrift } from "../core/drift.js";
 import type { DriftResult } from "../core/drift.js";
+import { evaluateStackDrift } from "../core/stack/drift.js";
 
 interface StatusEntry {
   path: string;
@@ -92,19 +93,40 @@ export default defineCommand({
     } else {
       // Table output
       consola.log("");
-      consola.log(`  Source: ${lock.source.url} @ ${lock.source.ref} (${lock.source.commit.slice(0, 8)})`);
+      consola.log(
+        `  Source: ${lock.source.url} @ ${lock.source.ref} (${lock.source.commit.slice(0, 8)})`
+      );
       consola.log(`  Targets: ${lock.targets.join(", ")}`);
       consola.log(`  Files: ${lock.files.length}`);
       consola.log("");
 
       for (const entry of entries) {
         const driftFlag = entry.drift ? " [DRIFT]" : entry.customized ? " [CUSTOMIZED]" : "";
-        consola.log(`  ${entry.status.padEnd(12)} ${entry.kind.padEnd(10)} ${entry.path}${driftFlag}`);
+        consola.log(
+          `  ${entry.status.padEnd(12)} ${entry.kind.padEnd(10)} ${entry.path}${driftFlag}`
+        );
       }
 
       if (hasDrift) {
         consola.log("");
         consola.warn("Drift detected in managed files.");
+      }
+    }
+
+    if (args.strict) {
+      try {
+        const stackReport = await evaluateStackDrift(root);
+        if (stackReport.hasDrift) {
+          hasDrift = true;
+          if (!json) {
+            consola.log("");
+            consola.warn(
+              `Stack drift detected (${stackReport.findings.length} findings). Run 'helpers sync --update-stack' to resolve.`
+            );
+          }
+        }
+      } catch {
+        // Ignored in status fallback
       }
     }
 

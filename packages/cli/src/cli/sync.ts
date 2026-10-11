@@ -6,8 +6,16 @@
 
 import { defineCommand } from "citty";
 import consola from "consola";
-import { readFile, unlink, access } from "node:fs/promises";
+import { readFile, writeFile, unlink, access } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "pathe";
+
+import { scanStackManifest } from "../core/stack/scanner.js";
+import {
+  resolveDomainSkills,
+  injectSkillsIntoFrontmatter,
+  AGENT_FILE_DOMAIN_MAP,
+} from "../core/stack/matcher.js";
 
 import { ExitCode, FileKind, FileClass, FileStatus } from "../types/common.js";
 import type { LockFile, SourceEntry, GeneratedEntry } from "../types/lock.js";
@@ -20,12 +28,7 @@ import { parseSourceFile } from "../core/parse.js";
 import { matchGlob, resolveOutputPath } from "../core/glob.js";
 import { canonicalHash, slotsHash, renderedHash } from "../core/hash.js";
 import { parseSlots, mergeSlots } from "../core/slots.js";
-import {
-  createStagingDir,
-  stageFile,
-  commitStaged,
-  cleanStaging,
-} from "../core/staging.js";
+import { createStagingDir, stageFile, commitStaged, cleanStaging } from "../core/staging.js";
 import {
   createJournal,
   writeJournal,
@@ -58,7 +61,7 @@ export async function computeSyncPlan(
   lock: LockFile,
   sourceDir: string,
   targetNames: string[],
-  options: { upgrade?: boolean; version?: string; ref?: string },
+  options: { upgrade?: boolean; version?: string; ref?: string }
 ): Promise<SyncPlan> {
   const manifest = await loadManifest(sourceDir);
   await preloadAllTransformers(manifest, targetNames);
@@ -71,7 +74,7 @@ export async function computeSyncPlan(
     sourceFiles.map(async (relPath) => {
       const content = await readFile(join(sourceDir, relPath), "utf8");
       return parseSourceFile(relPath, content);
-    }),
+    })
   );
 
   // Run all transformer pipelines
@@ -140,9 +143,17 @@ export async function computeSyncPlan(
       // Source removed upstream
       if (entry.kind === FileKind.Generated) {
         // Auto-delete generated descendants of orphaned sources
-        items.push({ action: "delete", path: entry.path, reason: "Source removed upstream (generated auto-delete)" });
+        items.push({
+          action: "delete",
+          path: entry.path,
+          reason: "Source removed upstream (generated auto-delete)",
+        });
       } else {
-        items.push({ action: "skip", path: entry.path, reason: "Source removed upstream (orphaned)" });
+        items.push({
+          action: "skip",
+          path: entry.path,
+          reason: "Source removed upstream (orphaned)",
+        });
       }
       seen.add(entry.path);
     }
@@ -161,7 +172,7 @@ export async function applySyncPlan(
   root: string,
   lock: LockFile,
   plan: SyncPlan,
-  _sourceDir: string,
+  _sourceDir: string
 ): Promise<LockFile> {
   const stagingDir = await createStagingDir(root);
   const actionItems = plan.items.filter((i) => i.action !== "skip");
@@ -319,6 +330,11 @@ export default defineCommand({
       description:
         "Bypass the upstream-repo safety guard (advanced; overwrites local .claude/ with the upstream snapshot)",
     },
+    "update-stack": {
+      type: "boolean",
+      default: false,
+      description: "Re-scan repository stack and update agent skills in frontmatter",
+    },
   },
   async run({ args }) {
     const root = process.cwd();
@@ -354,7 +370,7 @@ export default defineCommand({
               "• For upstream maintainers: use `helpers regen` to rebuild generated " +
               "outputs in-place from the local sources.\n" +
               "• For consumers that legitimately maintain a mirror: pass `--allow-self-sync` " +
-              "to bypass this guard.",
+              "to bypass this guard."
           );
           process.exitCode = ExitCode.UsageError;
           return;
@@ -372,12 +388,9 @@ export default defineCommand({
 
       // 3. Fetch source
       consola.start("Fetching source repo...");
-      const { dir: sourceDir, commit } = await fetchSource(
-        lock.source.url,
-        ref,
-        undefined,
-        { offline: (args as Record<string, unknown>).offline === true },
-      );
+      const { dir: sourceDir, commit } = await fetchSource(lock.source.url, ref, undefined, {
+        offline: (args as Record<string, unknown>).offline === true,
+      });
 
       // Update lock source info
       if (args.upgrade || args.version || args.ref) {
@@ -392,7 +405,9 @@ export default defineCommand({
         ref: args.ref,
       });
 
-      consola.info(`Sync plan: ${plan.items.filter((i) => i.action === "add").length} add, ${plan.items.filter((i) => i.action === "update").length} update, ${plan.items.filter((i) => i.action === "delete").length} delete, ${plan.items.filter((i) => i.action === "skip").length} skip`);
+      consola.info(
+        `Sync plan: ${plan.items.filter((i) => i.action === "add").length} add, ${plan.items.filter((i) => i.action === "update").length} update, ${plan.items.filter((i) => i.action === "delete").length} delete, ${plan.items.filter((i) => i.action === "skip").length} skip`
+      );
 
       // 5. Dry run
       if (dryRun) {
@@ -405,6 +420,17 @@ export default defineCommand({
 
       // 6. Apply
       await applySyncPlan(root, lock, plan, sourceDir);
+
+      // 7. Stack update (if requested or by default)
+      if (args["update-stack"]) {
+        const updatedAgents = await applyStackUpdate(root);
+        if (updatedAgents.length > 0) {
+          consola.success(`Stack skills aligned: ${updatedAgents.join(", ")}`);
+        } else {
+          consola.info("Stack skills already up to date.");
+        }
+      }
+
       consola.success("Sync complete.");
     } finally {
       await releaseMutatingGuard(root, lockAcquired);
@@ -412,17 +438,49 @@ export default defineCommand({
   },
 });
 
+export async function applyStackUpdate(root: string): Promise<string[]> {
+  const manifest = await scanStackManifest(root);
+  const domainSkills = resolveDomainSkills(manifest);
+  const updatedFiles: string[] = [];
+  const agentsDir = join(root, ".claude", "agents");
+
+  if (!existsSync(agentsDir)) return updatedFiles;
+
+  const entries = await readdir(agentsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith(".md")) {
+      const domain = AGENT_FILE_DOMAIN_MAP[entry.name];
+      if (domain && domainSkills[domain]) {
+        const filePath = join(agentsDir, entry.name);
+        const content = await readFile(filePath, "utf-8");
+        const updated = injectSkillsIntoFrontmatter(content, domainSkills[domain]);
+        if (updated !== content) {
+          await writeFile(filePath, updated, "utf-8");
+          updatedFiles.push(entry.name);
+        }
+      }
+    }
+  }
+  return updatedFiles;
+}
+
 // ─── Helpers ────────────────────────────────────
 
 async function discoverSourceFiles(baseDir: string, patterns: string[]): Promise<string[]> {
   const allFiles: string[] = [];
   async function walk(dir: string): Promise<void> {
     let entries;
-    try { entries = await readdir(dir, { withFileTypes: true }); } catch (e) { consola.warn(`Could not read directory ${dir}:`, e); return; }
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch (e) {
+      consola.warn(`Could not read directory ${dir}:`, e);
+      return;
+    }
     for (const entry of entries) {
       const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) { await walk(fullPath); }
-      else {
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else {
         const relPath = relative(baseDir, fullPath);
         if (patterns.some((p) => matchGlob(p, relPath))) allFiles.push(relPath);
       }

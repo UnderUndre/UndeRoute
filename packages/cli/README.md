@@ -1,4 +1,4 @@
-# clai-helpers
+# underoute-clai
 
 CLI tool that treats `.claude/` as the single source of truth for AI-tool configuration and transpiles it into GitHub Copilot (`.github/`), Google Gemini (`.gemini/`), and other AI-tool file formats.
 
@@ -28,7 +28,7 @@ Write once in Claude format. Sync everywhere.
 ### Bootstrap a project
 
 ```bash
-npx clai-helpers init
+npx underoute-clai init
 ```
 
 This will:
@@ -43,19 +43,19 @@ This will:
 ### Pin to a specific version
 
 ```bash
-npx clai-helpers init --version v1.0.0
+npx underoute-clai init --version v1.0.0
 ```
 
 ### Generate only specific targets
 
 ```bash
-npx clai-helpers init --targets claude,copilot
+npx underoute-clai init --targets claude,copilot
 ```
 
 ### Update to latest
 
 ```bash
-npx clai-helpers sync --upgrade
+npx underoute-clai sync --upgrade
 ```
 
 ## Commands
@@ -68,18 +68,18 @@ Bootstrap a new project from the source repo.
 helpers init [options]
 ```
 
-| Flag                     | Type    | Default                         | Description                           |
-| ------------------------ | ------- | ------------------------------- | ------------------------------------- |
-| `--source <url>`         | string  | `github:UnderUndre/UndeRoute`   | Source repo URL                       |
-| `--version <tag>`        | string  | latest tag                      | Pin to specific version tag           |
-| `--ref <ref>`            | string  | --                              | Branch or SHA (overrides `--version`) |
-| `--targets <list>`       | string  | `claude,copilot,gemini,speckit` | Comma-separated target names          |
-| `--source-config <path>` | string  | --                              | Local manifest override               |
-| `--trust-custom`         | boolean | `false`                         | Pre-approve custom transformers       |
+| Flag                     | Type    | Default                     | Description                           |
+| ------------------------ | ------- | --------------------------- | ------------------------------------- |
+| `--source <url>`         | string  | `github:underundre/helpers` | Source repo URL                       |
+| `--version <tag>`        | string  | latest tag                  | Pin to specific version tag           |
+| `--ref <ref>`            | string  | --                          | Branch or SHA (overrides `--version`) |
+| `--targets <list>`       | string  | `claude,copilot,gemini`     | Comma-separated target names          |
+| `--source-config <path>` | string  | --                          | Local manifest override               |
+| `--trust-custom`         | boolean | `false`                     | Pre-approve custom transformers       |
 
 ### `helpers regen`
 
-Regenerate downstream targets **in-place** from the local `helpers.config.ts`. No network fetch, no lockfile. Intended for **upstream template repos** that maintain generated outputs alongside sources (like UnderUndre/UndeRoute itself) and need to refresh them after editing the `.claude/` tree.
+Regenerate downstream targets **in-place** from the local `helpers.config.ts`. No network fetch, no lockfile. Intended for **upstream template repos** that maintain generated outputs alongside sources (like UnderUndre/ai itself) and need to refresh them after editing the `.claude/` tree.
 
 ```bash
 helpers regen                   # all targets
@@ -105,13 +105,14 @@ Refuses to run if cwd contains `helpers.config.ts` (upstream-template layout) â€
 helpers sync [options]
 ```
 
-| Flag                     | Type    | Default | Description                     |
-| ------------------------ | ------- | ------- | ------------------------------- |
-| `--upgrade`              | boolean | `false` | Move to latest version          |
-| `--version <tag>`        | string  | --      | Move to specific version        |
-| `--ref <ref>`            | string  | --      | Branch or SHA                   |
-| `--source-config <path>` | string  | --      | Local manifest override         |
-| `--trust-custom`         | boolean | `false` | Pre-approve custom transformers |
+| Flag                     | Type    | Default | Description                                       |
+| ------------------------ | ------- | ------- | ------------------------------------------------- |
+| `--upgrade`              | boolean | `false` | Move to latest version                            |
+| `--version <tag>`        | string  | --      | Move to specific version                          |
+| `--ref <ref>`            | string  | --      | Branch or SHA                                     |
+| `--update-stack`         | boolean | `false` | Re-scan project manifests and update agent skills |
+| `--source-config <path>` | string  | --      | Local manifest override                           |
+| `--trust-custom`         | boolean | `false` | Pre-approve custom transformers                   |
 
 ### `helpers status`
 
@@ -194,11 +195,12 @@ Run comprehensive health diagnostics across system, tools, MCP servers, API keys
 
 ```bash
 helpers doctor            # Full health matrix
+helpers doctor --stack    # Only evaluate stack drift against package manifests
 helpers doctor --json     # Machine-readable JSON output
 helpers doctor --quiet    # Show failures only
 ```
 
-Checks: Node.js >=20.x, npm, git, gh CLI auth, hermes binary, MCP servers (context7, filesystem, github, sequential-thinking), API key presence, `.claude/` structural integrity, drift status.
+Checks: Node.js >=20.x, npm, git, gh CLI auth, hermes binary, MCP servers (context7, filesystem, github, sequential-thinking), API key presence, `.claude/` structural integrity, drift status, stack drift alignment.
 
 Exit code 0 if all critical checks pass, 1 if any critical check fails.
 
@@ -235,7 +237,7 @@ helpers recover <--resume | --rollback | --abandon>
 
 ## Fleet
 
-Manage clai-helpers across multiple GitHub repos from a single machine. Fleet discovers all repos with `helpers-lock.json`, reports drift, and syncs them in bulk.
+Manage underoute-clai across multiple GitHub repos from a single machine. Fleet discovers all repos with `helpers-lock.json`, reports drift, and syncs them in bulk.
 
 ### Prerequisites
 
@@ -253,7 +255,7 @@ export GH_TOKEN=ghp_your_token_here
 
 ### `helpers fleet list`
 
-Discover all GitHub repos with clai-helpers installed and display their status.
+Discover all GitHub repos with underoute-clai installed and display their status.
 
 ```bash
 helpers fleet list [options]
@@ -270,7 +272,7 @@ Running `helpers fleet` without a subcommand delegates to `fleet list`.
 
 ### `helpers fleet sync`
 
-Sync clai-helpers across selected GitHub repos. Three modes available:
+Sync underoute-clai across selected GitHub repos. Three modes available:
 
 ```bash
 helpers fleet sync [options]
@@ -330,13 +332,13 @@ helpers fleet remove-org <org>
 
 ### Common errors
 
-| Error                                   | Likely cause                                | Fix                                           |
-| --------------------------------------- | ------------------------------------------- | --------------------------------------------- |
-| `auth required: ...`                    | No token in env or `gh auth`                | `export GH_TOKEN=...` or `gh auth login`      |
-| `github/rate-limited`                   | >5000 API calls/h hit                       | Wait until reset (printed in error message)   |
-| `git/push-rejected (branch protection)` | Branch protection requires reviewers        | Use `--mode pr` instead of `--mode push`      |
-| `lockfile/malformed`                    | A repo's `helpers-lock.json` is broken      | Open the repo, fix manually, re-run           |
-| `config/malformed`                      | Typo in `~/.config/clai-helpers/fleet.json` | Error message names the field; fix and re-run |
+| Error                                   | Likely cause                                  | Fix                                           |
+| --------------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| `auth required: ...`                    | No token in env or `gh auth`                  | `export GH_TOKEN=...` or `gh auth login`      |
+| `github/rate-limited`                   | >5000 API calls/h hit                         | Wait until reset (printed in error message)   |
+| `git/push-rejected (branch protection)` | Branch protection requires reviewers          | Use `--mode pr` instead of `--mode push`      |
+| `lockfile/malformed`                    | A repo's `helpers-lock.json` is broken        | Open the repo, fix manually, re-run           |
+| `config/malformed`                      | Typo in `~/.config/underoute-clai/fleet.json` | Error message names the field; fix and re-run |
 
 For deeper documentation, see [`specs/003-fleet-sync/quickstart.md`](../../specs/003-fleet-sync/quickstart.md).
 
@@ -407,7 +409,7 @@ The source repo provides a `helpers.config.ts` (or `.js`, `.mjs`, `.json`) at it
 ### Example
 
 ```ts
-import { defineHelpersConfig } from "clai-helpers";
+import { defineHelpersConfig } from "underoute-clai";
 
 export default defineHelpersConfig({
   version: 1,
@@ -528,8 +530,8 @@ Local additions win. The source manifest provides defaults. This lets you add cu
 A custom transformer is a `.ts` or `.js` file that exports a default function matching the `TransformerFn` signature:
 
 ```ts
-import type { TransformerFn, ParsedFile, RenderedFile, TransformContext } from "clai-helpers";
-import { FileKind } from "clai-helpers";
+import type { TransformerFn, ParsedFile, RenderedFile, TransformContext } from "underoute-clai";
+import { FileKind } from "underoute-clai";
 
 const transform: TransformerFn = (
   source: ParsedFile,
@@ -643,7 +645,7 @@ Use `helpers status --strict` in your CI pipeline to catch drift:
 ```yaml
 # GitHub Actions example
 - name: Check AI config drift
-  run: npx clai-helpers status --strict
+  run: npx underoute-clai status --strict
 ```
 
 Exit code `2` means someone manually edited a managed file. The tool is non-interactive by default, so it works in CI without any extra flags.
@@ -651,7 +653,7 @@ Exit code `2` means someone manually edited a managed file. The tool is non-inte
 For JSON output in CI scripts:
 
 ```bash
-npx clai-helpers status --strict --json
+npx underoute-clai status --strict --json
 ```
 
 ### Recommended workflow
@@ -674,7 +676,7 @@ import {
   FileClass,
   FileStatus,
   ExitCode,
-} from "clai-helpers";
+} from "underoute-clai";
 
 import type {
   // Config types
@@ -687,7 +689,7 @@ import type {
   ParsedFile,
   RenderedFile,
   TransformContext,
-} from "clai-helpers";
+} from "underoute-clai";
 ```
 
 ## Development
