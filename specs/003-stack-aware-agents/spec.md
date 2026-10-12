@@ -202,6 +202,7 @@
   - Голый `helpers doctor` по-прежнему запускает `status --strict` в проверке `drift.status`; стековый HIGH даёт там fail и exit 1, а в detail — подсказку `Run 'helpers doctor --stack' for details`.
   - Exit-коды — таблица в contracts/cli-interface.md на основе enum `ExitCode`.
 - **FR-009 (Upstream Matrix Validation)**: `helpers regen` в апстрим-репо, если в нём есть `.claude/stack-matrix.json`, проверяет схему, уникальность `id`, валидность имён, наличие `.claude/skills/<name>/SKILL.md` для каждого скилла и `.claude/agents/<agent>.md` для каждой роли. Ошибка — exit 1: шаблон с битой матрицей не выпускается.
+- **FR-010 (Unified SpecKit Pipeline in Claude Target)**: В `helpers.config.ts` в пайплайны базового таргета `claude` включается обработка `.specify/**/*` (`transformer: "identity"`). Любой репозиторий, подключенный к таргету `claude`, автоматически получает шаблоны `.specify/templates/`, скрипты `.specify/scripts/`, чеклисты `.specify/checklists/` и конституцию `.specify/memory/constitution.md`. Отдельный таргет `speckit` сохраняется для обратной совместимости, но его отсутствие в `helpers-lock.json` больше не приводит к ситуации, когда команды `/speckit.*` установлены, а шаблоны `.specify/` отсутствуют.
 
 ---
 

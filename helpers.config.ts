@@ -46,6 +46,11 @@ export default {
           output: "AGENTS.md",
           class: "core",
         },
+        {
+          transformer: "identity",
+          match: ".specify/**/*",
+          output: "{{relativePath}}",
+        },
       ],
     },
 

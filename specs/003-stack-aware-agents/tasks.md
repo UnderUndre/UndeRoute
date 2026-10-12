@@ -108,6 +108,7 @@ description: "Task list for Stack-Aware Agent Fleet Synchronization with agent r
 - [x] T036 [DOC] `packages/cli/CHANGELOG.md` entry and migration note: opt-in binding, unchanged `status --json`, named slot grammar, `STACK_RULES` slot in the template, `confbox` dependency, CLI ≤ 1.0.x drops bindings on sync. The changelog currently ends at 0.1.0 while `package.json` says 1.0.0: confirm the release baseline with the maintainer. Do not bump the version here; `/bump` (expected 1.1.0) is a separate release step (Principle IV).
 - [x] T037 [E2E] Run the quickstart tracer on a consumer fixture outside UndeRoute (UndeRoute itself runs in upstream mode) with the CLI built from the implementation branch (`node <UndeRoute>/packages/cli/bin/helpers.mjs`) and `helpers init --ref 003-stack-aware-agents`. Expect the prefixes and lines from `quickstart.md`.
 - [x] T038 [OPS] Add `.github/workflows/helpers-cli.yml` (no workflow builds `packages/cli/` today), triggered by changes under `packages/cli/`, `.claude/` and `helpers.config.ts`. Job `test`: in `packages/cli/` run `npm ci` against the committed `package-lock.json`, then `npm run validate`, `npm test`, `npm run build` and `npm audit` (zero High/Critical); run `helpers regen` with matrix validation. Job `stack-bench`: T033 on `ubuntu-latest` (release-blocking) and `windows-latest` (report only).
+- [x] T041 [CONFIG] Include `.specify/**/*` in the `claude` target pipeline in `helpers.config.ts` (FR-010) ensuring automatic SpecKit templates delivery alongside Claude agents.
 
 ---
 
