@@ -62,7 +62,7 @@ Reviewers identify themselves by tool — `claude`, `codex`, `antigravity`, `gem
 
 ### VII. Artifact Versioning
 
-Every pipeline stage that mutates a feature artifact (specify, clarify, plan, tasks, review, **bizplan**) MUST tag the commit via `.specify/scripts/{bash,powershell}/snapshot-stage.{sh,ps1}` using the convention `<stage>/<slug>/v<N>`.
+Every pipeline stage that mutates a feature artifact (specify, clarify, **requirements-audit**, plan, tasks, **test-design**, review, **qa-signoff**, **bizplan**) MUST tag the commit via `.specify/scripts/{bash,powershell}/snapshot-stage.{sh,ps1}` using the convention `<stage>/<slug>/v<N>`.
 
 - Tags are the **only** historical record. **No parallel `.history/` files** — git is the history. Duplicating into `specs/<slug>/.history/` is an anti-pattern: it drifts and bloats the tree.
 - `/speckit.diff <slug>` reads tags to compare iterations without speculative file copies.
@@ -151,6 +151,24 @@ Exploratory research spikes and Proof-of-Concepts (PoC) MUST adhere to formal De
 3. **Mandatory Code Disposal**: Prototype code and exploratory branches MUST be completely discarded. Merging or copy-pasting raw spike code into production files is strictly prohibited. Production deliverables must be implemented clean-room from scratch against typed contracts and automated test suites.
 4. **No fake TDD ballast**: Rigid TDD test suites are prohibited on temporary spike code to prevent accumulating throwaway abstraction debt.
 
+### XII. QA & Test Artifact Contour (ISO/IEC/IEEE 29119 + 29148)
+
+Manual QA artifacts are part of the pipeline canon, not an afterthought. Three commands form the contour:
+
+1. **Stage 2.5 — `/speckit.requirements-audit`** (gate): audits `spec.md` against ISO/IEC/IEEE 29148:2018 (Verifiability, Consistency, Completeness, Unambiguity) and scores every FR/NFR with Risk = Impact (1–5) × Probability (1–5). Outputs `specs/<slug>/requirements-audit.md` + draft `specs/<slug>/qa/preliminary-rtm.md`. Verdict **REJECTED blocks `/speckit.plan`** (bypass only via `--override-gate "<reason>"`, logged). Runs after `/speckit.specify` (or `/speckit.clarify`), before `/speckit.plan`.
+2. **Stage 5.5 — `/speckit.test-design`**: after `/speckit.tasks`, generates `specs/<slug>/qa/{rtm-matrix.md, test-cases.md, uat-scenarios.md, regression-suite.md}` per ISO/IEC/IEEE 29119-3:2021 (artifacts) and 29119-4:2021 (techniques: BVA, EP, Decision Table, State Transition, Error Guessing). Test depth scales by Risk Score. RTM traceability is end-to-end: `FR ↔ Task ↔ Commit/PR ↔ TC ↔ Bug`, with an NFR Level 1 Evidence table (raw benchmark/scan artifacts, not impressions). Runs before/parallel to `/speckit.implement`.
+3. **Stage 8.5 — `/speckit.qa-signoff`** (gate): after manual QA execution on staging/preview, issues a three-position verdict — `APPROVED` / `APPROVED WITH RISKS` (requires a filled Residual Risk Register + explicit risk owner confirmation) / `BLOCKED`. **BLOCKED prohibits `/speckit.code-review` and merge.** Outputs `specs/<slug>/qa/signoff-report.md`. Bypass via `--override-gate "<reason>"`, logged.
+
+Rules:
+
+- `/speckit.analyze` MUST check RTM coverage: every FR/NFR traces to at least one test case; Risk ≥ 20 requirements MUST have Decision Table + State Transition + Exploratory Charter + UAT coverage.
+- QA (does the build match the spec) and UAT (does the feature serve the business) are separate artifacts and separate questions; `uat-scenarios.md` is not a test-case dump.
+- SKIPPED ≠ PASSED. Sign-off trusts explicit execution marks only.
+- Snapshot stage names `requirements-audit`, `test-design`, `qa-signoff` are reserved per Principle VII.
+- Hotfixes under the Principle IX carve-out skip the contour. Chore-only features may waive the contour via `specs/<slug>/qa/waiver.md` + reason (mirrors VII-B.5).
+
+Rationale: a requirements defect caught at stage 2.5 costs minutes; the same defect at stage 9 or in production costs a release. If a requirement cannot be tested, the requirement is the defect.
+
 ## Technical Constraints
 
 > Moved to [`../../specs/main/requirements.md`](../../specs/main/requirements.md) §2.1 (single source of truth). Constitution governs **principles**; concrete tech-stack constraints live alongside requirements where they belong.
@@ -167,7 +185,7 @@ Exploratory research spikes and Proof-of-Concepts (PoC) MUST adhere to formal De
 
 ### `/speckit.*` pipeline for features
 
-`/speckit.specify` → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.analyze` → **`/speckit.review`** (×2 from external AI tools) → `/speckit.implement` → `/speckit.status`.
+`/speckit.specify` → **`/speckit.requirements-audit`** (Principle XII gate) → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → **`/speckit.test-design`** (Principle XII) → `/speckit.analyze` → **`/speckit.review`** (×2 from external AI tools) → `/speckit.implement` → **`/speckit.qa-signoff`** (Principle XII gate, after manual QA) → `/speckit.code-review` → `/speckit.status`.
 
 This file (the constitution) is loaded at the Constitution Check gate of `/speckit.plan`. Violations block until resolved.
 
@@ -194,9 +212,11 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 4. **Complexity must be justified.** Every new agent, transformer, target, or skill adds load to every downstream session. A change that doesn't earn its weight is rejected.
 5. **Anti-sycophancy applies to review of this file too.** If a principle above is wrong for the project, say so and propose an amendment. Don't quietly ignore it.
 
-**Version**: 1.7.1 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-11
+**Version**: 1.8.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-25
 
 ### Changelog
+
+- **1.8.0** (2026-10-25) — Added Principle **XII: QA & Test Artifact Contour** (ISO/IEC/IEEE 29119-2/3/4 + 29148). Three new stages: `/speckit.requirements-audit` (2.5, REJECT blocks plan), `/speckit.test-design` (5.5, generates `qa/{rtm-matrix,test-cases,uat-scenarios,regression-suite}.md`), `/speckit.qa-signoff` (8.5, APPROVED / APPROVED WITH RISKS / BLOCKED; BLOCKED gates code-review & merge). Snapshot stages `requirements-audit|test-design|qa-signoff` reserved. Hotfix carve-out (IX) and chore waiver apply. Pipeline line updated.
 
 - **1.7.1** (2026-10-11) — Clarified Principle III: CLI-computed, lock-recorded fields (stack binding of `skills:`) are pipeline output, not project overrides. No behavioral change. Raised by 003-stack-aware-agents analyze D3.
 
