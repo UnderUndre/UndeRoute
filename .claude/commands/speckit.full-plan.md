@@ -1,6 +1,10 @@
 ---
 description: Combined plan + tasks — generate implementation plan and task breakdown in one session.
 handoffs:
+  - label: Design Test Artifacts (Stage 5.5)
+    agent: speckit.test-design
+    prompt: Generate ISO 29119 test cases, RTM, and UAT scenarios
+    send: true
   - label: Analyze For Consistency
     agent: speckit.analyze
     prompt: Run a project analysis for consistency
@@ -67,4 +71,4 @@ After both phases complete, report:
 - Branch name
 - Phase 1: plan.md path, generated artifacts list, architecture.md updates
 - Phase 2: tasks.md path, total task count, tasks per agent, parallel lanes, critical path, agent dispatch plan, suggested MVP scope
-- Suggested next command: `/speckit.analyze` or `/speckit.implement`
+- Suggested next command: `/speckit.test-design` (Stage 5.5) or `/speckit.analyze`

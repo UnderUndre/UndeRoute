@@ -1,6 +1,10 @@
 ---
 description: Combined specify + clarify — create feature spec and immediately clarify ambiguities in one session.
-handoffs: 
+handoffs:
+  - label: Audit Requirements (Gate 2.5)
+    agent: speckit.requirements-audit
+    prompt: Audit the specification against ISO 29148
+    send: true
   - label: Build Technical Plan
     agent: speckit.plan
     prompt: Create a plan for the spec. I am building with...
@@ -28,7 +32,7 @@ This is a **combo command** that runs `/speckit.specify` followed by `/speckit.c
 
 Honor `speckit.specify.md` step **0**:
 
-- **No plan + first commercial feature** → run `/speckit.business-plan` **CREATE** before Phase 1 spec body.  
+- **No plan + first commercial feature** → run `/speckit.business-plan` **CREATE** before Phase 1 spec body.
 - **Plan exists** → read it as constraint; defer UPDATE until after clarify if commercial delta (preferred in this combo), unless CREATE just ran.
 
 ### Phase 1: Specify
@@ -67,9 +71,9 @@ Without pausing, execute the **full** `/speckit.clarify` workflow as defined in 
 
 After clarify is integrated:
 
-1. If plan was **created** in Phase 0 and clarify changed pricing/ICP/gates → **UPDATE** plan once.  
-2. If plan **existed** and feature has commercial delta (see specify 0b) → run `/speckit.business-plan` **UPDATE**.  
-3. If no commercial delta → report `Business plan: unchanged`.  
+1. If plan was **created** in Phase 0 and clarify changed pricing/ICP/gates → **UPDATE** plan once.
+2. If plan **existed** and feature has commercial delta (see specify 0b) → run `/speckit.business-plan` **UPDATE**.
+3. If no commercial delta → report `Business plan: unchanged`.
 4. Snapshot: `snapshot-stage.ps1 -Stage bizplan -Slug <slug>` when plan file changed.
 
 ### Completion Report
@@ -80,4 +84,4 @@ After all phases complete, report:
 - Phase 0/3: business plan `created` | `updated vX→vY` | `unchanged` | `waived` + path
 - Phase 1: checklist results, questions asked/answered
 - Phase 2: questions asked/answered, sections touched, coverage summary
-- Suggested next command: `/speckit.full-plan` or `/speckit.plan`
+- Suggested next command: `/speckit.requirements-audit` (Gate 2.5) or `/speckit.full-plan`
