@@ -1,6 +1,10 @@
 ---
 description: Generate an actionable, dependency-ordered tasks.md with agent routing and parallel execution lanes.
 handoffs:
+  - label: Design Test Artifacts (Stage 5.5)
+    agent: speckit.test-design
+    prompt: Generate ISO 29119 test cases, RTM, and UAT scenarios
+    send: true
   - label: Analyze For Consistency
     agent: speckit.analyze
     prompt: Run a project analysis for consistency

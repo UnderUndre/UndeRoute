@@ -1,16 +1,17 @@
 ---
 description: Create or update the feature specification from a natural language feature description.
 handoffs:
-  - label: Create/Update Business Plan
-    agent: speckit.business-plan
-    prompt: Create or update docs business plan from this feature
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with...
+  - label: Audit Requirements (Gate 2.5)
+    agent: speckit.requirements-audit
+    prompt: Audit the specification against ISO 29148
+    send: true
   - label: Clarify Spec Requirements
     agent: speckit.clarify
     prompt: Clarify specification requirements
     send: true
+  - label: Build Technical Plan
+    agent: speckit.plan
+    prompt: Create a plan for the spec. I am building with...
 ---
 
 ## User Input
@@ -248,7 +249,7 @@ Given that feature description, do this:
 
 8. **Business plan UPDATE hook** (if step 0b applies and commercial delta exists): execute `/speckit.business-plan` update now (or explicitly defer to post-clarify in the report if user is continuing straight into clarify — then `/speckit.clarify` or the user must run update before `/speckit.plan`).
 
-9. Report completion with branch name, spec file path, checklist results, **business plan action** (`created path` | `updated path vX→vY` | `unchanged` | `waived`), and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+9. Report completion with branch name, spec file path, checklist results, **business plan action** (`created path` | `updated path vX→vY` | `unchanged` | `waived`), and readiness for the next phase (`/speckit.requirements-audit` — Gate 2.5).
 
 **NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
 

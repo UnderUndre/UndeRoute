@@ -273,7 +273,8 @@ Check `$ARGUMENTS` for `--override-gate <reason>` (or `--override-gate="<reason>
     - Check that implemented features match the original specification
     - Validate that tests pass and coverage meets requirements
     - Confirm the implementation follows the technical plan
-    - Report final status with summary per agent:
+    - Report final status with summary per agent, and instruct the user on the next required gate:
+      **Next step**: Run manual QA on staging/preview and execute `/speckit.qa-signoff` (Gate 8.5) before requesting `/speckit.code-review`.
 
     ```text
     | Agent | Completed | Failed | Blocked |

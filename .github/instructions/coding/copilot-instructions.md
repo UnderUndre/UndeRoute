@@ -2,11 +2,11 @@
 
 ## Metadata
 
-| Field         | Value |
-| ------------- | ----- |
-| **Version**   | 2.1.0 |
-| **Updated**   | 2026-07-06 |
-| **Scope**     | Lean Coding Foundation (Standing Orders, Stop Conditions, Principles Gist) |
+| Field         | Value                                                                       |
+| ------------- | --------------------------------------------------------------------------- |
+| **Version**   | 2.1.0                                                                       |
+| **Updated**   | 2026-07-06                                                                  |
+| **Scope**     | Lean Coding Foundation (Standing Orders, Stop Conditions, Principles Gist)  |
 | **Companion** | `.github/instructions/coding/copilot-instructions-ref.md` (Heavy reference) |
 
 ---
@@ -34,13 +34,14 @@ All agents MUST adhere to these distilled core rules. For the full normative tex
    - Follow: Classify → Analyze → Spec → Plan → Execute → Verify → Reflect.
    - WRAP Atomicity: <500 LOC/change, refactor XOR feature (never mixed).
    - Chain of Verification: Plan → Verify schema/routes → Tracer bullet (end-to-end skeleton) → Flesh out.
-   - *See Coding Reference §5 for detailed workflow.*
+   - _See Coding Reference §5 for detailed workflow._
 
 5. **Anti-Patterns Gist (MUST avoid)**
-   - No file/class/type names matching specific LLM names (e.g. *haiku*).
+   - No file/class/type names matching specific LLM names (e.g. _haiku_).
    - Delete security theater (client-only guards with no server verification).
    - Resolve user/operator identity ONLY from verified JWT, never request body.
    - Classify errors via structural properties (name, code, status), never message substrings.
    - Guard numeric inputs with `Number.isFinite()` at boundaries (HTML accepts "e").
    - Callers MUST guard state updates behind `{ committed }` / success flag to block stale memory.
-   - *See Coding Reference §14 for details and production incident logs.*
+   - Never use symptom-hiding guards (`if (!x) return;`) or tautological tests (must fail on no-op).
+   - _See Coding Reference §14 for details and production incident logs._

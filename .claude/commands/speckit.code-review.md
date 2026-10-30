@@ -50,8 +50,8 @@ Act as a Principal Staff Engineer, SRE, and Security Auditor.
 
 ## Multi-Pass Inspection Pipeline
 
-1. **Pass 1: Constitution & Architecture Compliance**  
-   Validate changes against `.specify/memory/constitution.md`, `AGENTS.md`, and `CLAUDE.md`. Check for unauthorized patterns, architecture drift, modular monolith boundaries, and verify no raw exploratory spike/PoC code was leaked into production without clean rewrite.
+1. **Pass 1: Constitution, QA Contour & Architecture Compliance**  
+   Validate changes against `.specify/memory/constitution.md` (including Principle XII QA Contour), `AGENTS.md`, and `CLAUDE.md`. Check for unauthorized patterns, architecture drift, modular monolith boundaries, verify no raw exploratory spike/PoC code leaked, and **verify that `specs/<slug>/qa/signoff-report.md` exists and has status `APPROVED` or `APPROVED WITH RISKS` (or explicit `--override-gate` was supplied)**. If QA sign-off is `BLOCKED` or missing without waiver, **REJECT** code review immediately.
 2. **Pass 2: Security, Compliance & Secrets (ISO 27001 Control 8.28 / PCI DSS v4.0.1)**  
    Zero unmasked PII in logs or storage, no hardcoded secrets, raw SQL concatenation, IDOR, SSRF, or unsanitized shell inputs. Verify cryptographic posture and input validation at API boundaries (Zod/Pydantic).
 3. **Pass 3: Concurrency, State & Async Hygiene**  

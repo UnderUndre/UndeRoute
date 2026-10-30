@@ -113,12 +113,12 @@ For each issue found in review:
 
 ### Review Sections (BIG changes = all 4, SMALL = relevant subset):
 
-| Section | Key Questions |
-| --- | --- |
+| Section          | Key Questions                                    |
+| ---------------- | ------------------------------------------------ |
 | **Architecture** | Boundaries? Coupling? Data flow? SPOF? Security? |
-| **Code Quality** | DRY? Error handling? Edge cases? Tech debt? |
-| **Tests** | Coverage? Assertion quality? Failure scenarios? |
-| **Performance** | N+1? Memory? Caching? Latency? |
+| **Code Quality** | DRY? Error handling? Edge cases? Tech debt?      |
+| **Tests**        | Coverage? Assertion quality? Failure scenarios?  |
+| **Performance**  | N+1? Memory? Caching? Latency?                   |
 
 ---
 
@@ -131,10 +131,7 @@ For each issue found in review:
 export async function createUser(req: Request): Promise<Response> {
   const parsed = createUserSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return json(
-      { error: "Validation failed", details: parsed.error.flatten() },
-      { status: 400 },
-    );
+    return json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 });
   }
 
   try {
@@ -184,17 +181,17 @@ app.post("/users", async (req, res) => {
 
 **Before starting ANY task, identify the domain and activate the right agent.**
 
-| Domain | Agent File | When |
-| --- | --- | --- |
-| Frontend / UI / UX | `frontend-specialist.md` | Components, styling, state, a11y |
-| Backend / API / DB | `backend-specialist.md` | Endpoints, services, auth, data flow |
-| Database / Schema | `database-architect.md` | Schema design, migrations, queries |
-| DevOps / Deploy | `devops-engineer.md` | CI/CD, servers, monitoring, rollback |
-| Security / Audit | `security-auditor.md` | Vulnerabilities, OWASP, supply chain |
-| Performance | `performance-optimizer.md` | Profiling, Web Vitals, bundle size |
-| Documentation | `documentation-writer.md` | README, API docs, changelog |
-| Debugging | `debug.md` | Systematic bug investigation |
-| Brainstorming | `brainstorm.md` | Idea exploration, no code |
+| Domain             | Agent File                 | When                                 |
+| ------------------ | -------------------------- | ------------------------------------ |
+| Frontend / UI / UX | `frontend-specialist.md`   | Components, styling, state, a11y     |
+| Backend / API / DB | `backend-specialist.md`    | Endpoints, services, auth, data flow |
+| Database / Schema  | `database-architect.md`    | Schema design, migrations, queries   |
+| DevOps / Deploy    | `devops-engineer.md`       | CI/CD, servers, monitoring, rollback |
+| Security / Audit   | `security-auditor.md`      | Vulnerabilities, OWASP, supply chain |
+| Performance        | `performance-optimizer.md` | Profiling, Web Vitals, bundle size   |
+| Documentation      | `documentation-writer.md`  | README, API docs, changelog          |
+| Debugging          | `debug.md`                 | Systematic bug investigation         |
+| Brainstorming      | `brainstorm.md`            | Idea exploration, no code            |
 
 **Routing protocol:**
 
@@ -209,14 +206,14 @@ app.post("/users", async (req, res) => {
 
 ## 10. MCP Servers
 
-| Server | Purpose | Priority |
-| --- | --- | --- |
-| `github` | PRs, Issues, code search | **Primary** for GitHub ops. Fallback: `gh` CLI. |
-| `context7` | Library docs (fresh) | **MUST use** when unsure about any API. |
-| `filesystem` | Dir tree, batch read, search | Extended file ops beyond built-in tools. |
-| `git` | Typed git commands | All git ops. Safety protocols still apply. |
-| `sequential-thinking` | Structured reasoning | Complex arch decisions, multi-step debug. |
-| `terminal-controller` | Stateful terminal sessions | Interactive scenarios. Simple commands → Bash. |
+| Server                | Purpose                      | Priority                                        |
+| --------------------- | ---------------------------- | ----------------------------------------------- |
+| `github`              | PRs, Issues, code search     | **Primary** for GitHub ops. Fallback: `gh` CLI. |
+| `context7`            | Library docs (fresh)         | **MUST use** when unsure about any API.         |
+| `filesystem`          | Dir tree, batch read, search | Extended file ops beyond built-in tools.        |
+| `git`                 | Typed git commands           | All git ops. Safety protocols still apply.      |
+| `sequential-thinking` | Structured reasoning         | Complex arch decisions, multi-step debug.       |
+| `terminal-controller` | Stateful terminal sessions   | Interactive scenarios. Simple commands → Bash.  |
 
 **Rules:**
 
@@ -306,6 +303,12 @@ app.post("/users", async (req, res) => {
 - **Rationale**: soft-fail функции существуют именно потому что вызов может не пройти (version mismatch, concurrent writer). Blind-update локальной переменной → stale JS state → corrupted downstream decisions.
 - **Test discipline**: unit-test функцию в изоляции — недостаточно. **MUST** писать integration test который проверяет, что caller'ы правильно guard'ят mutation. Isolation tests silent-memory bug не ловят.
 
+### 14.7 Anti-Symptom Patching & Tautological Tests (Запрет пластырей и фиктивных тестов)
+
+- **MUST NOT** замазывать падения заглушками вроде `if (!x) return;` или пустыми `try { ... } catch {}` (Anti-Symptom Patching). Поверхностный guard прячет баг из мониторинга и оставляет систему в повреждённом состоянии.
+- **MUST NOT** писать tautological (пустые) тесты, которые остаются зелёными при удалении содержимого функции (`no-op`). Тест обязань падать при вырезании логики и проверять конкретные результаты/побочные эффекты.
+- **Почему**: иллюзия чистоты кода приводит к деградации продакшена под нагрузкой. Ремонтируй кран у стояка, а не завязывай течь изолентой.
+
 ---
 
 ## 15. LLM Integration Patterns — MUST
@@ -315,20 +318,22 @@ app.post("/users", async (req, res) => {
 ### 15.1 LLM Prompts — admin-editable, never hardcoded-only
 
 Каждый промпт резолвится по precedence:
+
 1. **Per-assistant override** — `assistant.settings.prompts.X` (JSONB)
 2. **Admin-editable row** — `admin_settings` table, ключ по паттерну `X_PROMPT_CONTENT`
 3. **TypeScript seed constant** — fallback для чистой инсталляции / DB-hiccup
-**MUST NOT** хардкодить промпт как single source. Хардкоженные-only промпты → оператор не может iterate без CI/CD release → жуткий feedback loop ("поменяй запятую → жди 2 часа"). Admin editor — это и есть feedback loop.
+   **MUST NOT** хардкодить промпт как single source. Хардкоженные-only промпты → оператор не может iterate без CI/CD release → жуткий feedback loop ("поменяй запятую → жди 2 часа"). Admin editor — это и есть feedback loop.
 
 ### 15.2 LLM Model — operator-pickable per phase
 
 `assistant.settings.models.{phase}` для каждой фазы (`extraction`, `intro`, `main`, `vision`, `verification`, `compression`, ...). Resolution:
+
 1. `input.modelOverride` (tests / programmatic)
 2. `assistant.settings.models.{phase}`
 3. `process.env.{PHASE}_MODEL`
 4. modelRegistry default
-**MUST NOT**: хардкодить имя модели в сервисе (`modelRegistry.resolveModel("haiku", ...)`).
-**MUST NOT**: именовать файлы/классы по модели (см. §14.1). Модель — config, не архитектура.
+   **MUST NOT**: хардкодить имя модели в сервисе (`modelRegistry.resolveModel("haiku", ...)`).
+   **MUST NOT**: именовать файлы/классы по модели (см. §14.1). Модель — config, не архитектура.
 
 ---
 
@@ -339,6 +344,7 @@ app.post("/users", async (req, res) => {
 Admin endpoints, которые делают `SELECT ... FOR UPDATE` (или аналог) **MUST** иметь rate-limiter. Без него скомпрометированный админ-токен / баговый скрипт положит базу через exhaustion connection pool на dead-locks.
 
 Typical limits (per-operator key = `req.user?.id ?? req.ip`):
+
 - Destructive (financial, deletions): **10/min** (force-pay-link, delete)
 - Mutations с lock (state override): **60/min** (force-advance, unlock-slot)
 - Read-only admin: 300/min (GET /admin/*)
@@ -348,6 +354,7 @@ Typical limits (per-operator key = `req.user?.id ?? req.ip`):
 Когда два кода могут писать в одну JSONB-row одновременно (классика: AI pipeline + operator override оба мутируют `thread.metadata`), raw `UPDATE SET col = ...` silently clobbers. Нужна version-колонка + CAS.
 
 Паттерн:
+
 1. Column `metadata_version BIGINT NOT NULL DEFAULT 0`
 2. Writes через persistor-helper: `UPDATE ... SET col = ..., metadata_version = metadata_version + 1 WHERE id = ? AND metadata_version = expected`
 3. Version mismatch → skip write, log WARN, set sticky `hasConflict` flag
