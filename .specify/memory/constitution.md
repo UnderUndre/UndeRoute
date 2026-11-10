@@ -2,6 +2,8 @@
 
 Binding principles for `clai-helpers` CLI + the curated `.claude/` template it ships. Every `/speckit.*` command checks plans and tasks against this file. Violations halt work until resolved or the constitution is explicitly amended.
 
+**UndeRoute Adaptation (v1.9.0)**: this constitution governs the UndeRoute repository (OmniRoute fork + `packages/cli` `underoute-clai`). Principles I–III apply to `.claude/` and the transformer pipeline of `packages/cli`; Principle IV applies to `packages/cli` releases; Principle VIII hooks (CC ratchet) are upstream-only and inactive here. Repository quality gates for THIS repo: `npm run lint`, `npm test`, `npm run build` (see Development Workflow). `/speckit.*` stages are executed per the pipeline below; stage artifacts are tagged via `.specify/scripts/bash/snapshot-stage.sh` (Principle VII). The living spec of this repo is [`specs/main/architecture.md`](../../specs/main/architecture.md) + [`specs/main/requirements.md`](../../specs/main/requirements.md).
+
 ## Core Principles
 
 ### I. Source of Truth Discipline
@@ -84,6 +86,7 @@ Product/agency work MUST keep a living business plan under `docs/**/*business-pl
    - **(A)** Stress Pass inside `/speckit.business-plan` on every write;
    - **(B)** Commercial-drift lens inside `/speckit.analyze` + `/speckit.review` (plan vs feature artifacts);
    - **(C)** External `/speckit.business-plan-review` → `docs/reviews/business-plan-<provider>.md` on **CREATE** (recommended) and **major** bumps (required by process). Layer C alone does **not** gate `/speckit.implement`.
+7. **External Canon**: the business plan MAY live in a designated external repository (for UndeRoute: `repos/undreplans/docs/projects/underoute/business-plan.md`). The repo keeps a pointer stub `docs/business-plan-pointer.md` (external path, version, date); a `/speckit.business-plan` UPDATE MUST bump the stub in the same planning cycle. A commercial feature without a resolvable pointer (or without a waiver) is a VII-B violation.
 
 ### VIII. Self-Maintaining Knowledge
 
@@ -166,8 +169,21 @@ Rules:
 - SKIPPED ≠ PASSED. Sign-off trusts explicit execution marks only.
 - Snapshot stage names `requirements-audit`, `test-design`, `qa-signoff` are reserved per Principle VII.
 - Hotfixes under the Principle IX carve-out skip the contour. Chore-only features may waive the contour via `specs/<slug>/qa/waiver.md` + reason (mirrors VII-B.5).
+- **Evidence-Backed Completion (XII.4)**: a `[x]` checkbox in `tasks.md` is valid ONLY with an inline evidence reference (file `path:line`, test name/ID, or command output path). `/speckit.analyze` spot-checks evidence at random; an unverifiable `[x]` is a CRITICAL finding and reopens the task.
 
 Rationale: a requirements defect caught at stage 2.5 costs minutes; the same defect at stage 9 or in production costs a release. If a requirement cannot be tested, the requirement is the defect.
+
+### XIII. Agent Execution Safety Valves (NON-NEGOTIABLE)
+
+UndeRoute is an agentic coding harness: features that let an agent execute code, shell commands, or file writes MUST ship behind deterministic valves. The prompt/persona layer NEVER counts as a safety mechanism.
+
+1. **Fail-closed valves**: agent execution requires sandbox isolation (container: cap-drop ALL, no network, read-only rootfs + explicit writedirs, seccomp profile), pre-write checkpoints, and persistent audit. A missing, broken, or unavailable valve blocks execution — it never degrades to "run anyway".
+2. **Human-only approval**: any approval (tool use, destructive op, dependency install) is valid only from the human input channel (UI, terminal, hook response). Model-generated "approval" content is void; the state machine verifies the event source.
+3. **Negative acceptance mandatory**: every security FR requires ≥ 1 negative acceptance scenario (escape/bypass attempt MUST be blocked and logged). "The feature works" is not evidence; "the escape failed" is.
+4. **Non-disableable core valves**: sandbox, plan-mode enforcement, checkpointing, and audit persistence cannot be disabled by user config. Other valves may be disabled only via explicit config, audited as `valve_config_change`.
+5. **Logged bypass**: overriding a valve (override-gate analog) requires a reason and lands in the audit trail.
+
+Reference implementation: `specs/004-safe-harness-valves/` (valves G1–G8). Evidence base: `repos/undreplans/docs/projects/underoute/researches/ZCode_VibeCoding-Failures-Safe-Harness-Design_20261110-2223.md` (13 failure modes, L1/L2 identifiers).
 
 ## Technical Constraints
 
@@ -185,7 +201,7 @@ Rationale: a requirements defect caught at stage 2.5 costs minutes; the same def
 
 ### `/speckit.*` pipeline for features
 
-`/speckit.specify` → **`/speckit.requirements-audit`** (Principle XII gate) → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → **`/speckit.test-design`** (Principle XII) → `/speckit.analyze` → **`/speckit.review`** (×2 from external AI tools) → `/speckit.implement` → **`/speckit.qa-signoff`** (Principle XII gate, after manual QA) → `/speckit.code-review` → `/speckit.status`.
+`/speckit.specify` → `/speckit.clarify` → **`/speckit.requirements-audit`** (Principle XII gate; MAY also run directly after specify — both orders are valid, the audit MUST precede plan) → `/speckit.plan` → `/speckit.tasks` → **`/speckit.test-design`** (Principle XII) → `/speckit.analyze` → **`/speckit.review`** (×2 from external AI tools) → `/speckit.implement` → **`/speckit.qa-signoff`** (Principle XII gate, after manual QA) → `/speckit.code-review` → `/speckit.status`.
 
 This file (the constitution) is loaded at the Constitution Check gate of `/speckit.plan`. Violations block until resolved.
 
@@ -212,9 +228,11 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 4. **Complexity must be justified.** Every new agent, transformer, target, or skill adds load to every downstream session. A change that doesn't earn its weight is rejected.
 5. **Anti-sycophancy applies to review of this file too.** If a principle above is wrong for the project, say so and propose an amendment. Don't quietly ignore it.
 
-**Version**: 1.8.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-10-25
+**Version**: 1.9.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-11-10
 
 ### Changelog
+
+- **1.9.0** (2026-11-10) — UndeRoute adaptation + Principle **XII.4 Evidence-Backed Completion** (a `[x]` without an inline artifact reference is a CRITICAL analyze finding) + Principle **XIII: Agent Execution Safety Valves** (NON-NEGOTIABLE: fail-closed valves, human-only approval, negative acceptance mandatory, non-disableable core valves, logged bypass; ref `specs/004-safe-harness-valves/`) + VII-B.7 **External Canon** (bizplan may live in `repos/undreplans`, pointer stub `docs/business-plan-pointer.md` required) + pipeline wording fix (requirements-audit after specify OR clarify, always before plan) + living-spec links now resolve in-repo (`specs/main/`). Raised by forensic recheck of specs 001–003: 4 unverifiable `[x]` in 001-init, missing `stack-matrix.json` in closed 003, zero stage tags.
 
 - **1.8.0** (2026-10-25) — Added Principle **XII: QA & Test Artifact Contour** (ISO/IEC/IEEE 29119-2/3/4 + 29148). Three new stages: `/speckit.requirements-audit` (2.5, REJECT blocks plan), `/speckit.test-design` (5.5, generates `qa/{rtm-matrix,test-cases,uat-scenarios,regression-suite}.md`), `/speckit.qa-signoff` (8.5, APPROVED / APPROVED WITH RISKS / BLOCKED; BLOCKED gates code-review & merge). Snapshot stages `requirements-audit|test-design|qa-signoff` reserved. Hotfix carve-out (IX) and chore waiver apply. Pipeline line updated.
 
