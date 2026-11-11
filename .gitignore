@@ -214,7 +214,9 @@ scripts/i18n/_pending-keys.json
 # AI agent local settings and configs
 .agents/
 .antigravitycli/
-/.claude/
+# .claude/ is TRACKED in this fork (helpers canon: agents/skills/commands — see f4c87e9099);
+# runtime state is ignored at lines ~38-45. Nested vendored clone stays untracked:
+.claude/skills/ai-design-skills/
 
 # PR Reviews and local feedback files
 pr_reviews*.json
