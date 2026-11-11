@@ -32,13 +32,14 @@ user intent → state machine (PLAN→AWAITING_PLAN_APPROVAL→ACT)
 
 ## 4. Stage map
 
-| Спека                   | Статус                                         | Кратко                           |
-| ----------------------- | ---------------------------------------------- | -------------------------------- |
-| 001-init                | Phase 0–2 частично (речек: 4 фиктивных `[x]`)  | Core Engine, MVP-1→4 roadmap     |
-| 002-modular-n8n         | 0/13, кандидат на DEPRECATED                   | инфра в других репо              |
-| 003-stack-aware-agents  | 41/41 (артефакт stack-matrix.json отсутствует) | stack-sniffer для `helpers`      |
-| 004-safe-harness-valves | specify→analyze (2026-11-10)                   | клапаны G1–G8, Constitution XIII |
-| G9–G12                  | не начаты                                      | G9 quarantine блокирует MVP-2    |
+| Спека                   | Статус                                         | Кратко                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001-init                | Phase 0–2 частично (речек: 4 фиктивных `[x]`)  | Core Engine, MVP-1→4 roadmap                                                                                                                                                                                                                                                                                                                                   |
+| 002-modular-n8n         | 0/13, кандидат на DEPRECATED                   | инфра в других репо                                                                                                                                                                                                                                                                                                                                            |
+| 003-stack-aware-agents  | 41/41 (артефакт stack-matrix.json отсутствует) | stack-sniffer для `helpers`                                                                                                                                                                                                                                                                                                                                    |
+| 004-safe-harness-valves | specify→analyze (2026-11-10)                   | клапаны G1–G8, Constitution XIII                                                                                                                                                                                                                                                                                                                               |
+| 005-agent-skill-routing | planned (2026-11-11)                           | авто-загрузка skills/commands в продуктовый рантайм: discovery (workspace `.claude/skills`, AGENTS.md, корпус UndeRoute) + инжекция через acp-bridge + provenance/allowlist + карантин описаний (зависимость G9: скилл = недоверенный контент, tool poisoning). Факт: сейчас в рантайме инжекции НЕТ — `acp-bridge.ts:14-20` спавнит binary+args без контекста |
+| G9–G12                  | не начаты                                      | G9 quarantine блокирует MVP-2                                                                                                                                                                                                                                                                                                                                  |
 
 ## 5. Constraints
 
