@@ -4,6 +4,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { makeGitAncestryProbe, readBuildSha, resolveBuildProvenance } from "./buildProvenance.ts";
 
 import {
   MCP_CLOSURE_SPOT_CHECK_PATH,
@@ -11,8 +12,10 @@ import {
   findLeakedTestArtifactPaths,
   findMissingMcpClosurePaths,
 } from "./mcpPublishedFilesClosure.ts";
+import { resolveNpmInvocation } from "./resolveNpmEntry.ts";
 import {
   PACK_ARTIFACT_ALLOWED_EXACT_PATHS,
+  PACK_ARTIFACT_ALLOWED_PATH_MATCHERS,
   PACK_ARTIFACT_ALLOWED_PATH_PREFIXES,
   PACK_ARTIFACT_REQUIRED_PATHS,
   findMissingArtifactPaths,
@@ -23,13 +26,13 @@ import {
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
 const ROOT: string = join(__dirname, "..", "..");
-const npmCommand: string = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function runNpm(args: string[], stdio: "inherit" | "pipe" = "pipe"): string {
-  const npmExecPath = process.env.npm_execpath;
-  const isBunRuntime = "Bun" in globalThis;
-  const command = npmExecPath && !isBunRuntime ? process.execPath : npmCommand;
-  const commandArgs = npmExecPath && !isBunRuntime ? [npmExecPath, ...args] : args;
+  // Prefer running npm's own `npm-cli.js` through the current Node binary.
+  // Never treat `npm_execpath` as a JS entry unconditionally: `bun run` points
+  // it at the bare `bun` ELF binary, which Node then tries to execute as
+  // JavaScript and dumps into the error output (#16321).
+  const { command, args: commandArgs } = resolveNpmInvocation(args);
 
   if (stdio === "inherit") {
     execFileSync(command, commandArgs, {
@@ -140,6 +143,7 @@ try {
   const unexpectedPaths: string[] = findUnexpectedArtifactPaths(artifactPaths, {
     exactPaths: PACK_ARTIFACT_ALLOWED_EXACT_PATHS,
     prefixPaths: PACK_ARTIFACT_ALLOWED_PATH_PREFIXES,
+    pathMatchers: PACK_ARTIFACT_ALLOWED_PATH_MATCHERS,
   });
   const missingRequiredPaths: string[] = POLICY_ONLY
     ? []
@@ -202,6 +206,26 @@ try {
     missingMcpPaths.length > 0
   ) {
     process.exit(1);
+  }
+
+  // #10427: an artifact is only shippable if it can be traced to the release line. The
+  // 2026-08-14 gateway outage was a package built from a feature branch that predated the
+  // fix it was supposed to carry — nothing in this gate noticed. Skipped under
+  // --policy-only, which deliberately runs without a build (no dist/BUILD_SHA to check).
+  if (!POLICY_ONLY) {
+    const provenance = resolveBuildProvenance({
+      buildSha: readBuildSha(process.cwd()),
+      isAncestorOfRelease: makeGitAncestryProbe(
+        process.env.OMNIROUTE_RELEASE_REF || "origin/main",
+        process.cwd()
+      ),
+      allowOverride: process.env.OMNIROUTE_ALLOW_CANARY_BUILD === "1",
+    });
+    console.log(`\n[provenance] ${provenance.message}`);
+    if (!provenance.ok) {
+      console.error("\n❌ Build provenance check failed.");
+      process.exit(1);
+    }
   }
 
   console.log("\n✅ Pack artifact policy check passed.");

@@ -43,15 +43,17 @@ export const KNOWN_DUPLICATE_VERSIONS = new Set([
 // ---------------------------------------------------------------------------
 // ALLOWLIST 2 — gaps de sequência CONHECIDOS.
 // Fonte: auditoria do disco (src/lib/db/migrations/). Além dos slots legados,
-// 144–145 seguem reservados pelas migrations Radar que já existem na série
-// empilhada; a migration 143 já aterrissou. O job registry foi promovido de 139
-// para 146 pela tabela RENAMED_MIGRATION_COMPATIBILITY. A
-// 147–149 estão reservadas por migrations atualmente em trânsito nos PRs #8228,
-// #9313, #10047 e #10066; esta branch usa 150 para evitar essas colisões conhecidas.
-// O stale-enforcement exige que cada reserva seja removida quando os arquivos
+// As migrations Radar 144–145, a migration 143 e a 147 já aterrissaram. O job
+// registry foi promovido de 139 para 146 pela tabela
+// RENAMED_MIGRATION_COMPATIBILITY. A 148 aterrissou nesta branch
+// (148_provider_quota_state.sql) e a 149 aterrissou junto com #10066
+// (149_api_key_combo_access.sql) — nenhuma das duas é mais um gap. O
+// stale-enforcement exige que cada reserva seja removida quando os arquivos
 // correspondentes aterrissarem na release.
+// #15564 landed 197 and 198. 199 (#15314), 200, and 201 (#15354) also exist.
+// None of 197–201 is a gap.
 // ---------------------------------------------------------------------------
-export const KNOWN_GAPS = new Set(["026", "055", "121", "144", "145", "148", "149"]); // 121: número queimado no ciclo v3.8.47 — 122 (#6909) mergeou antes e 121 nunca aterrissou (validação e2e 2026-07-12)
+export const KNOWN_GAPS = new Set(["026", "055", "121"]); // 121: número queimado no ciclo v3.8.47 — 122 (#6909) mergeou antes e 121 nunca aterrissou (validação e2e 2026-07-12); 144/145 aterrissaram na release (radar offers/intel cache), 148/149 aterrissaram (provider_quota_state, api_key_combo_access); 197–201 exist on disk and are not gaps
 
 function pad3(n) {
   return String(n).padStart(3, "0");

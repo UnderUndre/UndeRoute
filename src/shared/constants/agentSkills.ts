@@ -4,7 +4,7 @@
 
 import type { AgentSkill, SkillArea, SkillCategory } from "@/lib/agentSkills/types";
 
-const REPO = "diegosouzapw/OmniRoute";
+const REPO = "cheaper-inference/OmniRoute";
 const BRANCH = "main";
 const SKILL_PATH = "skills";
 
@@ -35,9 +35,9 @@ export interface CuratedSkillEntry {
   isNew?: boolean;
 }
 
-// ── Canonical 45-entry curated list (D28) ────────────────────────────────────
+// ── Canonical 46-entry curated list (D28) ────────────────────────────────────
 
-/** Curated metadata for all 45 agent skills. Source-of-truth for the catalog. */
+/** Curated metadata for all 46 agent skills. Source-of-truth for the catalog. */
 export const CURATED_SKILLS: CuratedSkillEntry[] = [
   // ── API Skills (23) ─────────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ export const CURATED_SKILLS: CuratedSkillEntry[] = [
     id: "omni-providers",
     name: "Providers",
     description:
-      "Manage provider connections, API keys, OAuth flows, and connection tests via the REST API. List, add, update, remove, and test AI provider integrations across OmniRoute's 327-provider catalog.",
+      "Manage provider connections, API keys, OAuth flows, and connection tests via the REST API. List, add, update, remove, and test AI provider integrations across OmniRoute's 380-provider catalog.",
     category: "api",
     area: "providers",
     icon: "key",
@@ -203,7 +203,7 @@ export const CURATED_SKILLS: CuratedSkillEntry[] = [
     id: "omni-webhooks",
     name: "Webhooks",
     description:
-      "Register, list, test, and remove webhook endpoints. Configure event subscriptions (request.completed, provider.error, budget.exceeded, etc.) and manage delivery retries.",
+      "Register, list, test, and remove webhook endpoints. Configure event subscriptions (request.completed, request.failed, quota.exceeded, etc.) and manage delivery retries.",
     category: "api",
     area: "webhooks",
     icon: "webhook",
@@ -212,7 +212,7 @@ export const CURATED_SKILLS: CuratedSkillEntry[] = [
     id: "omni-mcp",
     name: "MCP Server",
     description:
-      "Connect to the OmniRoute MCP server (107 tools, 3 transports: SSE/stdio/HTTP). Covers routing, cache, compression, memory, skills, providers, and audit tools across 32 permission scopes.",
+      "Connect to the OmniRoute MCP server (110 tools, 3 transports: SSE/stdio/HTTP). Covers routing, cache, compression, memory, skills, providers, and audit tools across 33 permission scopes.",
     category: "api",
     area: "mcp",
     icon: "electrical_services",

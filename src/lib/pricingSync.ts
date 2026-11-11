@@ -13,6 +13,7 @@
 import { getDbInstance } from "./db/core";
 import { invalidateDbCache, getModelCatalogCacheVersion } from "./db/readCache";
 import { backupDbFile } from "./db/backup";
+import { LITELLM_PROVIDER_MAP, remapHistoricalLitellmRows } from "./litellmProviderMap";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -96,30 +97,6 @@ const SYNC_SOURCES = (process.env.PRICING_SYNC_SOURCES || "litellm")
 
 const LITELLM_PRICING_URL =
   "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
-
-// ─── Provider mapping: LiteLLM provider → OmniRoute aliases ─────
-
-const LITELLM_PROVIDER_MAP: Record<string, string[]> = {
-  openai: ["openai", "cx"],
-  anthropic: ["anthropic", "cc"],
-  vertex_ai: ["gemini"],
-  "vertex_ai-anthropic_models": ["anthropic"],
-  google: ["gemini"],
-  deepseek: ["if"],
-  groq: ["groq"],
-  together_ai: ["openrouter"],
-  bedrock: ["kiro"],
-  fireworks_ai: ["fireworks"],
-  cerebras: ["cerebras"],
-  nvidia_nim: ["nvidia"],
-  siliconflow: ["siliconflow"],
-  "vertex_ai-language_models": ["gemini"],
-  "vertex_ai-mistral_models": ["mistral"],
-  gemini: ["gemini"],
-  bedrock_converse: ["kiro"],
-  cloudflare: ["cloudflare-ai"],
-  stability: ["stability-ai"],
-};
 
 // ─── Periodic sync state ─────────────────────────────────
 
@@ -269,6 +246,7 @@ export function getSyncedPricing(): PricingByProvider {
       console.warn(`[PRICING_SYNC] Corrupted data for provider "${key}", skipping`);
     }
   }
+  remapHistoricalLitellmRows(synced);
   pricingMemo = synced;
   pricingMemoVersion = currentVersion;
   return synced;
@@ -515,7 +493,7 @@ export function getSyncStatus(): SyncStatus {
   };
 }
 
-// ─── Init (called from server-init.ts) ───────────────────
+// ─── Init (called from instrumentation-node.ts) ───────────────────
 
 /**
  * Initialize pricing sync if enabled.

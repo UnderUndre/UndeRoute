@@ -25,6 +25,7 @@
  */
 
 import { errorResponse } from "../../utils/error.ts";
+import type { PerTargetAdmissionHook } from "../admission/types.ts";
 import type { ComboLogger, HandleSingleModel } from "../combo/types.ts";
 
 export const CHAOS_DEFAULTS = {
@@ -179,7 +180,22 @@ function dispatchOnePanelModel(opts: {
         log?.info?.(
           `CHAOS panel ${index} (${model}) ok=${res.ok} status=${res.status} textLen=${text.length}`
         );
-        const part: ChaosPart = { model, index, ok: true, text };
+        // G5b: honor the upstream response status — a 4xx/5xx is a panel FAILURE,
+        // not a success (previously ok:true was hardcoded, so an all-error panel
+        // never reached the all-failed branch and the error text was streamed as
+        // if it were a successful answer).
+        if (res.ok) {
+          const part: ChaosPart = { model, index, ok: true, text };
+          await onResult?.(part);
+          return part;
+        }
+        const part: ChaosPart = {
+          model,
+          index,
+          ok: false,
+          text: "",
+          error: `upstream ${res.status}: ${text.slice(0, 200) || res.statusText || "error"}`,
+        };
         await onResult?.(part);
         return part;
       } catch (err) {
@@ -338,10 +354,70 @@ function concatSseText(sse: string): string {
 }
 
 /**
+ * #9654 Wave 2: per-target lane-aware admission probe — drop lane-full panel
+ * members before fan-out (strictly non-blocking; no-op when off).
+ */
+async function filterPanelByAdmission(
+  panel: string[],
+  body: Body,
+  perTargetAdmission: PerTargetAdmissionHook | null | undefined,
+  log?: { info?: (...a: unknown[]) => void }
+): Promise<string[]> {
+  if (!perTargetAdmission) return panel;
+  const gates = await Promise.all(
+    panel.map(async (model) => ({
+      model,
+      ok: await perTargetAdmission({ modelStr: model, executionKey: model, body }),
+    }))
+  );
+  const dropped = gates.filter((g) => !g.ok);
+  if (dropped.length > 0) {
+    log?.info?.(
+      "CHAOS",
+      `Skipping ${dropped.length} panel member(s) — admission lane full: ${dropped
+        .map((g) => g.model)
+        .join(", ")}`
+    );
+  }
+  return gates.filter((g) => g.ok).map((g) => g.model);
+}
+
+/**
+ * The primary is the explicit primaryModel if it succeeded, else the last
+ * successful part (by construction the top-scored stable model).
+ */
+function pickPrimaryPart(
+  allParts: ChaosPart[],
+  primaryModel?: string | null
+): ChaosPart | undefined {
+  return (
+    (primaryModel ? allParts.find((p) => p.model === primaryModel && p.ok) : undefined) ||
+    allParts.filter((p) => p.ok).slice(-1)[0]
+  );
+}
+
+/**
+ * G5 (silent-stop fix): make an all-panel failure visible server-side and
+ * build the client-facing error text with the per-model errors.
+ */
+function describeAllPanelFailed(
+  allParts: ChaosPart[],
+  comboName: string | undefined,
+  log?: { warn?: (...a: unknown[]) => void }
+): string {
+  const modelErrors = allParts.map((p) => `${p.model}: ${p.error ?? "unknown"}`).join(" | ");
+  log?.warn?.("CHAOS", `All chaos panel models failed for ${comboName ?? "panel"}: ${modelErrors}`);
+  return `All chaos panel models failed — ${modelErrors}`;
+}
+
+/**
  * Top-level chaos dispatch entrypoint used by `handleComboChat` when a combo's
  * `config.chaos.enabled` flag is set (the `auto/chaos` virtual combo).
  *
- * Returns a single Response whose body is an SSE stream:
+ * A non-streaming request (body `stream` omitted or false) gets a JSON
+ * `chat.completion` carrying the primary model's answer (or a JSON 502 when the
+ * whole panel failed). A `stream: true` request gets a single Response whose
+ * body is an SSE stream:
  *   - one SSE comment (`: chaos N ...`) per panel model, enqueued
  *     PROGRESSIVELY as each model lands (comments are ignored by every SSE
  *     parser, so OpenAI-compatible clients see only the final chunk)
@@ -363,8 +439,19 @@ export async function handleChaosChat(opts: {
   comboName?: string;
   primaryModel?: string | null;
   tuning?: ChaosTuning | null;
+  /** #9654 Wave 2: per-target lane-aware admission probe (see HandleComboChatOptions). */
+  perTargetAdmission?: PerTargetAdmissionHook | null;
 }): Promise<Response> {
-  const { body, models, handleSingleModel, log, comboName, primaryModel, tuning } = opts;
+  const {
+    body,
+    models,
+    handleSingleModel,
+    log,
+    comboName,
+    primaryModel,
+    tuning,
+    perTargetAdmission,
+  } = opts;
   const panel = Array.isArray(models) ? models.filter(Boolean) : [];
   const hardTimeout = tuning?.panelHardTimeoutMs ?? CHAOS_DEFAULTS.panelHardTimeoutMs;
   const minPanel = tuning?.minPanel ?? CHAOS_DEFAULTS.minPanel;
@@ -387,6 +474,61 @@ export async function handleChaosChat(opts: {
 
   const chunkId = `chaos-${comboName ?? "panel"}`;
 
+  // A non-streaming client (body `stream` omitted or false — the OpenAI Chat
+  // Completions default) must receive a JSON `chat.completion`, never an SSE
+  // body it cannot parse. The progressive panel broadcast only exists for
+  // clients that asked for a stream; here the panel is collected and the
+  // primary answer is returned as one JSON object.
+  if (body?.stream !== true) {
+    const panelToDispatch = await filterPanelByAdmission(panel, body, perTargetAdmission, log);
+    const allParts = await Promise.all(
+      panelToDispatch.map((model, index) => {
+        const ctrl = new AbortController();
+        return dispatchOnePanelModel({
+          body,
+          model,
+          index,
+          handleSingleModel,
+          ctrl,
+          hardTimeout,
+          log,
+        }).finally(() => {
+          if (!ctrl.signal.aborted) ctrl.abort();
+        });
+      })
+    );
+    const chaosHeaders = {
+      "X-OmniRoute-Chaos": "true",
+      "X-OmniRoute-Chaos-Panel": String(panel.length),
+      "X-OmniRoute-Chaos-Primary": primaryModel ?? "",
+    };
+    if (!allParts.some((p) => p.ok)) {
+      const errResponse = errorResponse(502, describeAllPanelFailed(allParts, comboName, log));
+      for (const [key, value] of Object.entries(chaosHeaders)) {
+        errResponse.headers.set(key, value);
+      }
+      return errResponse;
+    }
+    const primaryPart = pickPrimaryPart(allParts, primaryModel);
+    const payload = {
+      id: chunkId,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: primaryPart?.model ?? panel[0],
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: primaryPart?.text ?? "" },
+          finish_reason: "stop",
+        },
+      ],
+    };
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...chaosHeaders },
+    });
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const enc = new TextEncoder();
@@ -406,7 +548,9 @@ export async function handleChaosChat(opts: {
 
       const abortControllers: AbortController[] = [];
 
-      const modelPromises = panel.map((model, index) => {
+      const panelToDispatch = await filterPanelByAdmission(panel, body, perTargetAdmission, log);
+
+      const modelPromises = panelToDispatch.map((model, index) => {
         const ctrl = new AbortController();
         abortControllers.push(ctrl);
         return dispatchOnePanelModel({
@@ -432,8 +576,12 @@ export async function handleChaosChat(opts: {
       }
 
       if (successes.length === 0) {
-        const errText = "All chaos panel models failed";
-        await safeEnqueue(chatChunk(chunkId, panel[0], errText));
+        // G5 (silent-stop fix): make an all-panel failure visible server-side.
+        // The status stays 200 (SSE envelope must stay well-formed), but the
+        // failure is now logged with the per-model errors so operators can see
+        // why the chaos panel produced nothing.
+        const errText = describeAllPanelFailed(allParts, comboName, log);
+        await safeEnqueue(chatChunk(chunkId, panelToDispatch[0] ?? panel[0] ?? "", errText));
         await safeEnqueue(SSE_DONE);
         await enqueueChain;
         closed = true;
@@ -444,10 +592,7 @@ export async function handleChaosChat(opts: {
       // If fewer than minPanel succeeded, still return the best we have.
       // The primary is the explicit primaryModel if it succeeded, else the
       // last successful part (by construction that's the top-scored stable model).
-      const primaryPart =
-        (primaryModel && allParts.find((p) => p.model === primaryModel && p.ok)) ||
-        allParts.filter((p) => p.ok).slice(-1)[0] ||
-        successes[0];
+      const primaryPart = pickPrimaryPart(allParts, primaryModel);
 
       // Final canonical answer (non-aware clients consume this).
       await safeEnqueue(
@@ -490,8 +635,10 @@ export function dispatchChaosFromCombo(args: {
   body: Body;
   handleSingleModel: HandleSingleModel;
   log: ComboLogger;
+  /** #9654 Wave 2: per-target lane-aware admission probe (see HandleComboChatOptions). */
+  perTargetAdmission?: PerTargetAdmissionHook | null;
 }): Promise<Response> | null {
-  const { cfg, comboModels, comboName, body, handleSingleModel, log } = args;
+  const { cfg, comboModels, comboName, body, handleSingleModel, log, perTargetAdmission } = args;
   if (
     !cfg.chaos ||
     typeof cfg.chaos !== "object" ||
@@ -522,5 +669,6 @@ export function dispatchChaosFromCombo(args: {
     comboName,
     primaryModel: chaosCfg.judgeModel,
     tuning: chaosCfg.tuning,
+    perTargetAdmission,
   });
 }

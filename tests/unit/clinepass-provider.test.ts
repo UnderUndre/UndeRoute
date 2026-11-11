@@ -68,6 +68,7 @@ test("ClinePass fallback is the official subscription-only catalog", () => {
     "cline-pass/kimi-k2.7-code",
     "cline-pass/mimo-v2.5-pro",
     "cline-pass/mimo-v2.5",
+    "cline-pass/qwen3.8-max",
     "cline-pass/qwen3.7-max",
     "cline-pass/qwen3.7-plus",
   ]);
@@ -86,11 +87,15 @@ test("ClinePass fallback is the official subscription-only catalog", () => {
 test("Cline fallback owns recommended/free models and excludes the ClinePass namespace", () => {
   const ids = providerRegistry.cline.models.map((model: { id: string }) => model.id);
   assert.deepEqual(ids, [
-    "zai/glm-5.2",
+    "z-ai/glm-5.2",
     "x-ai/grok-4.5",
     "openai/gpt-5.6-sol",
     "moonshotai/kimi-k3",
     "anthropic/claude-opus-4.8",
+    "cline-free/deepseek-v4.1-flash",
+    "cline-free/mimo-v2.6-flash",
+    "cline-free/muse-spark-1.3-contributor",
+    "stealth/space-bunny-alpha",
     "openrouter/free",
     "deepseek/deepseek-v4-flash",
     "tencent/hy3:free",
@@ -128,6 +133,36 @@ test("unwrapClinepassEnvelope: nested error.message extracted", () => {
     "clinepass"
   );
   assert.equal(error?.message, "quota exceeded");
+});
+
+test("unwrapClinepassEnvelope: preserves error-message precedence and status types", () => {
+  for (const [rawError, expected] of [
+    ["", ""],
+    ["direct", "direct"],
+    [{ message: "nested" }, "nested"],
+    [{ message: "" }, "fallback"],
+    [null, "fallback"],
+  ]) {
+    assert.deepEqual(
+      unwrapClinepassEnvelope(
+        {
+          success: false,
+          error: rawError,
+          message: "fallback",
+          statusCode: "502",
+        },
+        "clinepass"
+      ),
+      { body: null, error: { message: expected, status: null } }
+    );
+  }
+  assert.deepEqual(
+    unwrapClinepassEnvelope({ success: false, message: "", statusCode: 0 }, "clinepass"),
+    {
+      body: null,
+      error: { message: "Upstream error", status: 0 },
+    }
+  );
 });
 
 test("unwrapClinepassEnvelope: non-clinepass provider passes through untouched", () => {

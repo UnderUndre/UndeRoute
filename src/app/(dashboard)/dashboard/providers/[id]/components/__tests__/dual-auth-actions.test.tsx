@@ -111,6 +111,7 @@ function renderPopulatedCodeBuddy() {
     loadCodexSettings: vi.fn(),
     onSetProxyTarget: vi.fn(),
     handleDistributeProxies: vi.fn(),
+    onAccountProxiesReset: vi.fn().mockResolvedValue(undefined),
     handleBatchTestAll: vi.fn(),
     ...actions,
     openExternalLinkFlow: vi.fn(),
@@ -161,6 +162,15 @@ describe("dual-auth provider actions (#8882)", () => {
   it("renders OAuth Connect and Manual API key for empty CodeBuddy CN", () => {
     const rendered = renderEmptyProvider({
       providerId: "codebuddy-cn",
+      supportsDualAuth: true,
+      providerSupportsPat: false,
+    });
+    expectDualAuthActions(rendered.container, rendered);
+  });
+
+  it("renders OAuth Connect and Manual API key for empty xAI", () => {
+    const rendered = renderEmptyProvider({
+      providerId: "xai",
       supportsDualAuth: true,
       providerSupportsPat: false,
     });

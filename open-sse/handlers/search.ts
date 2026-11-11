@@ -6,20 +6,39 @@ import { randomUUID } from "crypto";
  * Routes to search providers with automatic failover:
  *   serper-search, brave-search, perplexity-search, exa-search, tavily-search,
  *   firecrawl, google-pse-search, linkup-search, searchapi-search,
- *   youcom-search, searxng-search, ollama-search, zai-search, duckduckgo-free
+ *   youcom-search, searxng-search, ollama-search, zai-search, jina-search,
+ *   duckduckgo-free, x-search (Grok / SuperGrok X Search — explicit or search_type "x")
+ *   and xquik-search (direct X API search — explicit or credentialed fallback)
+ *   and anysearch-search (free public web search — fallback-only)
+ *   and parallel-search (Parallel Search API — web only)
  *
  * Request format:
  * {
  *   "query": "search query",
  *   "provider": "serper-search" | "brave-search" | ... // optional, auto-selects cheapest
  *   "max_results": 5,
- *   "search_type": "web" | "news"
+ *   "search_type": "web" | "news" | "x"
  * }
  */
 
-import { getSearchProvider, type SearchProviderConfig } from "../config/searchRegistry.ts";
+export { resolveSearchBaseUrl, SearchBaseUrlOverrideError } from "./search/baseUrl.ts";
+import { resolveSearchBaseUrl } from "./search/baseUrl.ts";
+import type { SearchUsage } from "./search/reportedCost.ts";
+import {
+  getSearchProvider,
+  isUnconfiguredLoopbackSearchProvider,
+  type SearchProviderConfig,
+} from "../config/searchRegistry.ts";
+import { NIMBLE_CLIENT_SOURCE, NIMBLE_CLIENT_SOURCE_HEADER } from "../config/nimble.ts";
 import { buildPerplexityRequest, parsePerplexitySearchOptions } from "./search/perplexitySearch.ts";
 import * as fcSearch from "./search/firecrawlSearch.ts";
+import { type FirecrawlSearchEnvelope } from "./search/firecrawlSearch.ts";
+import { buildJinaSearchRequest, extractJinaSearchItems } from "./search/jinaSearch.ts";
+import * as xSearch from "./search/xSearch.ts";
+import * as xquikSearch from "./search/xquikSearch.ts";
+import * as anysearchSearch from "./search/anysearchSearch.ts";
+import * as kimiSearch from "./search/kimiSearch.ts";
+import * as parallelSearch from "./search/parallelSearch.ts";
 import { freeWebSearch } from "../services/freeWebSearch.ts";
 import { saveCallLog } from "@/lib/usageDb";
 import { safeOutboundFetch } from "@/shared/network/safeOutboundFetch";
@@ -27,7 +46,15 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { z } from "zod";
 import { sanitizeErrorMessage } from "../utils/error.ts";
+import { isValidContext7LibraryId } from "../executors/context7-fetch.ts";
 import { resolveSearchProxy, executeProviderFetch } from "./search/searchProxy.ts";
+import { formatSearchProviderFailure } from "./search/providerFailure.ts";
+import {
+  compactProviderRaw,
+  resolveExaPassthrough,
+  resolveTavilyPassthrough,
+  tavilyTopic,
+} from "./search/providerOptionsPassthrough.ts";
 
 export interface SearchResult {
   title: string;
@@ -58,7 +85,7 @@ export interface SearchResponse {
   query: string;
   results: SearchResult[];
   answer: { source: string; text: string | null; model: string | null } | null;
-  usage: { queries_used: number; search_cost_usd: number; llm_tokens?: number };
+  usage: SearchUsage;
   metrics: {
     response_time_ms: number;
     upstream_latency_ms: number;
@@ -100,11 +127,34 @@ interface SearchHandlerOptions {
   /** Connection ID (proxy resolution + call-log attribution) and API key ID (per-key proxy). */
   connectionId?: string;
   apiKeyId?: string;
+  /**
+   * Whole-request budget in ms. Replaces the 15s constant when set, and is
+   * also the ceiling for a provider's own timeout. Unset keeps both as they
+   * are, so a deployment that never touches it behaves exactly as before.
+   */
+  timeoutMs?: number;
+  /** Per-provider timeout overrides in ms, keyed by provider id. */
+  providerTimeoutsMs?: Record<string, number>;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────
 
-const GLOBAL_TIMEOUT_MS = 15_000;
+const DEFAULT_GLOBAL_TIMEOUT_MS = 15_000;
+const MIN_SEARCH_TIMEOUT_MS = 1_000;
+const MAX_SEARCH_TIMEOUT_MS = 120_000;
+
+function clampSearchTimeoutMs(
+  override: number | undefined,
+  fallback: number,
+  floor: number
+): number {
+  if (typeof override !== "number" || !Number.isFinite(override)) return fallback;
+  return Math.min(MAX_SEARCH_TIMEOUT_MS, Math.max(floor, Math.floor(override)));
+}
+
+function resolveGlobalTimeoutMs(override?: number): number {
+  return clampSearchTimeoutMs(override, DEFAULT_GLOBAL_TIMEOUT_MS, MIN_SEARCH_TIMEOUT_MS);
+}
 
 // Non-retriable HTTP status codes — fail immediately, don't try alternate
 const NON_RETRIABLE = new Set([400, 401, 403, 404]);
@@ -141,6 +191,7 @@ function makeResult(
     image_url?: string;
     full_text?: string;
     text_format?: string;
+    provider_raw?: Record<string, unknown> | null;
   },
   idx: number,
   now: string
@@ -165,7 +216,7 @@ function makeResult(
       image_url: item.image_url || null,
     },
     citation: { provider: providerId, retrieved_at: now, rank: idx + 1 },
-    provider_raw: null,
+    provider_raw: item.provider_raw ?? null,
   };
 }
 
@@ -199,6 +250,49 @@ function normalizeSerperResponse(
         ? data.searchParameters.totalResults
         : null,
   };
+}
+
+// Context7 library-docs search results: { results: [{ id: "/owner/repo", title,
+// description, lastUpdateDate, stars, trustScore, ... }] }. The API has no URL
+// field — the library page URL is derived from the id. The relevance score is an
+// unbounded float (observed ~276), not a 0..1 score, so it is not mapped onto the
+// normalized 0..1 score field.
+interface Context7SearchItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  lastUpdateDate?: string;
+}
+
+function normalizeContext7Response(
+  data: unknown,
+  _query: string,
+  _searchType: string
+): { results: SearchResult[]; totalResults: number | null } {
+  const now = new Date().toISOString();
+  const items = (data as { results?: Context7SearchItem[] } | null)?.results;
+  if (!Array.isArray(items)) return { results: [], totalResults: null };
+  // Only canonical library ids are usable: they are interpolated into a
+  // context7.com URL, so anything else (missing, "//evil.com", ".." traversal,
+  // query junk) is dropped instead of producing a misleading or off-site link.
+  // Shared guard with the fetch executor (isValidContext7LibraryId) — no drift.
+  const usable = items.filter((item): item is Context7SearchItem & { id: string } =>
+    isValidContext7LibraryId(item?.id ?? "")
+  );
+  const results = usable.map((item, idx: number) =>
+    makeResult(
+      "context7",
+      {
+        title: item?.title,
+        url: `https://context7.com${item.id}`,
+        snippet: item?.description,
+        published_at: item?.lastUpdateDate,
+      },
+      idx,
+      now
+    )
+  );
+  return { results, totalResults: null };
 }
 
 function normalizeBraveResponse(
@@ -260,11 +354,6 @@ function getProviderSettingString(
   return undefined;
 }
 
-function resolveSearchBaseUrl(config: SearchProviderConfig, params: SearchRequestParams): string {
-  const override = getProviderSettingString(params, "baseUrl");
-  return (override || config.baseUrl).replace(/\/+$/, "");
-}
-
 function toSearchPageNumber(offset: number | undefined, maxResults: number): number | undefined {
   if (typeof offset !== "number" || offset <= 0 || maxResults <= 0) return undefined;
   return Math.floor(offset / maxResults) + 1;
@@ -304,8 +393,30 @@ function buildSerperRequest(
     url: `${config.baseUrl}${endpoint}`,
     init: {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(params.token ? { "X-API-Key": params.token } : {}) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(params.token ? { "X-API-Key": params.token } : {}),
+      },
       body: JSON.stringify(body),
+    },
+  };
+}
+
+// Context7 library-docs search: GET {baseUrl}/search?query=<q>. Key optional —
+// anonymous tier works without one; a configured ctx7sk-* key rides as Bearer.
+function buildContext7Request(
+  config: SearchProviderConfig,
+  params: SearchRequestParams
+): { url: string; init: RequestInit } {
+  const qp = new URLSearchParams({ query: params.query });
+  return {
+    url: `${config.baseUrl}/search?${qp}`,
+    init: {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        ...(params.token ? { Authorization: `Bearer ${params.token}` } : {}),
+      },
     },
   };
 }
@@ -322,7 +433,10 @@ function buildBraveRequest(
     url: `${config.baseUrl}${endpoint}?${qp}`,
     init: {
       method: "GET",
-      headers: { Accept: "application/json", ...(params.token ? { "X-Subscription-Token": params.token } : {}) },
+      headers: {
+        Accept: "application/json",
+        ...(params.token ? { "X-Subscription-Token": params.token } : {}),
+      },
     },
   };
 }
@@ -332,13 +446,17 @@ function buildExaRequest(
   params: SearchRequestParams
 ): { url: string; init: RequestInit } {
   const { includes, excludes } = parseDomainFilter(params.domainFilter);
+  // provider_options.exa: allow-listed + Zod-validated (see providerOptionsPassthrough.ts).
+  const exa = resolveExaPassthrough(params.providerOptions, params.timeRange);
   const body: Record<string, unknown> = {
+    type: "auto",
+    ...exa.fields,
     query: params.query,
     numResults: params.maxResults,
-    type: "auto",
     contents: {
       text: true,
       highlights: true,
+      ...exa.contents,
     },
   };
   if (includes.length) body.includeDomains = includes;
@@ -348,7 +466,10 @@ function buildExaRequest(
     url: config.baseUrl,
     init: {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(params.token ? { "x-api-key": params.token } : {}) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(params.token ? { "x-api-key": params.token } : {}),
+      },
       body: JSON.stringify(body),
     },
   };
@@ -360,9 +481,11 @@ function buildTavilyRequest(
 ): { url: string; init: RequestInit } {
   const { includes, excludes } = parseDomainFilter(params.domainFilter);
   const body: Record<string, unknown> = {
+    // provider_options.tavily: allow-listed + Zod-validated; generic fields below win.
+    ...resolveTavilyPassthrough(params.providerOptions, params.timeRange),
     query: params.query,
     max_results: params.maxResults,
-    topic: params.searchType === "news" ? "news" : "general",
+    topic: tavilyTopic(params.searchType),
   };
   if (includes.length) body.include_domains = includes;
   if (excludes.length) body.exclude_domains = excludes;
@@ -372,6 +495,38 @@ function buildTavilyRequest(
     init: {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${params.token}` },
+      body: JSON.stringify(body),
+    },
+  };
+}
+
+function buildNimbleRequest(
+  config: SearchProviderConfig,
+  params: SearchRequestParams
+): { url: string; init: RequestInit } {
+  if (!params.token) throw new Error("Nimble Search requires an API key");
+  const { includes, excludes } = parseDomainFilter(params.domainFilter);
+  const body: Record<string, unknown> = {
+    query: params.query,
+    max_results: Math.min(params.maxResults, config.maxMaxResults),
+    search_depth: "lite",
+    output_format: "plain_text",
+    focus: params.searchType === "news" ? "news" : "general",
+  };
+  if (params.country) body.country = params.country.toUpperCase();
+  if (params.language) body.locale = params.language;
+  if (params.timeRange && params.timeRange !== "any") body.time_range = params.timeRange;
+  if (includes.length) body.include_domains = includes.slice(0, 50);
+  if (excludes.length) body.exclude_domains = excludes.slice(0, 50);
+  return {
+    url: resolveSearchBaseUrl(config, params),
+    init: {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${params.token}`,
+        [NIMBLE_CLIENT_SOURCE_HEADER]: NIMBLE_CLIENT_SOURCE,
+      },
       body: JSON.stringify(body),
     },
   };
@@ -597,22 +752,41 @@ function buildOllamaRequest(
   };
 }
 
+type SearchRequestBuilder = (
+  config: SearchProviderConfig,
+  params: SearchRequestParams
+) => { url: string; init: RequestInit };
+
+const requestBuilders: Record<string, SearchRequestBuilder> = {
+  "serper-search": buildSerperRequest,
+  "brave-search": buildBraveRequest,
+  context7: buildContext7Request,
+  "perplexity-search": buildPerplexityRequest,
+  "exa-search": buildExaRequest,
+  "tavily-search": buildTavilyRequest,
+  "kimi-search": kimiSearch.buildKimiSearchRequest,
+  "nimble-search": buildNimbleRequest,
+  firecrawl: fcSearch.buildFirecrawlSearchRequest,
+  "google-pse-search": buildGooglePseRequest,
+  "linkup-search": buildLinkupRequest,
+  "searchapi-search": buildSearchApiRequest,
+  "youcom-search": buildYouComRequest,
+  "searxng-search": buildSearxngRequest,
+  "ollama-search": buildOllamaRequest,
+  "jina-search": buildJinaSearchRequest,
+  "x-search": xSearch.buildXSearchRequest,
+  "xquik-search": xquikSearch.buildXquikSearchRequest,
+  "anysearch-search": anysearchSearch.buildAnysearchSearchRequest,
+  "parallel-search": parallelSearch.buildParallelSearchRequest,
+};
+
 function buildRequest(
   config: SearchProviderConfig,
   params: SearchRequestParams
 ): { url: string; init: RequestInit } {
-  if (config.id === "serper-search") return buildSerperRequest(config, params);
-  if (config.id === "brave-search") return buildBraveRequest(config, params);
-  if (config.id === "perplexity-search") return buildPerplexityRequest(config, params);
-  if (config.id === "exa-search") return buildExaRequest(config, params);
-  if (config.id === "tavily-search") return buildTavilyRequest(config, params);
-  if (config.id === "firecrawl") return fcSearch.buildFirecrawlSearchRequest(config, params);
-  if (config.id === "google-pse-search") return buildGooglePseRequest(config, params);
-  if (config.id === "linkup-search") return buildLinkupRequest(config, params);
-  if (config.id === "searchapi-search") return buildSearchApiRequest(config, params);
-  if (config.id === "youcom-search") return buildYouComRequest(config, params);
-  if (config.id === "searxng-search") return buildSearxngRequest(config, params);
-  if (config.id === "ollama-search") return buildOllamaRequest(config, params);
+  const builder = requestBuilders[config.id];
+  if (builder) return builder(config, params);
+
   // Fallback for future providers: POST with bearer auth
   return {
     url: resolveSearchBaseUrl(config, params),
@@ -679,6 +853,16 @@ function normalizeExaResponse(
         image_url: item.image,
         full_text: item.text,
         text_format: "text",
+        provider_raw: compactProviderRaw({
+          id: item.id,
+          // The snippet only shows the first highlight; keep all of them next to their scores.
+          highlights: item.highlights,
+          highlight_scores: item.highlightScores,
+          summary: item.summary,
+          subpages: item.subpages,
+          entities: item.entities,
+          extras: item.extras,
+        }),
       },
       idx,
       now
@@ -707,12 +891,54 @@ function normalizeTavilyResponse(
         published_at: item.published_date,
         full_text: item.raw_content,
         text_format: "text",
+        provider_raw: compactProviderRaw({ images: item.images, favicon: item.favicon }),
       },
       idx,
       now
     )
   );
   return { results, totalResults: results.length };
+}
+
+interface NimbleSearchItem {
+  title?: string;
+  url?: string;
+  description?: string;
+  content?: string;
+}
+
+interface NimbleSearchEnvelope {
+  results?: NimbleSearchItem[];
+  total_results?: number;
+}
+
+function normalizeNimbleResponse(
+  data: unknown,
+  _query: string,
+  _searchType: string
+): { results: SearchResult[]; totalResults: number | null } {
+  const now = new Date().toISOString();
+  const envelope = (data ?? {}) as NimbleSearchEnvelope;
+  if (!Array.isArray(envelope.results)) return { results: [], totalResults: null };
+  const results = envelope.results.map((item, idx) =>
+    makeResult(
+      "nimble-search",
+      {
+        title: item.title,
+        url: item.url,
+        snippet: item.description || item.content?.slice(0, 300) || "",
+        full_text: item.content || undefined,
+        text_format: "text",
+      },
+      idx,
+      now
+    )
+  );
+  return {
+    results,
+    totalResults:
+      typeof envelope.total_results === "number" ? envelope.total_results : results.length,
+  };
 }
 
 function normalizeGooglePseResponse(
@@ -1078,11 +1304,12 @@ async function tryZaiMCPProvider(
   providerSpecificData: Record<string, unknown> | undefined,
   startTime: number,
   globalStartTime: number,
+  globalTimeoutMs: number,
   log?: any
 ): Promise<SearchHandlerResult> {
   const { query, searchType, maxResults } = params;
 
-  const remainingGlobal = GLOBAL_TIMEOUT_MS - (Date.now() - globalStartTime);
+  const remainingGlobal = globalTimeoutMs - (Date.now() - globalStartTime);
   const timeout = Math.min(config.timeoutMs, Math.max(remainingGlobal, 1000));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -1153,13 +1380,39 @@ async function tryZaiMCPProvider(
       /* non-critical — logging must not block search response */
     });
 
-    return {
-      success: false,
-      status: isTimeout ? 504 : 502,
-      error: `Search provider ${isTimeout ? "timeout" : "error"}: ${sanitizeErrorMessage(err.message)}`,
-    };
+    return formatSearchProviderFailure(config.id, err, isTimeout);
   }
 }
+
+type SearchResponseNormalizer = (
+  data: unknown,
+  query: string,
+  searchType: string
+) => { results: SearchResult[]; totalResults: number | null };
+
+const responseNormalizers: Record<string, SearchResponseNormalizer> = {
+  "serper-search": normalizeSerperResponse,
+  "brave-search": normalizeBraveResponse,
+  context7: normalizeContext7Response,
+  "perplexity-search": normalizePerplexityResponse,
+  "exa-search": normalizeExaResponse,
+  "tavily-search": normalizeTavilyResponse,
+  "kimi-search": (data: unknown) => kimiSearch.normalizeKimiSearchResponse(data, makeResult),
+  "nimble-search": normalizeNimbleResponse,
+  firecrawl: (data: FirecrawlSearchEnvelope, _query: string, searchType: string) =>
+    fcSearch.normalizeFirecrawlSearchResponse(data, searchType, makeResult),
+  "google-pse-search": normalizeGooglePseResponse,
+  "linkup-search": normalizeLinkupResponse,
+  "searchapi-search": normalizeSearchApiResponse,
+  "youcom-search": normalizeYouComResponse,
+  "searxng-search": normalizeSearxngResponse,
+  "ollama-search": normalizeOllamaResponse,
+  "jina-search": normalizeJinaSearchResponse,
+  "x-search": normalizeXSearchResponse,
+  "xquik-search": (data) => xquikSearch.normalizeXquikSearchResponse(data, makeResult),
+  "anysearch-search": (data) => anysearchSearch.normalizeAnysearchSearchResponse(data, makeResult),
+  "parallel-search": (data) => parallelSearch.normalizeParallelSearchResponse(data, makeResult),
+};
 
 function normalizeResponse(
   providerId: string,
@@ -1167,23 +1420,59 @@ function normalizeResponse(
   query: string,
   searchType: string
 ): { results: SearchResult[]; totalResults: number | null } {
-  if (providerId === "serper-search") return normalizeSerperResponse(data, query, searchType);
-  if (providerId === "brave-search") return normalizeBraveResponse(data, query, searchType);
-  if (providerId === "perplexity-search")
-    return normalizePerplexityResponse(data, query, searchType);
-  if (providerId === "exa-search") return normalizeExaResponse(data, query, searchType);
-  if (providerId === "tavily-search") return normalizeTavilyResponse(data, query, searchType);
-  if (providerId === "firecrawl")
-    return fcSearch.normalizeFirecrawlSearchResponse(data, searchType, makeResult);
-  if (providerId === "google-pse-search")
-    return normalizeGooglePseResponse(data, query, searchType);
-  if (providerId === "linkup-search") return normalizeLinkupResponse(data, query, searchType);
-  if (providerId === "searchapi-search") return normalizeSearchApiResponse(data, query, searchType);
-  if (providerId === "youcom-search") return normalizeYouComResponse(data, query, searchType);
-  if (providerId === "searxng-search") return normalizeSearxngResponse(data, query, searchType);
-  if (providerId === "ollama-search") return normalizeOllamaResponse(data, query, searchType);
+  const normalizer = responseNormalizers[providerId];
+  if (normalizer) return normalizer(data, query, searchType);
   return { results: [], totalResults: null };
 }
+
+function normalizeXSearchResponse(
+  data: unknown,
+  query: string,
+  _searchType: string
+): { results: SearchResult[]; totalResults: number | null } {
+  const now = new Date().toISOString();
+  const hits = xSearch.extractXSearchHits(data, query, 20);
+  const results = hits.map((hit, idx) =>
+    makeResult(
+      "x-search",
+      {
+        title: hit.title,
+        url: hit.url,
+        snippet: hit.snippet,
+        author: hit.author,
+        source_type: "x",
+      },
+      idx,
+      now
+    )
+  );
+  return { results, totalResults: results.length };
+}
+
+function normalizeJinaSearchResponse(
+  data: unknown,
+  _query: string,
+  _searchType: string
+): { results: SearchResult[]; totalResults: number | null } {
+  const now = new Date().toISOString();
+  const items = extractJinaSearchItems(data);
+  const results = items.map((item, idx) =>
+    makeResult(
+      "jina-search",
+      {
+        title: item.title,
+        url: item.url,
+        snippet: item.description || item.snippet || "",
+        full_text: item.content || item.text,
+        text_format: "markdown",
+      },
+      idx,
+      now
+    )
+  );
+  return { results, totalResults: results.length };
+}
+
 export async function handleSearch(options: SearchHandlerOptions): Promise<SearchHandlerResult> {
   const {
     query,
@@ -1203,8 +1492,12 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
     log,
     connectionId,
     apiKeyId,
+    timeoutMs,
+    providerTimeoutsMs,
   } = options;
   const startTime = Date.now();
+  const globalTimeoutMs = resolveGlobalTimeoutMs(timeoutMs);
+  const providerTimeoutOverride = clampSearchTimeoutMs(providerTimeoutsMs?.[providerId], 0, 1);
 
   // 1. Sanitize input
   const { clean: cleanQuery, error: sanitizeError } = sanitizeQuery(query);
@@ -1213,12 +1506,22 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
   }
 
   // 2. Use resolved provider from route (no re-resolution)
-  const primaryConfig = getSearchProvider(providerId);
+  let primaryConfig = getSearchProvider(providerId);
   if (!primaryConfig) {
     return {
       success: false,
       status: 400,
       error: `Unknown search provider: ${providerId}`,
+    };
+  }
+  if (providerTimeoutOverride > 0) {
+    primaryConfig = { ...primaryConfig, timeoutMs: providerTimeoutOverride };
+  }
+  if (primaryConfig.disabled) {
+    return {
+      success: false,
+      status: 403,
+      error: `Search provider '${providerId}' is currently disabled.`,
     };
   }
 
@@ -1245,7 +1548,61 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
     }
   }
 
-  // 4. Try primary provider
+  // 4. Try primary provider (skip catalog-default SearXNG localhost:8888,
+  // unless a request/connection override resolves it to a real URL).
+  const primaryEffectiveBaseUrl = resolveSearchBaseUrl(primaryConfig, {
+    ...requestParams,
+    providerSpecificData:
+      credentials?.providerSpecificData && typeof credentials.providerSpecificData === "object"
+        ? credentials.providerSpecificData
+        : undefined,
+  });
+  if (
+    isUnconfiguredLoopbackSearchProvider({ ...primaryConfig, baseUrl: primaryEffectiveBaseUrl })
+  ) {
+    if (log) {
+      log.warn(
+        "SEARCH",
+        "skipping catalog-default searxng-search at http://localhost:8888/search; set a real SearXNG URL"
+      );
+    }
+    const alternateEffectiveBaseUrl = alternateConfig
+      ? resolveSearchBaseUrl(alternateConfig, {
+          ...requestParams,
+          providerSpecificData:
+            alternateCredentials?.providerSpecificData &&
+            typeof alternateCredentials.providerSpecificData === "object"
+              ? alternateCredentials.providerSpecificData
+              : undefined,
+        })
+      : "";
+    if (
+      alternateConfig &&
+      alternateCredentials &&
+      !isUnconfiguredLoopbackSearchProvider({
+        ...alternateConfig,
+        baseUrl: alternateEffectiveBaseUrl,
+      })
+    ) {
+      return tryProvider(
+        alternateConfig,
+        requestParams,
+        alternateCredentials,
+        startTime,
+        log,
+        alternateCredentials?.connectionId,
+        apiKeyId,
+        globalTimeoutMs
+      );
+    }
+    return {
+      success: false,
+      status: 503,
+      error:
+        "SearXNG is still on the catalog default http://localhost:8888/search. Configure a real SearXNG URL or disable the provider.",
+    };
+  }
+
   const result = await tryProvider(
     primaryConfig,
     requestParams,
@@ -1253,7 +1610,8 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
     startTime,
     log,
     connectionId,
-    apiKeyId
+    apiKeyId,
+    globalTimeoutMs
   );
 
   if (result.success) return result;
@@ -1263,7 +1621,7 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
     alternateConfig &&
     alternateCredentials &&
     !NON_RETRIABLE.has(result.status || 0) &&
-    Date.now() - startTime < GLOBAL_TIMEOUT_MS
+    Date.now() - startTime < globalTimeoutMs
   ) {
     if (log) {
       log.warn(
@@ -1280,7 +1638,8 @@ export async function handleSearch(options: SearchHandlerOptions): Promise<Searc
       startTime,
       log,
       alternateCredentials?.connectionId,
-      apiKeyId
+      apiKeyId,
+      globalTimeoutMs
     );
 
     if (fallbackResult.success) return fallbackResult;
@@ -1299,13 +1658,14 @@ async function tryDuckDuckGoFreeProvider(
   params: Omit<SearchRequestParams, "token">,
   startTime: number,
   globalStartTime: number,
+  globalTimeoutMs: number,
   log?: {
     info?: (tag: string, message: string) => void;
     error?: (tag: string, message: string) => void;
   } | null
 ): Promise<SearchHandlerResult> {
   const { query, searchType, maxResults } = params;
-  const remainingGlobal = GLOBAL_TIMEOUT_MS - (Date.now() - globalStartTime);
+  const remainingGlobal = globalTimeoutMs - (Date.now() - globalStartTime);
   const timeout = Math.min(config.timeoutMs, Math.max(remainingGlobal, 1000));
 
   if (log) {
@@ -1395,7 +1755,8 @@ async function tryProvider(
   globalStartTime: number,
   log?: any,
   connectionId?: string,
-  apiKeyId?: string
+  apiKeyId?: string,
+  globalTimeoutMs: number = DEFAULT_GLOBAL_TIMEOUT_MS
 ): Promise<SearchHandlerResult> {
   const startTime = Date.now();
   const providerSpecificData =
@@ -1415,7 +1776,14 @@ async function tryProvider(
   const { query, searchType, maxResults } = params;
 
   if (config.id === "duckduckgo-free") {
-    return tryDuckDuckGoFreeProvider(config, params, startTime, globalStartTime, log);
+    return tryDuckDuckGoFreeProvider(
+      config,
+      params,
+      startTime,
+      globalStartTime,
+      globalTimeoutMs,
+      log
+    );
   }
 
   if (config.id === "zai-search" && token) {
@@ -1426,6 +1794,7 @@ async function tryProvider(
       providerSpecificData,
       startTime,
       globalStartTime,
+      globalTimeoutMs,
       log
     );
   }
@@ -1447,7 +1816,7 @@ async function tryProvider(
   const { proxy, proxyLevel } = await resolveSearchProxy(connectionId, apiKeyId, config.id);
 
   // Timeout: min of provider timeout and remaining global timeout
-  const remainingGlobal = GLOBAL_TIMEOUT_MS - (Date.now() - globalStartTime);
+  const remainingGlobal = globalTimeoutMs - (Date.now() - globalStartTime);
   const timeout = Math.min(config.timeoutMs, Math.max(remainingGlobal, 1000));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -1456,8 +1825,7 @@ async function tryProvider(
     log.info("SEARCH", `${config.id} | query: "${query.slice(0, 80)}" | type: ${searchType}`);
   }
 
-  // Delegate the fetch + response handling (proxy fetch, call-log, sanitized
-  // proxy event, result shaping) to the shared chokepoint in searchProxy.ts.
+  // Fetch, call-log, proxy event, result shaping and cost live in searchProxy.ts.
   return executeProviderFetch({
     config,
     url,
@@ -1472,6 +1840,7 @@ async function tryProvider(
     proxy,
     proxyLevel,
     log,
+    costContext: { apiKeyId, providerSpecificData },
     normalize: normalizeResponse,
   });
 }

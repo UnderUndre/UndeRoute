@@ -2,11 +2,19 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { notFound } from "next/navigation";
+import { buttonVariants } from "@omniroute/ui-kit/button";
+import { PageHeader } from "@omniroute/ui-kit/page-header";
+import { Tabs, TabsList, TabsTrigger } from "@omniroute/ui-kit/tabs";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import Icon from "@/shared/components/Icon";
 import { Card } from "@/shared/components";
+import Button from "@/shared/components/Button";
+import Input from "@/shared/components/Input";
 import { shouldAutoSyncOnOpen } from "@/lib/radar/autoSync";
 import { isValidSupporterKeyFormat } from "@/lib/radar/supporterKey";
+import { RadarAccessExplainer } from "./RadarAccessExplainer";
+import { RadarCatalogTable, type RadarMergedEntry } from "./RadarCatalogTable";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -16,27 +24,6 @@ interface RadarMeta {
   version: string;
   tier: string;
   fetchedAt: string;
-}
-
-interface RadarMergedEntry {
-  provider: string;
-  modelId: string;
-  displayName: string;
-  monthlyTokens: number;
-  creditTokens: number;
-  freeType: string;
-  poolKey: string | null;
-  tos: string;
-  trainsOnPrompts?: boolean;
-  enabled?: boolean;
-  origin: "baseline" | "radar" | "local";
-  disabledBy?: "radar";
-  // Extended feed fields (present when origin=radar)
-  contextWindow?: number | null;
-  capabilities?: { tools: boolean; vision: boolean; thinking: boolean };
-  budget?: { kind: string; tokensPerMonth?: number; poolId?: string };
-  limits?: { rpm: number | null; rpd: number | null; tpm: number | null; tpd: number | null };
-  setup?: { keyUrl: string | null; steps: string[] } | null;
 }
 
 type PageState = "flag_off" | "optin_pending" | "empty" | "populated";
@@ -67,7 +54,7 @@ type RadarTabId = "catalog" | "referrals";
 export function resolveRadarPageState(
   flagOn: boolean,
   optedIn: boolean,
-  hasEntries: boolean,
+  hasEntries: boolean
 ): PageState {
   if (!flagOn) return "flag_off";
   if (!optedIn) return "optin_pending";
@@ -90,23 +77,6 @@ function relativeTime(isoDate: string): string {
   return `${days}d ago`;
 }
 
-/** Format token count as human-readable. */
-function formatTokens(n: number): string {
-  if (n === 0) return "rate-only";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return String(n);
-}
-
-/** Budget display string. */
-function budgetLabel(entry: RadarMergedEntry): string {
-  if (entry.budget?.kind === "shared_pool") {
-    return `shared (${formatTokens(entry.budget.tokensPerMonth ?? entry.monthlyTokens)}/mo)`;
-  }
-  if (entry.budget?.kind === "rate_only" || entry.monthlyTokens === 0) return "rate-only";
-  return `${formatTokens(entry.monthlyTokens)}/mo`;
-}
-
 // ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
@@ -117,6 +87,7 @@ export default function RadarPage() {
   const [meta, setMeta] = useState<RadarMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [featureAvailable, setFeatureAvailable] = useState<boolean | null>(null);
   const [optIn, setOptIn] = useState<boolean | null>(null);
   const [activating, setActivating] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -144,31 +115,35 @@ export default function RadarPage() {
   const [hasSupporterKey, setHasSupporterKey] = useState(false);
   const [supporterKeyMasked, setSupporterKeyMasked] = useState<string | null>(null);
   const [showKeyForm, setShowKeyForm] = useState(false);
-
   // Fetch catalog
-  const fetchCatalog = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/radar/catalog");
-      if (res.status === 404) {
-        // Flag off — treat as not found
-        setOptIn(false);
-        setEntries([]);
-        setMeta(null);
-        setLoading(false);
-        return;
+  const fetchCatalog = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/radar/catalog", { cache: "no-store" });
+        if (res.status === 404) {
+          // Flag off — treat as not found
+          setFeatureAvailable(false);
+          setEntries([]);
+          setMeta(null);
+          if (showLoading) setLoading(false);
+          return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setFeatureAvailable(true);
+        const data = await res.json();
+        setEntries(data.entries || []);
+        setMeta(data.meta || null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("errorLoading"));
+      } finally {
+        if (showLoading) setLoading(false);
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setEntries(data.entries || []);
-      setMeta(data.meta || null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("errorLoading"));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+    },
+    [t]
+  );
+  const refreshCatalogSilently = useCallback(() => fetchCatalog(false), [fetchCatalog]);
 
   // D28 — fetch the referral links section ("Pegue seus créditos grátis").
   // Best-effort: flag off => 404, no cache => empty shape; either way this
@@ -193,18 +168,20 @@ export default function RadarPage() {
   // the activation screen on every reload).
   const fetchSettings = useCallback(async () => {
     try {
-      const settingsRes = await fetch("/api/radar/settings");
+      const settingsRes = await fetch("/api/radar/settings", { cache: "no-store" });
       if (settingsRes.status === 404) {
         // Flag off
-        setOptIn(false);
+        setFeatureAvailable(false);
+        setOptIn(null);
         return;
       }
       if (!settingsRes.ok) throw new Error(`HTTP ${settingsRes.status}`);
       const settingsData = await settingsRes.json();
+      setFeatureAvailable(true);
       setOptIn(settingsData.optIn === true);
       setHasSupporterKey(settingsData.hasSupporterKey === true);
       setSupporterKeyMasked(
-        typeof settingsData.supporterKeyMasked === "string" ? settingsData.supporterKeyMasked : null,
+        typeof settingsData.supporterKeyMasked === "string" ? settingsData.supporterKeyMasked : null
       );
       // F4/T7 — best-effort: keep whatever we already had if the field is
       // absent (older cached response shape), never fall back to a literal.
@@ -231,7 +208,9 @@ export default function RadarPage() {
   }, [fetchCatalog, fetchReferrals]);
 
   useEffect(() => {
-    fetchSettings();
+    void (async () => {
+      await fetchSettings();
+    })();
   }, [fetchSettings]);
 
   // Sync (defined before handleActivate which depends on it)
@@ -272,7 +251,9 @@ export default function RadarPage() {
     if (loading || syncing || optIn !== true || autoSyncFiredRef.current) return;
     if (!shouldAutoSyncOnOpen(meta?.fetchedAt ?? null, Date.now())) return;
     autoSyncFiredRef.current = true;
-    void handleSync();
+    void (async () => {
+      await handleSync();
+    })();
   }, [loading, syncing, optIn, meta, handleSync]);
 
   // Activate opt-in
@@ -329,37 +310,59 @@ export default function RadarPage() {
     }
   }, [keyInput, t, handleSync]);
 
-  // Determine effective state
-  const flagOn = optIn !== false || entries.length > 0 || meta !== null;
+  // Feature availability and privacy opt-in are independent states. A successful
+  // settings response with `optIn: false` means "show activation", not "flag off".
   const pageState = resolveRadarPageState(
-    optIn !== false, // if we got a 404, optIn=false => flag off
+    featureAvailable !== false,
     optIn === true,
-    entries.length > 0 && meta !== null,
+    meta !== null
   );
 
   // Flag off — render not-found
-  if (pageState === "flag_off" && !loading) {
+  if (featureAvailable === false && !loading) {
     notFound();
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-sm text-text-muted mt-1">{t("subtitle")}</p>
-        </div>
-        {pageState === "populated" && (
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-violet-500 text-violet-400 hover:bg-violet-500/10 transition-colors disabled:opacity-50"
-          >
-            {syncing ? t("syncing") : t("syncNow")}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        compact
+        title={t("title")}
+        description={t("subtitle")}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {(pageState === "empty" || pageState === "populated") && (
+              <Link
+                href="/dashboard/radar/intel"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("intel")}
+              </Link>
+            )}
+            {(pageState === "empty" || pageState === "populated") && (
+              <Link
+                href="/dashboard/radar/offers"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("offers")}
+              </Link>
+            )}
+            {(pageState === "empty" || pageState === "populated") && (
+              <Link
+                href="/dashboard/radar/combos"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("guidedCombos")}
+              </Link>
+            )}
+            {pageState === "populated" && (
+              <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+                {syncing ? t("syncing") : t("syncNow")}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {/* Feed freshness header */}
       {meta && (
@@ -369,7 +372,7 @@ export default function RadarPage() {
           </span>
           <span>
             {t("feedTier")}:{" "}
-            <span className={meta.tier === "live" ? "text-green-400" : "text-amber-400"}>
+            <span className={meta.tier === "live" ? "text-success" : "text-warning"}>
               {meta.tier === "live" ? t("tierLive") : t("tierCommunity")}
             </span>
           </span>
@@ -379,9 +382,7 @@ export default function RadarPage() {
         </div>
       )}
 
-      {error && (
-        <div className="p-3 rounded-lg bg-red-500/10 text-red-400 text-sm">{error}</div>
-      )}
+      {error && <div className="p-3 rounded-lg bg-error/10 text-error text-sm">{error}</div>}
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
@@ -392,24 +393,40 @@ export default function RadarPage() {
           {/* Opt-in pending */}
           {pageState === "optin_pending" && (
             <Card>
-              <div className="flex flex-col items-center gap-6 py-8 text-center max-w-lg mx-auto">
-                <div className="text-4xl">📡</div>
+              <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 py-8 text-center">
+                <Icon name="radar" size={36} className="text-primary" />
                 <h2 className="text-xl font-semibold">{t("activateTitle")}</h2>
-                <p className="text-text-muted">{t("activateDescription")}</p>
-                <div className="flex flex-col gap-2 text-sm text-text-muted text-left w-full">
-                  <div className="flex items-start gap-2">
-                    <span className="text-green-400 mt-0.5">✓</span>
-                    <span>{t("privacyNoUpload")}</span>
+                <p className="max-w-2xl text-text-muted">{t("activateDescription")}</p>
+
+                <RadarAccessExplainer />
+
+                {/* F4/T7 — ways to obtain a supporter key. These conditions
+                    intentionally precede both activation actions (D32). */}
+                {contributorClaimUrl && supporterPlansUrl && (
+                  <div className="flex w-full flex-col gap-3 rounded-xl border border-border p-4">
+                    <p className="text-sm font-medium">{t("claimSectionTitle")}</p>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row">
+                      <a
+                        href={contributorClaimUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({ variant: "outline", className: "flex-1" })}
+                      >
+                        {t("contributorButton")}
+                      </a>
+                      <a
+                        href={supporterPlansUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({ variant: "outline", className: "flex-1" })}
+                      >
+                        {t("supporterButton")}
+                      </a>
+                    </div>
+                    <p className="text-left text-xs text-text-muted">{t("contributorHint")}</p>
+                    <p className="text-left text-xs text-text-muted">{t("supporterHint")}</p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-green-400 mt-0.5">✓</span>
-                    <span>{t("privacyOnlySigned")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-green-400 mt-0.5">✓</span>
-                    <span>{t("privacyLocalOnly")}</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Paste-key activation — primary path: pasting an already-obtained
                     supporter key both sets it AND opts in (unlocks this screen).
@@ -423,74 +440,42 @@ export default function RadarPage() {
                       <span className="font-mono text-sm text-text-muted">
                         {supporterKeyMasked}
                       </span>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowKeyForm(true)}
-                        className="text-sm text-violet-400 hover:underline shrink-0"
+                        className="shrink-0 text-primary"
                       >
                         {t("changeKeyButton")}
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-2">
-                      <input
+                      <Input
                         type="text"
                         value={keyInput}
                         onChange={(e) => setKeyInput(e.target.value)}
                         placeholder="omr_..."
                         aria-label={t("keySectionTitle")}
-                        className="flex-1 px-3 py-2 text-sm font-mono rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        className="flex-1"
+                        inputClassName="font-mono"
                       />
-                      <button
-                        type="button"
+                      <Button
                         onClick={handleSubmitKey}
                         disabled={keySubmitting || keyInput.trim().length === 0}
-                        className="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 shrink-0"
+                        className="shrink-0"
                       >
                         {keySubmitting ? t("activating") : t("activateWithKeyButton")}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
 
                 <div className="w-full h-px bg-border" />
 
-                <button
-                  onClick={handleActivate}
-                  disabled={activating}
-                  className="px-6 py-3 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                >
+                <Button size="lg" onClick={handleActivate} disabled={activating}>
                   {activating ? t("activating") : t("activateButton")}
-                </button>
-
-                {/* F4/T7 — "get a supporter key" outbound links. Both open in a
-                    new tab; neither one carries a price/value (D14 — the
-                    only place pricing lives is the destination page). */}
-                {contributorClaimUrl && supporterPlansUrl && (
-                  <div className="w-full pt-6 mt-2 border-t border-border flex flex-col gap-3">
-                    <p className="text-sm font-medium">{t("claimSectionTitle")}</p>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full">
-                      <a
-                        href={contributorClaimUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 text-sm font-medium text-center rounded-lg border border-violet-500 text-violet-400 hover:bg-violet-500/10 transition-colors"
-                      >
-                        {t("contributorButton")}
-                      </a>
-                      <a
-                        href={supporterPlansUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2 text-sm font-medium text-center rounded-lg border border-violet-500 text-violet-400 hover:bg-violet-500/10 transition-colors"
-                      >
-                        {t("supporterButton")}
-                      </a>
-                    </div>
-                    <p className="text-xs text-text-muted text-left">{t("contributorHint")}</p>
-                    <p className="text-xs text-text-muted text-left">{t("supporterHint")}</p>
-                  </div>
-                )}
+                </Button>
               </div>
             </Card>
           )}
@@ -498,32 +483,21 @@ export default function RadarPage() {
           {/* D28 — tab bar. Only shown once opted in (empty/populated) — the
               activation gate above is a single full-screen step, not a tab. */}
           {(pageState === "empty" || pageState === "populated") && (
-            <div className="flex gap-2 border-b border-border" role="tablist">
-              <button
-                role="tab"
-                aria-selected={activeTab === "catalog"}
-                onClick={() => setActiveTab("catalog")}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "catalog"
-                    ? "border-violet-500 text-violet-400"
-                    : "border-transparent text-text-muted hover:text-text-main"
-                }`}
-              >
-                {t("catalogTab")}
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === "referrals"}
-                onClick={() => setActiveTab("referrals")}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "referrals"
-                    ? "border-violet-500 text-violet-400"
-                    : "border-transparent text-text-muted hover:text-text-main"
-                }`}
-              >
-                {t("freeCreditsTab")}
-              </button>
-            </div>
+            <Tabs
+              variant="underline"
+              value={activeTab}
+              onValueChange={(next) => setActiveTab(next as typeof activeTab)}
+            >
+              <TabsList aria-label={t("catalogTab")}>
+                {/* The panels below are rendered by the page itself (no TabsContent). */}
+                <TabsTrigger value="catalog" aria-controls={undefined}>
+                  {t("catalogTab")}
+                </TabsTrigger>
+                <TabsTrigger value="referrals" aria-controls={undefined}>
+                  {t("freeCreditsTab")}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           )}
 
           {/* Free credits tab (D28 — referral links) */}
@@ -550,10 +524,10 @@ export default function RadarPage() {
                           href={referral.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm font-medium text-violet-400 hover:underline w-fit"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline w-fit"
                         >
                           {t("claimButton")}
-                          <span className="material-symbols-outlined text-sm">open_in_new</span>
+                          <Icon name="open_in_new" size={14} />
                         </a>
                       </div>
                     </Card>
@@ -583,7 +557,7 @@ export default function RadarPage() {
                             </p>
                           )}
                           {referral.validUntil && (
-                            <p className="text-xs text-amber-400">
+                            <p className="text-xs text-warning">
                               {t("campaignsValidUntil", {
                                 date: new Date(referral.validUntil).toLocaleDateString(),
                               })}
@@ -593,10 +567,10 @@ export default function RadarPage() {
                             href={referral.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-sm font-medium text-violet-400 hover:underline w-fit"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline w-fit"
                           >
                             {t("claimButton")}
-                            <span className="material-symbols-outlined text-sm">open_in_new</span>
+                            <Icon name="open_in_new" size={14} />
                           </a>
                         </div>
                       </Card>
@@ -612,111 +586,20 @@ export default function RadarPage() {
             <Card>
               <div className="flex flex-col items-center gap-4 py-12 text-center">
                 <p className="text-text-muted">{t("emptyState")}</p>
-                <button
-                  onClick={handleSync}
-                  disabled={syncing}
-                  className="px-6 py-3 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                >
+                <Button size="lg" onClick={handleSync} disabled={syncing}>
                   {syncing ? t("syncing") : t("syncCta")}
-                </button>
+                </Button>
               </div>
             </Card>
           )}
 
           {/* Populated catalog table */}
           {pageState === "populated" && activeTab === "catalog" && (
-            <Card>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-sm text-text-muted border-b border-border">
-                      <th className="pb-3 font-medium">{t("colProvider")}</th>
-                      <th className="pb-3 font-medium">{t("colModel")}</th>
-                      <th className="pb-3 font-medium">{t("colQuota")}</th>
-                      <th className="pb-3 font-medium">{t("colContext")}</th>
-                      <th className="pb-3 font-medium">{t("colCapabilities")}</th>
-                      <th className="pb-3 font-medium">{t("colTos")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry) => (
-                      <tr
-                        key={`${entry.provider}:${entry.modelId}`}
-                        className={`border-b border-border/50 last:border-b-0 ${
-                          entry.enabled === false ? "opacity-50" : ""
-                        }`}
-                      >
-                        <td className="py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{entry.provider}</span>
-                            {entry.origin === "radar" && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400 font-medium">
-                                {t("newBadge")}
-                              </span>
-                            )}
-                            {entry.setup?.keyUrl && (
-                              <Link
-                                href={`/dashboard/radar/setup?provider=${encodeURIComponent(entry.provider)}`}
-                                className="text-xs text-violet-400 hover:underline"
-                                title={t("setupGuide")}
-                              >
-                                ⚙
-                              </Link>
-                            )}
-                          </div>
-                          {entry.enabled === false && entry.disabledBy === "radar" && (
-                            <p className="text-xs text-red-400 mt-0.5">{t("disabledByFeed")}</p>
-                          )}
-                        </td>
-                        <td className="py-3 text-text-muted text-sm font-mono truncate max-w-[200px]">
-                          {entry.displayName}
-                        </td>
-                        <td className="py-3 text-sm">{budgetLabel(entry)}</td>
-                        <td className="py-3 text-sm text-text-muted">
-                          {entry.contextWindow
-                            ? `${(entry.contextWindow / 1000).toFixed(0)}K`
-                            : "—"}
-                        </td>
-                        <td className="py-3">
-                          <div className="flex gap-1">
-                            {entry.capabilities?.tools && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">
-                                {t("capTools")}
-                              </span>
-                            )}
-                            {entry.capabilities?.vision && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">
-                                {t("capVision")}
-                              </span>
-                            )}
-                            {entry.capabilities?.thinking && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">
-                                {t("capThinking")}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3">
-                          <span
-                            className={`text-xs px-2 py-1 rounded ${
-                              entry.tos === "ok"
-                                ? "bg-green-500/10 text-green-400"
-                                : entry.tos === "caution"
-                                  ? "bg-yellow-500/10 text-yellow-400"
-                                  : entry.tos === "avoid"
-                                    ? "bg-red-500/10 text-red-400"
-                                    : "bg-gray-500/10 text-gray-400"
-                            }`}
-                          >
-                            {entry.tos}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+            <RadarCatalogTable
+              entries={entries}
+              refreshCatalog={refreshCatalogSilently}
+              onError={setError}
+            />
           )}
         </>
       )}

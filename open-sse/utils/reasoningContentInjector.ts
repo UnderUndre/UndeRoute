@@ -13,8 +13,6 @@
  * that proxy to thinking-mode models.
  */
 
-import { requiresReasoningReplay } from "../services/reasoningCache.ts";
-
 const PLACEHOLDER = " ";
 
 type JsonRecord = Record<string, unknown>;
@@ -22,7 +20,7 @@ type JsonRecord = Record<string, unknown>;
 /**
  * Model-id predicates for thinking-mode families that need the echo.
  * Matched case-insensitively against the resolved model id (post upstream
- * routing, e.g. `oc/deepseek-v4-flash-free` for the OpenCode meta-provider).
+ * routing, e.g. `opencode-zen/deepseek-v4-flash-free` for OpenCode Zen).
  */
 const THINKING_MODEL_PATTERNS: RegExp[] = [
   /deepseek/i,
@@ -31,34 +29,65 @@ const THINKING_MODEL_PATTERNS: RegExp[] = [
   /\bminimax\b/i,
   /\bmimo\b/i, // xiaomi-tokenplan mimo family (e.g. xiaomi-tokenplan/mimo-v2.5-pro)
 ];
+const K3_AUTHENTIC_REASONING_PATTERN = /(?:^|\/)(?:kimi-)?k3(?:$|[.-])/i;
+const NATIVE_K27_AUTHENTIC_REASONING_PATTERN = /(?:^|\/)kimi-k2\.7-code(?:$|-)/i;
+
+/**
+ * K3 requires authentic reasoning regardless of which provider serves it.
+ * Native Moonshot K2.7 retains the same preserved-thinking contract. Empty
+ * protocol markers remain valid only after client content and replay miss.
+ */
+export function requiresAuthenticReasoningContent(provider: unknown, model: unknown): boolean {
+  const normalizedModel = String(model ?? "").trim();
+  if (K3_AUTHENTIC_REASONING_PATTERN.test(normalizedModel)) return true;
+
+  const normalizedProvider = String(provider ?? "")
+    .trim()
+    .toLowerCase();
+  return (
+    (normalizedProvider === "moonshot" || normalizedProvider === "kimi") &&
+    NATIVE_K27_AUTHENTIC_REASONING_PATTERN.test(normalizedModel)
+  );
+}
 
 export function isThinkingMessageModel(model: string | undefined | null): boolean {
   if (!model || typeof model !== "string") return false;
   return THINKING_MODEL_PATTERNS.some((re) => re.test(model));
 }
 
+/**
+ * `providerRequiresEcho` is resolved by the caller (Moonshot/Kimi legacy check,
+ * or a registry entry's `requiresReasoningContentEcho` capability flag — see
+ * `open-sse/config/providers/shared.ts`) so the provider allowlist lives in one
+ * place instead of being duplicated here. See issue #13599.
+ */
 export function shouldInjectReasoningContentPlaceholder(
+  providerRequiresEcho: boolean,
   provider: unknown,
   model: string | undefined | null
 ): boolean {
-  const normalizedProvider = String(provider ?? "")
-    .trim()
-    .toLowerCase();
   return (
-    (normalizedProvider === "moonshot" || normalizedProvider === "kimi") &&
-    !requiresReasoningReplay({
-      provider: normalizedProvider,
-      model: String(model ?? ""),
-      allowLegacyFallback: false,
-    }) &&
+    providerRequiresEcho &&
+    !requiresAuthenticReasoningContent(provider, model) &&
     isThinkingMessageModel(model)
   );
 }
 
-function hasNonEmptyReasoningContent(message: JsonRecord): boolean {
+function isNonEmptyReasoningCarrier(value: unknown): boolean {
+  if (typeof value === "string") return value.trim().length > 0;
+  return Array.isArray(value) && value.length > 0;
+}
+
+/**
+ * Serde-based upstreams (DeepSeek, Kimi, GLM) alias `reasoning` to
+ * `reasoning_content`, so a message that already carries either field must not
+ * get a second one — the body would be rejected with
+ * `400 duplicate field \`reasoning_content\``.
+ */
+function hasAnyReasoningCarrier(message: JsonRecord): boolean {
   return (
-    typeof message.reasoning_content === "string" &&
-    (message.reasoning_content as string).trim().length > 0
+    isNonEmptyReasoningCarrier(message.reasoning_content) ||
+    isNonEmptyReasoningCarrier(message.reasoning)
   );
 }
 
@@ -73,8 +102,10 @@ function isAssistantMessage(value: unknown): value is JsonRecord {
 
 /**
  * Inject a placeholder `reasoning_content` on every assistant message in
- * `body.messages` that lacks one. Returns the original object if no mutation
- * was needed, or a shallow-copied body with a new messages array otherwise.
+ * `body.messages` that carries no reasoning (neither `reasoning_content` nor
+ * the `reasoning` alias, as a non-empty string or array). Returns the original
+ * object if no mutation was needed, or a shallow-copied body with a new
+ * messages array otherwise.
  *
  * No-op when the body shape is unexpected (defensive).
  */
@@ -86,7 +117,7 @@ export function injectReasoningContentForThinkingModel(body: unknown): unknown {
   let modified = false;
   const messages = record.messages.map((message) => {
     if (!isAssistantMessage(message)) return message;
-    if (hasNonEmptyReasoningContent(message)) return message;
+    if (hasAnyReasoningCarrier(message)) return message;
     modified = true;
     return { ...message, reasoning_content: PLACEHOLDER };
   });

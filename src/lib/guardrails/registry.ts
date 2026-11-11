@@ -8,6 +8,7 @@ import { PIIMaskerGuardrail } from "./piiMasker";
 import { PromptInjectionGuardrail } from "./promptInjection";
 import { VisionBridgeGuardrail } from "./visionBridge";
 import { AudioBridgeGuardrail } from "./audioBridge";
+import { VideoBridgeGuardrail } from "./videoBridge";
 import { CredentialMaskerGuardrail } from "./credentialMasker";
 
 /**
@@ -72,6 +73,15 @@ function getGuardrailLogger(context: GuardrailContext) {
   return context.log || console;
 }
 
+function guardrailLogMetadata(meta: Record<string, unknown> | null) {
+  if (!meta || !("videoBridgeLogRedaction" in meta)) return meta ?? undefined;
+  // The shadow contains the original transcript for downstream log redaction.
+  // Keep it in execution results, but never emit it to diagnostic transports.
+  const diagnostic = { ...meta };
+  delete diagnostic.videoBridgeLogRedaction;
+  return diagnostic;
+}
+
 export function resolveDisabledGuardrails({
   apiKeyInfo,
   body,
@@ -90,14 +100,14 @@ export function resolveDisabledGuardrails({
     apiKeyInfo && typeof apiKeyInfo === "object"
       ? (apiKeyInfo as Record<string, unknown>).disabledGuardrails
       : undefined;
-  const headerDisabled =
-    getHeaderValue(headers, "x-omniroute-disabled-guardrails") ||
-    getHeaderValue(headers, "x-disabled-guardrails");
+  const headerDisabled = getHeaderValue(headers, "x-omniroute-disabled-guardrails");
+  const legacyHeaderDisabled = getHeaderValue(headers, "x-disabled-guardrails");
 
   return [...coerceDisabledGuardrails(apiKeyDisabled)]
     .concat(coerceDisabledGuardrails(bodyRecord?.disabledGuardrails))
     .concat(coerceDisabledGuardrails(metadata?.disabledGuardrails))
     .concat(coerceDisabledGuardrails(headerDisabled))
+    .concat(coerceDisabledGuardrails(legacyHeaderDisabled))
     .filter((value, index, list) => list.indexOf(value) === index);
 }
 
@@ -172,7 +182,7 @@ export class GuardrailRegistry {
         logger.debug?.(
           "GUARDRAIL",
           `${guardrail.name} pre-call ${execution.blocked ? "blocked" : modified ? "modified" : "passed"}`,
-          meta || undefined
+          guardrailLogMetadata(meta)
         );
 
         if (execution.blocked) {
@@ -185,6 +195,9 @@ export class GuardrailRegistry {
           };
         }
       } catch (error) {
+        if (context.signal?.aborted) {
+          throw new Error("Guardrail processing aborted");
+        }
         const message = error instanceof Error ? error.message : String(error);
         results.push({
           blocked: false,
@@ -245,7 +258,7 @@ export class GuardrailRegistry {
         logger.debug?.(
           "GUARDRAIL",
           `${guardrail.name} post-call ${execution.blocked ? "blocked" : modified ? "modified" : "passed"}`,
-          meta || undefined
+          guardrailLogMetadata(meta)
         );
 
         if (execution.blocked) {
@@ -258,6 +271,9 @@ export class GuardrailRegistry {
           };
         }
       } catch (error) {
+        if (context.signal?.aborted) {
+          throw new Error("Guardrail processing aborted");
+        }
         const message = error instanceof Error ? error.message : String(error);
         results.push({
           blocked: false,
@@ -288,6 +304,7 @@ export function registerDefaultGuardrails() {
 
   guardrailRegistry.register(new VisionBridgeGuardrail());
   guardrailRegistry.register(new AudioBridgeGuardrail());
+  guardrailRegistry.register(new VideoBridgeGuardrail());
   guardrailRegistry.register(new PIIMaskerGuardrail());
   guardrailRegistry.register(new CredentialMaskerGuardrail());
   guardrailRegistry.register(new PromptInjectionGuardrail());

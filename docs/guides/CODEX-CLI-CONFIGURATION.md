@@ -1,7 +1,7 @@
 ---
 title: "Codex CLI — Configuration with OmniRoute"
-version: 3.8.49
-lastUpdated: 2026-08-01
+version: 3.8.50
+lastUpdated: 2026-08-18
 ---
 
 # Codex CLI — Configuration with OmniRoute
@@ -9,6 +9,15 @@ lastUpdated: 2026-08-01
 Complete guide for using the Codex CLI pointed at OmniRoute as an OpenAI-compatible backend.
 
 ---
+
+> **TOML is the only effective format.** Modern Codex reads `~/.codex/config.toml`
+> exclusively (verified against codex-cli 0.147.0: `codex --help` documents
+> `-c/--config` overrides "loaded from `~/.codex/config.toml`"). The old
+> `~/.codex/config.yaml` belonged to the legacy npm CLI and is silently ignored.
+> The dashboard generator (`/api/cli-tools/apply`, tool `codex`) writes TOML with a
+> conservative merge — existing keys and other provider blocks are preserved, the
+> API key stays in `OMNIROUTE_API_KEY` (never in the file), and a leftover legacy
+> `config.yaml` is reported as a migration note without being touched.
 
 ## Ready-to-paste config.toml
 
@@ -79,7 +88,7 @@ Use a real key instead when your OmniRoute server is protected or remote.
 
 Codex CLI deprecated `wire_api = "chat"` (Chat Completions) in February 2026 and now **requires** `wire_api = "responses"` (OpenAI Responses API). Setting `wire_api = "chat"` causes an immediate startup crash since v0.138.
 
-DeepSeek, GLM, Kimi and others only expose a Chat Completions endpoint — not the Responses API. If you pointed Codex directly at them, it would fail.
+Many providers, including GLM and Kimi, still expose only a Chat Completions endpoint. DeepSeek V4 now exposes a native Responses API as well as an Anthropic-compatible endpoint; OmniRoute uses Responses by default and lets each DeepSeek connection select Anthropic compatibility.
 
 **OmniRoute solves this transparently:**
 
@@ -87,8 +96,8 @@ DeepSeek, GLM, Kimi and others only expose a Chat Completions endpoint — not t
 Codex CLI
   → wire_api = "responses"
   → POST /v1/responses (OmniRoute)
-    → OmniRoute Responses ↔ Chat Completions transformer
-    → POST /chat/completions (DeepSeek / Mistral / GLM / Kimi / any provider)
+    → OmniRoute selects the provider's native protocol and translates when needed
+    → POST /responses (DeepSeek V4) or /chat/completions (Mistral / GLM / Kimi / others)
 ```
 
 You never need a separate translation proxy when using OmniRoute. **All models use `wire_api = "responses"`** — OmniRoute handles the rest.
@@ -288,6 +297,23 @@ omniroute setup-codex --codex-home /path/to/.codex
 
 The command fetches `/v1/models`, uses tuned profiles for known models, falls back to catalog metadata for other compatible text models, and writes `~/.codex/<name>.config.toml` for each. Idempotent — safe to re-run.
 
+If the base `config.toml` has no `model_providers.omniroute` definition, explicit
+`setup-codex` includes that definition in each generated overlay, using the selected
+local or remote endpoint. It leaves the base file unchanged. An existing provider
+definition is inherited, including its endpoint and authentication settings. Invalid
+base TOML stops generation before writing profiles.
+
+When you supply `--api-key` or `OMNIROUTE_API_KEY`, a newly defined provider refers to
+`env_key = "OMNIROUTE_API_KEY"`; the key itself is never saved or printed in the
+preview. Set that variable in the environment where you launch Codex. Without a
+supplied key, the new definition has no key requirement, for an OmniRoute instance
+configured to accept unauthenticated requests.
+
+The opt-in catalog auto-sync described below preserves provider definitions already
+in an overlay but does not bootstrap new provider settings; configure the provider
+first with explicit setup or the dashboard. Existing provider settings are omitted
+from dry-run previews because they may contain operator-managed credentials.
+
 OmniRoute can also **auto-sync** these same profile files after a successful provider model discovery/import changes the live catalog. This is **opt-in and off by default**: toggle it from the **CLI Code dashboard** ("CLI profile auto-sync" → Codex), or set `OMNIROUTE_AUTO_SYNC_CODEX_PROFILES=true` (it also honors `CLI_ALLOW_CONFIG_WRITES`, on by default). When enabled it only writes separate `~/.codex/*.config.toml` profile files; it never changes the active/default `~/.codex/config.toml`, Codex-lb settings, auth, or provider selection.
 
 ---
@@ -308,6 +334,17 @@ omniroute launch-codex --remote http://100.x.x.x:20128/v1 --api-key sk-xxx
 
 # Pass extra args to codex
 omniroute launch-codex --profile glm52 -- --yolo "fix this bug"
+```
+
+Codex is also a target of the two generic manifest-driven entry points
+(`bin/cli/cli-manifest.mjs`):
+
+```bash
+# Interactive model picker → writes ~/.codex/<name>.config.toml (TOML, env_key)
+omniroute configure codex
+
+# Launch codex with the omniroute provider injected via -c flags (no config written)
+omniroute run codex
 ```
 
 ---

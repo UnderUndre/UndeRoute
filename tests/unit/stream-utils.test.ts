@@ -147,7 +147,12 @@ test.after(() => {
   core.resetDbInstance();
   if (fs.existsSync(TEST_DATA_DIR)) {
     for (const entry of fs.readdirSync(TEST_DATA_DIR)) {
-      fs.rmSync(path.join(TEST_DATA_DIR, entry), { recursive: true, force: true });
+      fs.rmSync(path.join(TEST_DATA_DIR, entry), {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+        retryDelay: 100,
+      });
     }
   }
 });
@@ -232,14 +237,14 @@ test("createSSEStream passthrough converts textual tool-call content into struct
         id: "chatcmpl_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { role: "assistant", content: toolText } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
       })}\n\n`,
     ],
@@ -247,7 +252,7 @@ test("createSSEStream passthrough converts textual tool-call content into struct
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: {
         messages: [{ role: "user", content: "inspect db" }],
       },
@@ -284,21 +289,21 @@ test("createSSEStream passthrough converts split textual tool-call content at co
         id: "chatcmpl_split_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { role: "assistant", content: chunks[0] } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_split_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { content: chunks[1] } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_split_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
       })}\n\n`,
     ],
@@ -306,7 +311,7 @@ test("createSSEStream passthrough converts split textual tool-call content at co
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: { messages: [{ role: "user", content: "inspect db" }] },
       onComplete(payload) {
         onCompletePayload = payload;
@@ -340,28 +345,28 @@ test("createSSEStream passthrough handles textual tool-call content split inside
         id: "chatcmpl_split_prefix_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { role: "assistant", content: chunks[0] } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_split_prefix_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { content: chunks[1] } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_split_prefix_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { content: chunks[2] } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_split_prefix_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
       })}\n\n`,
     ],
@@ -369,7 +374,7 @@ test("createSSEStream passthrough handles textual tool-call content split inside
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: { messages: [{ role: "user", content: "inspect db" }] },
       onComplete(payload) {
         onCompletePayload = payload;
@@ -515,14 +520,14 @@ Arguments: {"path":"/opt/OmniRoute/src","target":"files"}`;
         id: "chatcmpl_unknown_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { role: "assistant", content: toolText } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_unknown_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
       })}\n\n`,
     ],
@@ -530,7 +535,7 @@ Arguments: {"path":"/opt/OmniRoute/src","target":"files"}`;
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: {
         messages: [{ role: "user", content: "inspect files" }],
         tools: [
@@ -561,14 +566,14 @@ test("createSSEStream passthrough suppresses malformed textual tool-call content
         id: "chatcmpl_malformed_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: { role: "assistant", content: malformedToolText } }],
       })}\n\n`,
       `data: ${JSON.stringify({
         id: "chatcmpl_malformed_textual_tool",
         object: "chat.completion.chunk",
         created: 1,
-        model: "antigravity/gemini-3.5-flash-low",
+        model: "antigravity/gemini-3.7-flash-low",
         choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
       })}\n\n`,
     ],
@@ -576,7 +581,7 @@ test("createSSEStream passthrough suppresses malformed textual tool-call content
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: { messages: [{ role: "user", content: "inspect db" }] },
       onComplete(payload) {
         onCompletePayload = payload;
@@ -617,7 +622,7 @@ test("createSSEStream suppresses malformed compact textual tool-call content", a
       targetFormat: FORMATS.ANTIGRAVITY,
       sourceFormat: FORMATS.OPENAI,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: { messages: [{ role: "user", content: "inspect files" }] },
       onComplete(payload) {
         onCompletePayload = payload;
@@ -706,6 +711,7 @@ test("createSSEStream passthrough forwards data only after the complete SSE even
     {
       mode: "passthrough",
       sourceFormat: FORMATS.OPENAI,
+      clientResponseFormat: FORMATS.OPENAI_RESPONSES,
       provider: "openai",
       model: "responses-model",
       body: {
@@ -747,8 +753,13 @@ test("createSSEStream passthrough preserves event metadata in a single SSE event
     }
   );
 
-  assert.match(text, /^: upstream-note\nid: 42\ntrace: upstream-abc\ndata: /);
-  assert.doesNotMatch(text, /^: upstream-note\n\nid: 42/s);
+  // #10017 drops `:` comments, `id:` and `retry:` for every client format — none of
+  // the OpenAI Chat-Completions, OpenAI Responses or Claude Messages protocols define
+  // them. What this case still pins is the framing: the surviving lines stay inside ONE
+  // event instead of being split apart by blank lines.
+  assert.match(text, /^trace: upstream-abc\ndata: /);
+  assert.doesNotMatch(text, /: upstream-note/);
+  assert.doesNotMatch(text, /\bid: 42\b/);
   assert.doesNotMatch(text, /\ntrace: upstream-abc\n\n/s);
   assert.match(text, /metadata content/);
 });
@@ -1018,7 +1029,7 @@ Arguments: {"command":"systemctl status omniroute"}`;
         response: {
           id: "resp_textual_tool",
           object: "response",
-          model: "antigravity/gemini-3.5-flash-low",
+          model: "antigravity/gemini-3.7-flash-low",
           status: "completed",
           output: [],
           usage: { input_tokens: 10, output_tokens: 4, total_tokens: 14 },
@@ -1032,7 +1043,7 @@ Arguments: {"command":"systemctl status omniroute"}`;
       sourceFormat: FORMATS.OPENAI_RESPONSES,
       clientResponseFormat: FORMATS.OPENAI_RESPONSES,
       provider: "antigravity",
-      model: "antigravity/gemini-3.5-flash-low",
+      model: "antigravity/gemini-3.7-flash-low",
       body: {
         input: "check service",
         tools: [{ type: "function", name: "terminal", parameters: { type: "object" } }],
@@ -1047,6 +1058,9 @@ Arguments: {"command":"systemctl status omniroute"}`;
   assert.doesNotMatch(text, /Arguments:/);
   assert.match(text, /response.output_item.added/);
   assert.match(text, /response.function_call_arguments.done/);
+  // 3 synthesized function-call lifecycle events plus the terminal snapshot's
+  // existing collector entries. The raw textual delta is no longer collected/
+  // forwarded a second time after successful conversion.
   assert.equal(onCompletePayload.clientPayload._eventCount, 5);
   assert.equal(onCompletePayload.responseBody.choices[0].finish_reason, "tool_calls");
   assert.equal(onCompletePayload.responseBody.choices[0].message.content, null);
@@ -2354,6 +2368,74 @@ test("createSSEStream passthrough forwards OpenAI usage-only empty choices chunk
   assert.equal(onCompletePayload.usage.completion_tokens, 3);
   assert.equal(onCompletePayload.responseBody.choices[0].message.content, "Hello");
   assert.deepEqual(onCompletePayload.responseBody.usage, usage);
+});
+
+test("createSSEStream translated Gemini path clears an invalid cache count after a hit", async () => {
+  let onCompletePayload = null;
+  await readTransformed(
+    [
+      `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text: "hello" }] } }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 1, totalTokenCount: 11, cachedContentTokenCount: 4 } })}\n\n`,
+      `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text: " world" }] }, finishReason: "STOP" }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 2, totalTokenCount: 12, cachedContentTokenCount: 20 } })}\n\n`,
+    ],
+    {
+      mode: "translate",
+      targetFormat: FORMATS.ANTIGRAVITY,
+      sourceFormat: FORMATS.OPENAI,
+      provider: "antigravity",
+      model: "antigravity/gemini-3.7-flash",
+      body: { messages: [{ role: "user", content: "hello" }] },
+      onComplete(payload) {
+        onCompletePayload = payload;
+      },
+    }
+  );
+  assert.equal(onCompletePayload.cacheEvidence, "invalid");
+  assert.equal(onCompletePayload.usage.cached_tokens, undefined);
+  assert.equal(onCompletePayload.responseBody.usage.cache_evidence, undefined);
+});
+
+test("createSSEStream passthrough preserves cache evidence across late snapshots", async () => {
+  let onCompletePayload = null;
+  await readTransformed(
+    [
+      `data: ${JSON.stringify({ id: "cache", choices: [{ delta: { content: "hello" } }], usage: { prompt_tokens: 10, completion_tokens: 1, total_tokens: 11, cached_tokens: 4 } })}\n\n`,
+      `data: ${JSON.stringify({ id: "cache", choices: [{ delta: {}, finish_reason: "stop" }], usage: { prompt_tokens: 10, completion_tokens: 2, total_tokens: 12 } })}\n\n`,
+    ],
+    {
+      mode: "passthrough",
+      sourceFormat: FORMATS.OPENAI,
+      provider: "openai-compatible",
+      model: "gpt-4.1-mini",
+      body: { messages: [{ role: "user", content: "hello" }] },
+      onComplete(payload) {
+        onCompletePayload = payload;
+      },
+    }
+  );
+  assert.equal(onCompletePayload.usage.cached_tokens, 4);
+  assert.equal(onCompletePayload.responseBody.usage.cached_tokens, undefined);
+});
+
+test("createSSEStream translated path clears a prior cache hit on explicit zero", async () => {
+  let onCompletePayload = null;
+  await readTransformed(
+    [
+      `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text: "hello" }] } }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 1, totalTokenCount: 11, cachedContentTokenCount: 4 } })}\n\n`,
+      `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text: " world" }] }, finishReason: "STOP" }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 2, totalTokenCount: 12, cachedContentTokenCount: 0 } })}\n\n`,
+    ],
+    {
+      mode: "translate",
+      targetFormat: FORMATS.ANTIGRAVITY,
+      sourceFormat: FORMATS.OPENAI,
+      provider: "antigravity",
+      model: "antigravity/gemini-3.7-flash",
+      body: { messages: [{ role: "user", content: "hello" }] },
+      onComplete(payload) {
+        onCompletePayload = payload;
+      },
+    }
+  );
+  assert.equal(onCompletePayload.usage.prompt_tokens_details.cached_tokens, 0);
 });
 
 test("createSSEStream passthrough logs empty response after tool_calls completion", async () => {

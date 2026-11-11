@@ -5,8 +5,13 @@ import { join } from "node:path";
 import test from "node:test";
 import type { Config } from "@opencode-ai/plugin";
 
-import { createOmniRouteConfigHook, OmniRoutePlugin } from "../src/index.js";
-import { getLogLevel, logger, setLogLevel, type LogLevel } from "../src/logger.js";
+import {
+  createOmniRouteConfigHook,
+  createOmniRouteProviderHook,
+  OmniRoutePlugin,
+  type OmniRouteRawModelEntry,
+} from "../src/index.js";
+import { createLogger, getLogLevel, logger, setLogLevel, type LogLevel } from "../src/logger.js";
 
 type ConsoleMethod = "error" | "info" | "log" | "warn";
 type ConsoleEntries = Record<ConsoleMethod, unknown[][]>;
@@ -156,7 +161,6 @@ test("error-level config fetch failures remain visible as concise injected-logge
     {
       baseURL: "https://omniroute.example/v1",
       features: {
-        autoCombos: false,
         diskCache: false,
         enrichment: false,
         logLevel: "error",
@@ -215,4 +219,72 @@ test("logger error output remains visible at error level", async () => {
   } finally {
     setLogLevel(previousLevel);
   }
+});
+
+const MINIMAL_MODELS: OmniRouteRawModelEntry[] = [
+  {
+    id: "claude-primary",
+    object: "model",
+    owned_by: "combo",
+    capabilities: { tool_calling: true, reasoning: true, vision: true, thinking: true },
+    context_length: 200000,
+    max_output_tokens: 64000,
+    input_modalities: ["text", "image"],
+    output_modalities: ["text"],
+  },
+];
+
+function providerHookWithLevel(level: LogLevel, baseURL?: string) {
+  return createOmniRouteProviderHook(
+    {
+      baseURL,
+      features: { enrichment: false, logLevel: level },
+    },
+    {
+      fetcher: async () => MINIMAL_MODELS,
+      combosFetcher: async () => {
+        throw new Error("combos boom");
+      },
+    }
+  );
+}
+
+test("logLevel error suppresses provider.models() fallback warnings and the catalog-refresh breadcrumb", async () => {
+  const hook = providerHookWithLevel("error", "https://or.example.com/v1");
+  const lines = rendered(
+    await captureConsole(async () => {
+      await hook.models!({} as never, { auth: { type: "api", key: "sk-x" } as never });
+    })
+  );
+
+  assert.equal(lines.filter((line) => line.includes("combos fetch failed")).length, 0);
+  assert.equal(lines.filter((line) => line.includes("catalog refreshed")).length, 0);
+});
+
+test("logLevel debug preserves the provider.models() catalog-refresh breadcrumb", async () => {
+  const hook = providerHookWithLevel("debug", "https://or.example.com/v1");
+  const lines = rendered(
+    await captureConsole(async () => {
+      await hook.models!({} as never, { auth: { type: "api", key: "sk-x" } as never });
+    })
+  );
+
+  assert.ok(
+    lines.some((line) => line.includes("catalog refreshed")),
+    "catalog-refresh breadcrumb emitted at debug level"
+  );
+});
+
+test("no baseURL resolvable stays visible at error level", async () => {
+  const hook = providerHookWithLevel("error");
+  const lines = rendered(
+    await captureConsole(async () => {
+      await hook.models!({} as never, { auth: { type: "api", key: "sk-x" } as never });
+    })
+  );
+
+  assert.ok(
+    lines.some((line) => line.includes("no baseURL resolvable")),
+    "genuine misconfiguration error remains visible at error level"
+  );
 });
