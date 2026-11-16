@@ -30,19 +30,3 @@ harness:
 - Before merging or pushing to any PR you did not create _this session_, run `git worktree list`
   and re-check `gh pr view <N> --json state,headRefOid` (Hard Rule #22b).
 - End every session with the main checkout on the branch it started on.
-
-## Superpowers / planning artifacts — path overrides
-
-The `_tasks/` convention is defined in `AGENTS.md` → "Planning & Research Artifacts". The
-superpowers skills ship with defaults that point at `docs/…` — those defaults are **overridden
-here**. When a superpowers skill announces a path like "saved to `docs/superpowers/plans/…`",
-rewrite it to the `_tasks/…` equivalent before writing:
-
-| Artifact (skill)                   | Default (do NOT use)      | Save here instead                                             |
-| ---------------------------------- | ------------------------- | ------------------------------------------------------------- |
-| Plans (`writing-plans`)            | `docs/superpowers/plans/` | `_tasks/superpowers/plans/YYYY-MM-DD-<feature>.md`            |
-| Specs / design (`brainstorming`)   | `docs/superpowers/specs/` | `_tasks/superpowers/specs/YYYY-MM-DD-<topic>-design.md`       |
-| Research (`deep-research`, ad-hoc) | `docs/research/`          | `_tasks/research/…`                                           |
-| Hand-offs (`/handoff`)             | —                         | `_tasks/hands-off/<YYYY-MM-DD>_<branch>_v<versão>_sess-<id>/` |
-
-Commit those artifacts inside the `_tasks/` repo (`git -C _tasks …`), never in the main repo.
