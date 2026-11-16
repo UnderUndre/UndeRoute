@@ -49,7 +49,7 @@
 **Purpose**: зафиксировать состояние «до» и манифест amend-коммита — общая инфраструктура для всех US.
 
 - [X] T001 [SETUP] Baseline evidence: выполнить 11 grep/ls-проверок находок аудита (analyze RTM = 0, Intent Routing = 0, «inactive here» = 1, IX «via CI workflow» = 1, dispatch /bump|/brainstorm|/questions, CLAUDE.md base-green|sweep-reds|_tasks, knowledge/patterns отсутствует, dialog-capture не зарегистрирован, snapshot exit 2 на requirements-audit) и записать выводы команд в specs/006-constitution-wiring-fix/verification/baseline.md — Evidence: `specs/006-constitution-wiring-fix/verification/baseline.md:1-40` (base-sha `bb2fbb1bae`, 11/11 captured)
-- [ ] T002 [SETUP] Манифест amend-бандла: записать в specs/006-constitution-wiring-fix/verification/amend-bundle.md точный список правок constitution.md (секции IX :135, адаптационная заметка :5, новый XIV, абзац V, пометка I, VIII.1 :97 CLAUDE.md→AGENTS.md — F2, changelog 1.9.1) и зависимых файлов (speckit.plan.md, speckit.qa-signoff.md) — один коммит v1.9.1 по Governance §2 (ADR-001)
+- [X] T002 [SETUP] Манифест amend-бандла: записать в specs/006-constitution-wiring-fix/verification/amend-bundle.md точный список правок constitution.md (секции IX :135, адаптационная заметка :5, новый XIV, абзац V, пометка I, VIII.1 :97 CLAUDE.md→AGENTS.md — F2, changelog 1.9.1) и зависимых файлов (speckit.plan.md, speckit.qa-signoff.md) — один коммит v1.9.1 по Governance §2 (ADR-001) — Evidence: `specs/006-constitution-wiring-fix/verification/amend-bundle.md:1-40` (7 constitution edits + 2 command files)
 
 **Checkpoint**: baseline и манифест зафиксированы — US-задачи могут стартовать.
 
