@@ -710,3 +710,30 @@ The dashboard is reachable at the operator's chosen URL/port (default `http://lo
 - **Local VPS / shared dev environments**: ask the operator for the URL and current credentials — they live in their personal vault, NOT in this repo.
 
 > Any credential observed in a previous version of this file was a non-production demo value; treat it as compromised and do not reuse it.
+
+---
+
+## Intent Routing
+
+Single source of truth for utterance-to-command routing (`.claude/hooks/intent-hint.sh` and `/dispatch` mirror this table). If unsure → run `/dispatch <free-text>`.
+
+| Intent (RU / EN) | Action |
+| --- | --- |
+| "тесты упали" / "test fail" | `/fix-tests` |
+| "CI упал" / "ci fail" / "workflow run" | `/fix-ci` |
+| "тайпы" / "ts error" / "fix types" | `/fix-types` |
+| "конфликт" / "merge conflict" | `/resolve-conflicts` |
+| "не работает" / "сломалось" / "bug" / "debug" | spawn `debugger` + `systematic-debugging` |
+| "обкашляю" / "brainstorm" / "варианты" | `/speckit.brainstorm` |
+| "найди дыры" / "devil's advocate" | `/questions_ideas` |
+| "проверь всё" / "verify" / "дай статус" | `/verify` |
+| "что изменилось" / "git diff" | `/diff` |
+| "кто написал" / "git blame" | `/blame-line` |
+| "зависимости" / "npm audit" | `/deps-check` |
+| "бенчмарк" / "perf" | `/perf-check` |
+| "новая фича" / "implement X" (>3 files) | `/speckit.start` → specify → clarify → requirements-audit → plan → tasks → analyze → review → implement → qa-signoff |
+| "релиз" / "ship" / "bump version" | `/speckit.bump` |
+| "запомни" / "session end" / "capture lesson" | `/improve` (or `/learn`) |
+| "regen" / "re-transpile" / "перегенери" | `/regen` |
+
+**Process Canon & Precedence**: Binding pipeline rules, quality gates (Principle VI Cross-AI Review, XII QA Contour), and SemVer live in [`.specify/memory/constitution.md`](.specify/memory/constitution.md). Feature work uses two-phase branches (Principle IX: `specs/<slug>` planning → `<slug>` implementation from `main`). **Precedence**: конституция приоритетна в процессных вопросах (гейты, стадии, артефакты, версии, теги); `AGENTS.md` приоритетен в продуктовых конвенциях кода; прямой конфликт процессных правил решает конституция.
