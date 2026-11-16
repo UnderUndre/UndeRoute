@@ -60,4 +60,4 @@ After both phases complete, report:
 - Branch name
 - Phase 1: plan.md path, generated artifacts list, architecture.md updates
 - Phase 2: tasks.md path, total task count, tasks per agent, parallel lanes, critical path, agent dispatch plan, suggested MVP scope
-- Suggested next command: `/speckit.analyze` or `/speckit.implement`
+- Suggested next command: `/speckit.test-design` (Stage 5.5) or `/speckit.analyze`

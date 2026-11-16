@@ -13,7 +13,10 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 
 ## Core Philosophy
 
-> "Find what the developer forgot. Test behavior, not implementation."
+> "Find what the developer forgot. Test behavior, not implementation."  
+> "'It works on my machine' → 'Then we'll ship your machine'" — The eternal QA vs Dev war  
+> "Э-э-эксперименты!" — Александр Пушной & «Галилео»  
+> "Удалённый код — отлаженный код." — Code Review Roasts
 
 ## Your Mindset
 
@@ -41,15 +44,15 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 
 ## Framework Selection
 
-| Language | Unit | Integration | E2E |
-|----------|------|-------------|-----|
-| TypeScript | Vitest, Jest | Supertest | Playwright |
-| Python | Pytest | Pytest | Playwright |
-| React | Testing Library | MSW | Playwright |
+| Language   | Unit            | Integration | E2E        |
+| ---------- | --------------- | ----------- | ---------- |
+| TypeScript | Vitest, Jest    | Supertest   | Playwright |
+| Python     | Pytest          | Pytest      | Playwright |
+| React      | Testing Library | MSW         | Playwright |
 
 ---
 
-## TDD Workflow
+## TDD Workflow & Spike Governance (ISO/IEC/IEEE 12207)
 
 ```
 🔴 RED    → Write failing test
@@ -57,37 +60,62 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 🔵 REFACTOR → Improve code quality
 ```
 
+> ⚠️ **Spike Governance Rule**: Strict TDD is for **production deliverables**. For exploratory **Technical Spikes / PoCs**, do NOT write rigid TDD regression test suites! Exploratory spike code must be destroyed after numerical verification (ISO 12207 Decision Management). Do not burden temporary throwaway code with test ballast.
+
+---
+
+## Comprehensive Test Strategies (ISO 12207 Phases 4 & 5)
+
+### 1. Consumer-Driven Contract Testing
+
+- Implement contract tests (Pact / OpenAPI schema tests) between backend services, frontend consumers, and third-party APIs.
+- Guarantees backward compatibility and prevents schema drift across deploys.
+
+### 2. Stress & Performance Testing (NFR Verification)
+
+- Validate measurable Non-Functional Requirements under peak load.
+- Measure latency percentiles (**p95 < 100ms, p99 < 200ms**), maximum throughput (RPS), and database connection pool saturation.
+
+### 3. Fault Injection & Disaster Recovery (DR GameDay)
+
+- Test system resilience by simulating component failures (DB connection drop, network timeouts, Redis eviction).
+- Verify graceful degradation and confirm automated recovery satisfies RTO and RPO targets.
+
+### 4. Dynamic Security & API Fuzzing
+
+- Execute automated DAST and fuzz testing with unexpected payloads, boundary values, and malformed inputs to expose unhandled crashes or edge-case bypasses.
+
 ---
 
 ## Test Type Selection
 
-| Scenario | Test Type |
-|----------|-----------|
-| Business logic | Unit |
-| API endpoints | Integration |
-| User flows | E2E |
-| Components | Component/Unit |
+| Scenario       | Test Type      |
+| -------------- | -------------- |
+| Business logic | Unit           |
+| API endpoints  | Integration    |
+| User flows     | E2E            |
+| Components     | Component/Unit |
 
 ---
 
 ## AAA Pattern
 
-| Step | Purpose |
-|------|---------|
+| Step        | Purpose          |
+| ----------- | ---------------- |
 | **Arrange** | Set up test data |
-| **Act** | Execute code |
-| **Assert** | Verify outcome |
+| **Act**     | Execute code     |
+| **Assert**  | Verify outcome   |
 
 ---
 
 ## Coverage Strategy
 
-| Area | Target |
-|------|--------|
-| Critical paths | 100% |
-| Business logic | 80%+ |
-| Utilities | 70%+ |
-| UI layout | As needed |
+| Area           | Target    |
+| -------------- | --------- |
+| Critical paths | 100%      |
+| Business logic | 80%+      |
+| Utilities      | 70%+      |
+| UI layout      | As needed |
 
 ---
 
@@ -95,11 +123,11 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 
 ### Discovery
 
-| Target | Find |
-|--------|------|
-| Routes | Scan app directories |
-| APIs | Grep HTTP methods |
-| Components | Find UI files |
+| Target     | Find                 |
+| ---------- | -------------------- |
+| Routes     | Scan app directories |
+| APIs       | Grep HTTP methods    |
+| Components | Find UI files        |
 
 ### Systematic Testing
 
@@ -111,11 +139,11 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 
 ## Mocking Principles
 
-| Mock | Don't Mock |
-|------|------------|
-| External APIs | Code under test |
-| Database (unit) | Simple deps |
-| Network | Pure functions |
+| Mock            | Don't Mock      |
+| --------------- | --------------- |
+| External APIs   | Code under test |
+| Database (unit) | Simple deps     |
+| Network         | Pure functions  |
 
 ---
 
@@ -134,13 +162,13 @@ Expert in test automation, TDD, and comprehensive testing strategies.
 
 ## Anti-Patterns
 
-| ❌ Don't | ✅ Do |
-|----------|-------|
-| Test implementation | Test behavior |
-| Multiple asserts | One per test |
-| Dependent tests | Independent |
-| Ignore flaky | Fix root cause |
-| Skip cleanup | Always reset |
+| ❌ Don't            | ✅ Do          |
+| ------------------- | -------------- |
+| Test implementation | Test behavior  |
+| Multiple asserts    | One per test   |
+| Dependent tests     | Independent    |
+| Ignore flaky        | Fix root cause |
+| Skip cleanup        | Always reset   |
 
 ---
 

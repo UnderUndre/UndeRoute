@@ -16,7 +16,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ultrathink
 
-> "Какое ТЗ — такое и ХЗ." — Valera on requirements quality driving task quality.
+> "Какое ТЗ — такое и ХЗ." — Folk Wisdom  
+> "Never half-ass two things. Whole-ass one thing." — Рон Свонсон (_Parks and Recreation_)  
+> "Без синей изоленты тут не обойтись." — Философия СТО
 
 1. **Setup**: Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -34,10 +36,21 @@ ultrathink
 3. **Execute task generation workflow**:
    - Load plan.md and extract tech stack, libraries, project structure
    - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
+   - **Micro-Decomposition ("Правило одного фитинга")**: Break all work into small, self-contained subtasks sized **15–30 minutes of work (<500 LOC per task)**. Never output giant "implement auth" monolithic tasks.
+   - **Strict Layer-by-Layer Sequence**: For each user story, generate tasks strictly in this sequence:
+     1. `[DB]` [Expand] Schema & Additive Migration (nullable columns / new tables / backward-compatible contracts)
+     2. `[BE]` [Dual-Write] Service layer & typed contract interfaces (with Zod/Pydantic validation)
+     3. `[BE]` Endpoint & schema validation (Zod/Pydantic)
+     4. `[FE]` UI integration & components
+     5. `[BE]`/`[FE]` Unit & integration tests (Consumer-Driven Contract Testing)
+     6. `[DB]` [Backfill] Background data migration & read-switch (if schema change involves existing data)
+     7. `[DB]` [Contract] Deprecation & cleanup migration (in Polish phase)
+     8. `[OPS]` Telemetry, observability (PII scrubbing per PCI DSS / ISO 27001), Runbooks, and rollback down-migration verification (in Polish phase)
+     9. `[SEC]` Architectural threat mitigation verification, DAST/fuzzing, and dependency license check (in Polish phase)
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
-   - If research.md exists: Extract decisions for setup tasks
-   - **Agent Assignment**: Assign `[AGENT]` tag to each task (see Agent Assignment Rules below)
+   - If research.md exists: Extract decisions for setup tasks and verify Spike Disposal Path
+   - **Agent & Skill Assignment**: Assign `[AGENT]` tag to each task and map it to the corresponding specialist command file from `.claude/commands/<agent>.md` and domain skills from `.claude/skills/<skill>` (see Agent & Skill Matrix below)
    - **Shared File Extraction**: Scan tasks for overlapping file paths — any file touched by 2+ agents → extract into `[SETUP]` task before the fork point
    - **Dependency Resolution**: Build dependency graph (see Dependency Resolution Rules below)
    - **Lane Generation**: Group dependency chains into parallel lanes by agent flow
@@ -46,11 +59,11 @@ ultrathink
 
 4. **Generate tasks.md**: Use `.specify/templates/tasks-template.md` as structure, fill with:
    - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization, shared dependency installs)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
+   - Phase 1: Setup tasks (project initialization, dependency vulnerability & license audit [SBOM SPDX/CycloneDX], spike disposal verification, shared installs)
+   - Phase 2: Foundational tasks (blocking prerequisites for all user stories; if Day 0 infrastructure, include Tracer Bullet deployment)
    - Phase 3+: One phase per user story (in priority order from spec.md)
    - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
+   - Final Phase: Polish & cross-cutting concerns (DB contract cleanup, ORR & DR GameDay verification, telemetry & PII redaction, runbooks, rollback down-migration)
    - All tasks must follow the strict checklist format (see Task Format below)
    - Clear file paths for each task
    - **Dependency Graph section** with validated dependencies
@@ -87,9 +100,7 @@ Every task MUST strictly follow this format:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
 2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[AGENT] tag**: REQUIRED for every task. One of:
-   - **Core** (any project): `[SETUP]`, `[DB]`, `[BE]`, `[FE]`, `[OPS]`, `[E2E]`, `[SEC]`, `[PERF]`, `[DOC]`, `[DEBUG]`, `[REFACTOR]`
-   - **Conditional** (only when plan.md explicitly requires): `[SEO]`, `[MOBILE]`, `[UIUX]`, `[PENTEST]`, `[GAME]`
+3. **[AGENT] tag**: REQUIRED for every task. One of: - **Core** (any project): `[SETUP]`, `[DB]`, `[BE]`, `[FE]`, `[OPS]`, `[E2E]`, `[SEC]`, `[PERF]`, `[DOC]`, `[DEBUG]`, `[REFACTOR]` - **Human & Business Roles** (non-technical / ops): `[FIN]`, `[LAW]`, `[MKT]`, `[QA]`, `[BIZ]` - **Conditional** (only when plan.md explicitly requires): `[SEO]`, `[MOBILE]`, `[UIUX]`, `[PENTEST]`, `[GAME]`
 4. **[Story] label**: REQUIRED for user story phase tasks only
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
    - Setup phase: NO story label
@@ -112,22 +123,32 @@ Every task MUST strictly follow this format:
 
 ### By file path (primary)
 
-| Path Pattern | Agent |
-|-------------|-------|
-| `src/models/`, `prisma/`, `drizzle/`, `migrations/`, `schema.*`, `seeds/` | `[DB]` |
-| `src/api/`, `src/services/`, `src/middleware/`, `server/`, `src/routes/`, `src/lib/` | `[BE]` |
-| `src/components/`, `src/pages/`, `src/app/`, `styles/`, `public/`, `src/hooks/` | `[FE]` |
-| `Dockerfile`, `.github/workflows/`, `infra/`, `deploy/`, CI configs | `[OPS]` |
-| `tests/e2e/`, `tests/integration/` (cross-domain only) | `[E2E]` |
-| `docs/`, `README.md`, `CHANGELOG.md`, `*.api.md`, OpenAPI specs, runbooks | `[DOC]` |
-| `app/` (React Native/Expo), `lib/` (Flutter), `ios/`, `android/`, `pubspec.yaml` | `[MOBILE]` |
-| `robots.txt`, `sitemap.xml`, `app/sitemap.ts`, `app/robots.ts`, structured-data components | `[SEO]` |
-| `design/`, `figma/`, `*.fig`, wireframes, design tokens, style guide | `[UIUX]` |
-| `Assets/` (Unity), `*.godot`, `*.unity`, shaders, game-engine configs | `[GAME]` |
+| Path Pattern                                                                               | Agent      |
+| ------------------------------------------------------------------------------------------ | ---------- |
+| `src/models/`, `prisma/`, `drizzle/`, `migrations/`, `schema.*`, `seeds/`                  | `[DB]`     |
+| `src/api/`, `src/services/`, `src/middleware/`, `server/`, `src/routes/`, `src/lib/`       | `[BE]`     |
+| `src/components/`, `src/pages/`, `src/app/`, `styles/`, `public/`, `src/hooks/`            | `[FE]`     |
+| `Dockerfile`, `.github/workflows/`, `infra/`, `deploy/`, CI configs                        | `[OPS]`    |
+| `tests/e2e/`, `tests/integration/` (cross-domain only)                                     | `[E2E]`    |
+| `docs/`, `README.md`, `CHANGELOG.md`, `*.api.md`, OpenAPI specs, runbooks                  | `[DOC]`    |
+| `app/` (React Native/Expo), `lib/` (Flutter), `ios/`, `android/`, `pubspec.yaml`           | `[MOBILE]` |
+| `robots.txt`, `sitemap.xml`, `app/sitemap.ts`, `app/robots.ts`, structured-data components | `[SEO]`    |
+| `design/`, `figma/`, `*.fig`, wireframes, design tokens, style guide                       | `[UIUX]`   |
+| `Assets/` (Unity), `*.godot`, `*.unity`, shaders, game-engine configs                      | `[GAME]`   |
+| `docs/business-plan.md`, `financial/`, `pricing.md`, unit-econ spreadsheets                | `[FIN]`    |
+| `LEGAL.md`, `TOS.md`, `PRIVACY.md`, compliance checklists, entity setups                   | `[LAW]`    |
+| `marketing/`, `gtm/`, `pitch/`, promo videos, social posts, ProductHunt launch             | `[MKT]`    |
+| `tests/manual/`, `qa/`, exploratory testing check-lists, physical device testing           | `[QA]`     |
+| `partnerships/`, `deals/`, roadmap strategy, vendor contracts                              | `[BIZ]`    |
 
 ### By task description (fallback)
 
 - "audit", "security review", "vulnerability", "hardening", "OWASP", "threat model" → `[SEC]`
+- "unit-economics", "pricing calculation", "Stripe payout setup", "Telegram Stars setup", "cashflow model" → `[FIN]`
+- "TOS", "Privacy Policy", "DMCA disclaimer", "trademark review", "legal entity setup", "LLC registration" → `[LAW]`
+- "marketing campaign", "ProductHunt launch", "viral video demo", "Reddit/X promo post", "GTM strategy" → `[MKT]`
+- "manual QA pass", "physical device testing", "voiceover audio sanity check", "hand-held test" → `[QA]`
+- "partner deal", "skin author contract", "b2b sales pitch", "founder qualification" → `[BIZ]`
 - "pentest", "exploit", "offensive test", "red team", "attack simulation" → `[PENTEST]`
 - "create schema", "add migration", "seed data", "create model", "index", "query optimization" → `[DB]`
 - "implement endpoint", "add route", "create service", "add middleware", "background job" → `[BE]`
@@ -161,6 +182,34 @@ Every task MUST strictly follow this format:
 - `[UIUX]` — only for design-heavy features needing wireframes/mockups before implementation (precedes `[FE]`)
 - `[PENTEST]` — only when spec.md explicitly requires offensive testing (distinct from `[SEC]` defensive audit)
 - `[GAME]` — only when plan.md tech stack includes Unity, Unreal, Godot, Phaser, or Three.js-as-game-engine
+
+### Agent Command & Skill Matrix (REQUIRED)
+
+Every assigned `[AGENT]` tag MUST be mapped in the **Agent Dispatch Plan** table to its exact specialist command file under `.claude/commands/<command>.md` and its domain skills under `.claude/skills/<skill>`:
+
+| Tag          | Specialist Command (`.claude/commands/`)                              | Required & Recommended Skills (`.claude/skills/`)                                                                             |
+| :----------- | :-------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `[SETUP]`    | `orchestrator` (`.claude/commands/orchestrator.md`)                   | `architecture`, `system-design-patterns`, `app-builder`, `clean-code`                                                         |
+| `[DB]`       | `database-architect` (`.claude/commands/database-architect.md`)       | `database-design`, `prisma-expert`, `clean-code`                                                                              |
+| `[BE]`       | `backend-specialist` (`.claude/commands/backend-specialist.md`)       | `api-patterns`, `nodejs-best-practices`, `typescript-expert`, `clean-code`, `nestjs-expert`, `python-patterns`, `mcp-builder` |
+| `[FE]`       | `frontend-specialist` (`.claude/commands/frontend-specialist.md`)     | `react-patterns`, `nextjs-best-practices`, `tailwind-patterns`, `frontend-design`, `ui-ux-pro-max`, `i18n-localization`       |
+| `[OPS]`      | `devops-engineer` (`.claude/commands/devops-engineer.md`)             | `docker-expert`, `server-management`, `deployment-procedures`, `bash-linux`, `powershell-windows`                             |
+| `[E2E]`      | `test-engineer` (`.claude/commands/test-engineer.md`)                 | `testing-patterns`, `webapp-testing`, `tdd-workflow`                                                                          |
+| `[SEC]`      | `security-auditor` (`.claude/commands/security-auditor.md`)           | `vulnerability-scanner`, `ai-engineering-hygiene`, `code-review-checklist`                                                    |
+| `[PENTEST]`  | `penetration-tester` (`.claude/commands/penetration-tester.md`)       | `red-team-tactics`, `vulnerability-scanner`                                                                                   |
+| `[PERF]`     | `performance-optimizer` (`.claude/commands/performance-optimizer.md`) | `performance-profiling`, `system-design-patterns`                                                                             |
+| `[DEBUG]`    | `debugger` (`.claude/commands/debugger.md`)                           | `systematic-debugging`, `lint-and-validate`                                                                                   |
+| `[REFACTOR]` | `backend-specialist` / `clean-code`                                   | `clean-code`, `ai-engineering-hygiene`, `testing-patterns`                                                                    |
+| `[SEO]`      | `seo-specialist` (`.claude/commands/seo-specialist.md`)               | `seo-fundamentals`, `geo-fundamentals`                                                                                        |
+| `[MOBILE]`   | `mobile-developer` (`.claude/commands/mobile-developer.md`)           | `mobile-design`, `react-patterns`, `typescript-expert`                                                                        |
+| `[UIUX]`     | `ui-ux-pro-max` (`.claude/commands/ui-ux-pro-max.md`)                 | `ui-ux-pro-max`, `frontend-design`, `tailwind-patterns`                                                                       |
+| `[GAME]`     | `game-developer` (`.claude/commands/game-developer.md`)               | `game-development`, `systems-programming`                                                                                     |
+| `[DOC]`      | `documentation-writer` (`.claude/commands/documentation-writer.md`)   | `documentation-templates`, `knowledge-adaptation`                                                                             |
+| `[FIN]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `semver-versioning`, `knowledge-adaptation`                                                                   |
+| `[LAW]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `code-review-checklist`                                                                                       |
+| `[MKT]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `brainstorming`, `knowledge-adaptation`                                                                                       |
+| `[QA]`       | `test-engineer` (`.claude/commands/test-engineer.md`)                 | `webapp-testing`, `testing-patterns`                                                                                          |
+| `[BIZ]`      | `project-planner` (`.claude/commands/project-planner.md`)             | `plan-writing`, `brainstorming`                                                                                               |
 
 ### Shared file extraction
 

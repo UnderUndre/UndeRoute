@@ -18,7 +18,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ultrathink
 
-> "В системе нет багов, есть только аномалии." — Valera, philosophical debug mode.
+> "В системе нет багов, есть только аномалии." — _S.T.A.L.K.E.R._  
+> "It must be humbling to suck on so many levels." («Должно быть, унизительно лажать на стольких уровнях сразу.») — Шелдон Купер (_The Big Bang Theory_)  
+> "Ай, мля, я маслину поймал!" — _S.T.A.L.K.E.R._ (Bandits)
 
 Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/speckit.tasks` has successfully produced a complete `tasks.md`.
 
@@ -81,6 +83,19 @@ Load only the minimal necessary context from each artifact:
 
 - Load `.specify/memory/constitution.md` for principle validation
 
+**From QA artifacts (Constitution Principle XII):**
+
+- `FEATURE_DIR/requirements-audit.md` (if present — Risk scores, 4-pillar gate verdict)
+- `FEATURE_DIR/qa/rtm-matrix.md` (if present — end-to-end `FR ↔ TC` traceability)
+- `FEATURE_DIR/qa/preliminary-rtm.md` (if present — draft RTM / executable AC fallback)
+- `FEATURE_DIR/qa/waiver.md` (if present — indicates waived `/speckit.test-design` / `/speckit.qa-signoff` for chore specs)
+
+**From business plan (Principle VII-B — commercial features):**
+
+- Load any `docs/**/*business-plan*.md` and `docs/business-plan.md` if present
+- Extract: Phase A hero SKU(s), price floors, focus/hard laws, frozen brands/modules, CAC/cold-spend gates, brand isolation rules, GTM spine constraints
+- If **no** plan files and feature is user-facing/monetized (not pure chore): flag under pass **H** (see below) — severity HIGH unless `FEATURE_DIR/business-plan-waiver.md` exists
+
 ### 3. Build Semantic Models
 
 Create internal representations (do not include raw artifacts in output):
@@ -114,6 +129,8 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 
 - Any requirement or plan element conflicting with a MUST principle
 - Missing mandated sections or quality gates from constitution
+- **RTM coverage (Constitution §XII)**: every FR/NFR MUST trace to at least one test case (`TC-*` in `qa/rtm-matrix.md`); requirements with Risk ≥ 20 MUST have Decision Table + State Transition + Exploratory Charter + UAT coverage. **Waiver fallback**: if `FEATURE_DIR/qa/waiver.md` exists (waived `test-design`), verify coverage against `qa/preliminary-rtm.md` (every FR/NFR → ≥ 1 executable AC). Missing coverage = **CRITICAL**.
+- **Evidence-Backed Completion (Constitution §XII.4)**: scan completed task lines strictly matching `- \[[xX]\] T\d+` (case-insensitive `[x]`/`[X]`, excluding template checkboxes such as `Self-Validation Checklist`); a completed task checkbox is valid ONLY with an inline evidence reference (`path:line`, test name/ID, or command output path). Unverifiable completed tasks = **CRITICAL** finding (reopens task).
 
 #### E. Coverage Gaps
 
@@ -142,25 +159,80 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 - `[SEC]` and `[E2E]` tasks must depend on implementation tasks (not vice versa) — flag inverted dependencies as HIGH
 - Shared file conflicts: if 2+ tasks from different agents reference the same file path without a common `[SETUP]` dependency — flag as CRITICAL (race condition risk)
 
+#### H. Commercial drift vs business plan (GTM / money path)
+
+Read-only check against loaded business plan(s). **Skip** only if `business-plan-waiver.md` exists for this feature **or** feature is explicitly chore-only (no user-facing/monetization).
+
+Flag when `spec.md` / `plan.md` / `tasks.md`:
+
+| Drift                                                                                                                 | Typical severity |
+| :-------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| Implements or tasks a **SKU / price / offer** that contradicts plan floors or killed SKUs                             | **CRITICAL**     |
+| Builds work **forbidden by focus/hard law** (e.g. secondary brand eng while frozen; Lab while gated; dual-front)      | **CRITICAL**     |
+| Opens **paid cold CAC / ads** tasks while plan says $0 cold until gate                                                | **HIGH**         |
+| Ignores **brand isolation** (crypto/polity copy in sterile B2B surface, or reverse)                                   | **HIGH**         |
+| Adds monetization surface with **no** plan update path and plan file missing                                          | **HIGH**         |
+| GTM/sales artifacts required by plan (sample pack, SOW knives) never appear in tasks though feature is the hero offer | **MEDIUM**       |
+| Terminology: plan hero name vs spec product name drift without alias                                                  | **MEDIUM**       |
+
+Do **not** re-litigate full unit-econ tables here — that is `/speckit.business-plan` Stress Pass + optional external biz review. Here only **consistency / drift**.
+
+#### I. Supply Chain & Dependency Licensing Validation
+
+- Scan `plan.md` and `research.md` for newly introduced external libraries and dependencies
+- Flag viral copyleft licenses (AGPL-3.0, GPL without open-source intent) as **CRITICAL**
+- Flag missing lockfile validation or unpinned floating dependency ranges as **HIGH**
+- Flag dependencies with known critical CVEs or deprecated status as **HIGH**
+
+#### J. Zero-Downtime Data Architecture & Expand/Contract Validation
+
+- Verify that features modifying database schemas explicitly define 4-phase Expand/Contract migrations:
+  1. Expand (additive, nullable, backward compatible)
+  2. Dual-Write (service writes old + new)
+  3. Backfill & Read-Switch (background migration)
+  4. Contract (cleanup, drop old schema elements)
+- Flag any non-backward-compatible DDL (dropping columns/tables, column renames in 1 step, adding NOT NULL without default) as **CRITICAL**
+- Flag missing down-migration rollback plan as **HIGH**
+
+#### K. Spike Governance & Prototype Deprecation Validation (ISO/IEC/IEEE 12207)
+
+- Check if research spikes are documented in `research.md`
+- Verify that every spike has:
+  1. Explicit numerical verification metrics (latency p95/p99, throughput, memory)
+  2. Mandatory Spike Disposal Path (throwaway protocol ensuring experimental prototype code is discarded)
+- Flag any plan or task that attempts to merge or keep raw exploratory spike code in production as **HIGH**
+
+#### L. Regulatory Compliance & Trust Boundary Isolation (ISO 12207 Phase 0 / PCI DSS v4.0.1 / GDPR)
+
+- Verify that features handling PII, tokens, or financial data isolate trust boundaries (e.g. CDE scope reduction)
+- Verify that logging does not record unmasked PII or secrets (PCI DSS Req 10 / ISO 27001)
+- Flag unjustified distributed microservices architectures that violate Conway's law (without compliance/hardware boundaries) as **HIGH**
+
+#### M. Operational Readiness, Rollback & Observability
+
+- Verify tasks include structured logging, OpenTelemetry traces, and metric emission
+- Verify that operational runbooks and disaster recovery (RTO/RPO) considerations exist
+- Flag missing rollback verification or missing telemetry tasks as **HIGH**
+
 ### 5. Severity Assignment
 
 Use this heuristic to prioritize findings:
 
-- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
+- **CRITICAL**: Violates constitution MUST, missing core spec artifact, requirement with zero coverage that blocks baseline functionality, or **hard commercial gate breach** (focus law / killed SKU / price floor contradiction)
+- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, **commercial drift** (cold CAC, brand isolation, missing plan on monetized feature)
+- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case, missing GTM artifacts for hero offer
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
 ### 6. Compute Verdict
 
 Map findings to a single gate verdict using this heuristic:
 
-| Verdict | Condition |
-|---|---|
-| **PASS** | Zero CRITICAL findings AND zero HIGH findings |
-| **MEDIUM** | At least one HIGH finding but no CRITICAL — proceed only with explicit user acceptance |
-| **HIGH** | Multiple HIGH findings — implement should not proceed without rework |
-| **CRITICAL** | Any CRITICAL finding — implement is blocked |
+| Verdict      | Condition                                                                              |
+| ------------ | -------------------------------------------------------------------------------------- |
+| **PASS**     | Zero CRITICAL findings AND zero HIGH findings                                          |
+| **MEDIUM**   | At least one HIGH finding but no CRITICAL — proceed only with explicit user acceptance |
+| **HIGH**     | Multiple HIGH findings — implement should not proceed without rework                   |
+| **CRITICAL** | Any CRITICAL finding — implement is blocked                                            |
 
 If `--override` was passed in `$ARGUMENTS`, verdict is `OVERRIDDEN: <reason>` regardless of detection results.
 
@@ -170,7 +242,7 @@ Compute `FEATURE_DIR` from prerequisites step. Ensure `FEATURE_DIR/reviews/` exi
 
 Report structure:
 
-```markdown
+````markdown
 # SpecKit Analyze: <feature-slug>
 
 **Reviewer**: analyze (Claude self-consistency)
@@ -180,20 +252,27 @@ Report structure:
 
 ## Findings
 
-| ID | Category | Severity | Location(s) | Summary | Recommendation |
-|----|----------|----------|-------------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements … | Merge phrasing; keep clearer version |
+| ID  | Category    | Severity | Location(s)      | Summary                    | Recommendation                       |
+| --- | ----------- | -------- | ---------------- | -------------------------- | ------------------------------------ |
+| A1  | Duplication | HIGH     | spec.md:L120-134 | Two similar requirements … | Merge phrasing; keep clearer version |
 
 (Add one row per finding; generate stable IDs prefixed by category initial. Limit 50 rows; aggregate remainder in overflow note.)
 
 ## Coverage Summary
 
 | Requirement Key | Has Task? | Task IDs | Notes |
-|-----------------|-----------|----------|-------|
+| --------------- | --------- | -------- | ----- |
 
 ## Constitution Alignment Issues
 
 (List principle name + violation; empty section is fine.)
+
+## Commercial / Business Plan Alignment
+
+- Plan files loaded: [paths | none]
+- Focus/hard laws checked: [summary | n/a]
+- Findings: [none | see table IDs H*]
+- If none and commercial feature: state explicitly "No commercial drift detected" or "No plan — HIGH/waiver"
 
 ## Unmapped Tasks
 
@@ -224,6 +303,8 @@ high_count: <N>
 medium_count: <N>
 low_count: <N>
 ```
+````
+
 ```
 
 ### 8. Provide Next Actions
@@ -261,3 +342,4 @@ Ask the user: "Would you like me to suggest concrete remediation edits for the t
 ## Context
 
 $ARGUMENTS
+```
