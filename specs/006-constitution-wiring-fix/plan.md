@@ -13,7 +13,7 @@
 ## Technical Context
 
 **Language/Version**: Markdown, Bash (snapshot-stage.sh), PowerShell 5.1+ (snapshot-stage.ps1), JSON (settings.json — не меняется)
-**Primary Dependencies**: ноль новых (supply chain: NFR-003; единственный инструмент — существующий `clai-helpers` CLI для sync, уже в devDeps)
+**Primary Dependencies**: ноль новых (supply chain: NFR-003); transpile-инструмент — встроенный CLI `underoute-clai` (bin `helpers`, packages/cli; в корневых devDeps отсутствует): `sync`/`status` недоступны без `helpers-lock.json` (sync.ts:352, status.ts:49), T017 использует `node packages/cli/bin/helpers.mjs regen --targets copilot` (regen работает без lockfile, regen.ts:53-59)
 **Storage**: N/A (файлы репо; `knowledge/patterns/INDEX.md` — плоский маркер-стаб)
 **Testing**: grep/командно-исполнимые AC (см. `qa/preliminary-rtm.md`, 18/18); exit-code тесты snapshot-скрипта; `git diff --name-only` path-фильтр для NFR-003
 **Target Platform**: Windows 10/11 + Git Bash (основная среда владельца); скрипты должны оставаться совместимы с POSIX bash (существующий канон `set -euo pipefail`)
@@ -30,22 +30,22 @@
 
 _GATE: прогнан против `.specify/memory/constitution.md` v1.9.0. Re-check после Phase 1: без изменений (дизайн не меняет архитектуры)._
 
-| Principle                           | Вердикт               | Обоснование                                                                                                                                                                                                                                                                        |
-| :---------------------------------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| I. Source of Truth Discipline       | PASS                  | Правки идут в SOURCE (`.claude/commands/*.md`), не в generated-деревья. После правок commands обязателен `npx clai-helpers sync` + `status --strict` (задача T017) — иначе drift. AGENTS.md/CLAUDE.md не входят в transpile-set (не sources), хуки не транслируются по VIII hybrid |
-| II. Transformer, Not Fork           | PASS                  | Новых деревьев не создаётся                                                                                                                                                                                                                                                        |
-| III. Protected Slots                | PASS                  | Generated-файлы не hand-edited                                                                                                                                                                                                                                                     |
-| IV. SemVer 0.x                      | PASS (deferred)       | Изменения шаблона классифицируются на `/bump` (ожидаемо MINOR: новое поведение XII-wiring; не breaking — старые имена стадий сохранены NFR-004). Бамп вне скоупа этой спеки                                                                                                        |
-| V. Token Economy                    | PASS                  | NFR-001 бюджетирует дельту always-on слоя; dual-role note (FR-011) разрешает конфликт «inventory vs consumer»                                                                                                                                                                      |
-| VI. Cross-AI Review Gate            | ACTIVE                | Пайплайн сам является носителем: analyze → review ×2 → implement                                                                                                                                                                                                                   |
-| VII. Artifact Versioning            | PASS                  | plan/tasks тегируются скриптом; requirements-audit/analyze — вручную до фикса FR-003 (прецедент 004, задокументировано)                                                                                                                                                            |
-| VII-B. Business Plan Stage          | PASS (waived)         | `business-plan-waiver.md` (chore-only, VII-B.5)                                                                                                                                                                                                                                    |
-| VIII. Self-Maintaining Knowledge    | PASS                  | FR-009 оживляет mechanism #4; VIII не блокирует implement                                                                                                                                                                                                                          |
-| IX. Two-Phase Review Flow           | ACTIVE                | Планирование на `specs/006-...`; реализация на `006-...` от main после merge planning PR                                                                                                                                                                                           |
-| X. Zero-Downtime Data               | N/A                   | Нет DB                                                                                                                                                                                                                                                                             |
-| XI. Spike Governance                | N/A                   | Нет спайков                                                                                                                                                                                                                                                                        |
-| XII. QA Contour                     | PASS (partial waiver) | `qa/waiver.md`: test-design + qa-signoff waived; requirements-audit PASS `61406f2e31`; analyze остаётся гейтом                                                                                                                                                                     |
-| XIII. Agent Execution Safety Valves | N/A                   | Рантайм-клапаны не затрагиваются (FR-010 удаляет незарегистрированный файл, не клапан)                                                                                                                                                                                             |
+| Principle | Вердикт | Обоснование |
+| :--- | :--- | :--- |
+| I. Source of Truth Discipline | PASS | Правки идут в SOURCE (`.claude/commands/*.md`), не в generated-деревья. После правок commands обязателен transpile-прогон T017: `node packages/cli/bin/helpers.mjs regen --targets copilot` + `git diff --exit-code .github/` (sync/status требуют helpers-lock и в UndeRoute падают — sync.ts:352, status.ts:49; full regen создал бы `.gemini/` вопреки FR-013 — только copilot-таргет, ADR-009). AGENTS.md/CLAUDE.md не входят в transpile-set, хуки не транслируются по VIII hybrid |
+| II. Transformer, Not Fork | PASS | Новых деревьев не создаётся |
+| III. Protected Slots | PASS | Generated-файлы не hand-edited |
+| IV. SemVer 0.x | PASS (deferred) | Изменения шаблона классифицируются на `/bump` (ожидаемо MINOR: новое поведение XII-wiring; не breaking — старые имена стадий сохранены NFR-004). Бамп вне скоупа этой спеки |
+| V. Token Economy | PASS | NFR-001 бюджетирует дельту always-on слоя; dual-role note (FR-011) разрешает конфликт «inventory vs consumer» |
+| VI. Cross-AI Review Gate | ACTIVE | Пайплайн сам является носителем: analyze → review ×2 → implement |
+| VII. Artifact Versioning | PASS | plan/tasks тегируются скриптом; requirements-audit/analyze — вручную до фикса FR-003 (прецедент 004, задокументировано) |
+| VII-B. Business Plan Stage | PASS (waived) | `business-plan-waiver.md` (chore-only, VII-B.5) |
+| VIII. Self-Maintaining Knowledge | PASS | FR-009 оживляет mechanism #4; VIII не блокирует implement |
+| IX. Two-Phase Review Flow | ACTIVE | Планирование на `specs/006-...`; реализация на `006-...` от main после merge planning PR |
+| X. Zero-Downtime Data | N/A | Нет DB |
+| XI. Spike Governance | N/A | Нет спайков |
+| XII. QA Contour | PASS (partial waiver) | `qa/waiver.md`: test-design + qa-signoff waived; requirements-audit PASS `61406f2e31`; analyze остаётся гейтом |
+| XIII. Agent Execution Safety Valves | N/A | Рантайм-клапаны не затрагиваются (FR-010 удаляет незарегистрированный файл, не клапан) |
 
 Violations: нет. Complexity Tracking: пусто (нарушений, требующих обоснования, не обнаружено).
 
@@ -83,7 +83,7 @@ specs/006-constitution-wiring-fix/
 AGENTS.md                                         # §Intent Routing + удаление §Base-green check (:571)
 CLAUDE.md                                         # удаление секций Base-green + Superpowers/_tasks
 knowledge/patterns/INDEX.md                       # новый стаб (FR-009)
-specs/main/architecture.md                        # §6 feature-reference row 006 (Polish)
+specs/main/architecture.md                        # ## 4. Stage map row 006 (Polish; §6 в файле не существует: 46 строк, ## 1..## 5 — F4)
 ```
 
 **Structure Decision**: изменение по месту, без новых модулей; единственный новый файл — `knowledge/patterns/INDEX.md` (VIII staging) и evidence-артефакты в `specs/006-.../verification/`.
@@ -94,8 +94,11 @@ specs/main/architecture.md                        # §6 feature-reference row 00
 - **ADR-002 (Single routing source)**: таблица Intent Routing живёт в AGENTS.md; intent-hint.sh остаётся дублирующим regex-фильтром с комментарием-ссылкой; CLAUDE.md не получает дубликатов. Rationale: NFR-005; AGENTS.md — единственный always-on слой, который читают все хосты.
 - **ADR-003 (Precedence формула)**: конституция приоритетна в процессных вопросах (гейты, стадии, артефакты, версии, теги); AGENTS.md приоритетен в продуктовых конвенциях кода; прямой конфликт процессных правил решает конституция. Подтверждено владельцем (Q8).
 - **ADR-004 (base-green: полное удаление без deprecation-периода)**: практика отменена владельцем (Q3); файл-опора никогда не существовал, операционной практики нет — некому сломаться. Alternatives: deprecated-период — отвергнут (нет пользователей практики).
-- **ADR-005 (Manual stage-tags до FR-003)**: теги `requirements-audit/...` и `analyze/...` ставятся вручную в этой спеке (скрипт не знает стадий — находка №11); после реализации FR-003 скрипт берёт на себя. Прецедент: пайплайн 004 (теги вручную).
-- **ADR-006 (\_*-канон не трогается)**: AGENTS.md §Planning & Research Artifacts + Hard Rule #23 (`_tasks` приватный present-or-future gitignored-репо) остаются; выпиливается только таблица путей из CLAUDE.md (Q5). Rationale: AGENTS.md-канон не dangling, он описывает договорённость, а не существующий файл.
+- **ADR-005 (Manual stage-tags до FR-003)**: теги `requirements-audit/...` и `analyze/...` ставятся вручную в этой спеке (скрипт не знает стадий — находка №11); после реализации FR-003 скрипт берёт на себя `requirements-audit|test-design|qa-signoff`, тег `analyze/...` остаётся ручным (Principle VII не резервирует analyze: стадия не мутирует feature-артефакты — F8.3). Прецедент: пайплайн 004 (теги вручную).
+- **ADR-006 (_*-канон не трогается)**: AGENTS.md §Planning & Research Artifacts + Hard Rule #23 (`_tasks` приватный present-or-future gitignored-репо) остаются; выпиливается только таблица путей из CLAUDE.md (Q5). Rationale: AGENTS.md-канон не dangling, он описывает договорённость, а не существующий файл.
+- **ADR-007 (Single-source миграция — полный охват, F2)**: перенос routing-таблицы на AGENTS.md затрагивает ВСЕ 4 файла-потребителя: AGENTS.md (сама таблица), dispatch.md (:2/:20/:63/:70), intent-hint.sh (:10/:63/:95/:112), constitution.md:97 (VIII.1) — иначе NFR-005 нарушается собственным фиксом.
+- **ADR-008 (dialog doctor side effect, F6)**: удаление dialog-capture.mjs переводит `helpers dialog doctor` (packages/cli/src/cli/dialog.ts:106-110) в fail-чек (exit 1). Принято осознанно: вычистка packages/ запрещена NFR-003, эффект документирован (FR-010, research D2); депрекация `helpers dialog` — кандидат в отдельную спеку.
+- **ADR-009 (transpile только copilot, F1)**: full `regen` создал бы `.gemini/` (helpers.config.ts:87-95) вопреки FR-013; `--targets copilot` обновляет `.github/prompts` без gemini-дерева. Таргет `gemini` в конфиге сохраняется (product inventory для consumer'ов, Principle V dual role); риск EMFILE от глоба `.claude/worktrees/**` — fallback: ignore worktrees в helpers.config.ts (root-конфиг, NFR-003 не запрещает).
 
 ## Threat Modeling & Security Boundaries (STRIDE)
 

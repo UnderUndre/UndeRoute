@@ -2,13 +2,13 @@
 
 Binding principles for `clai-helpers` CLI + the curated `.claude/` template it ships. Every `/speckit.*` command checks plans and tasks against this file. Violations halt work until resolved or the constitution is explicitly amended.
 
-**UndeRoute Adaptation (v1.9.0)**: this constitution governs the UndeRoute repository (OmniRoute fork + `packages/cli` `underoute-clai`). Principles I–III apply to `.claude/` and the transformer pipeline of `packages/cli`; Principle IV applies to `packages/cli` releases; Principle VIII hooks (CC ratchet) are upstream-only and inactive here. Repository quality gates for THIS repo: `npm run lint`, `npm test`, `npm run build` (see Development Workflow). `/speckit.*` stages are executed per the pipeline below; stage artifacts are tagged via `.specify/scripts/bash/snapshot-stage.sh` (Principle VII). The living spec of this repo is [`specs/main/architecture.md`](../../specs/main/architecture.md) + [`specs/main/requirements.md`](../../specs/main/requirements.md).
+**UndeRoute Adaptation (v1.9.1)**: this constitution governs the UndeRoute repository (OmniRoute fork + `packages/cli` `underoute-clai`). Principles I–III apply to `.claude/` and the transformer pipeline of `packages/cli`; Principle IV applies to `packages/cli` releases; Principle VIII hooks: 6 хуков зарегистрированы в `.claude/settings.json` с 2026-08-14 (commit `f4c87e9099`); `.claude/` выполняет dual role (см. V). Repository quality gates for THIS repo: `npm run lint`, `npm test`, `npm run build` (see Development Workflow). `/speckit.*` stages are executed per the pipeline below; stage artifacts are tagged via `.specify/scripts/bash/snapshot-stage.sh` (Principle VII). The living spec of this repo is [`specs/main/architecture.md`](../../specs/main/architecture.md) + [`specs/main/requirements.md`](../../specs/main/requirements.md).
 
 ## Core Principles
 
 ### I. Source of Truth Discipline
 
-`.claude/` is **the** authoritative AI configuration. All downstream formats (`.github/prompts/`, `.github/instructions/*.instructions.md`, `.gemini/`, `GEMINI.md`, `.github/copilot-instructions.md`) are **generated**, never hand-edited.
+`.claude/` is **the** authoritative AI configuration. All downstream formats (`.github/prompts/`, `.github/instructions/*.instructions.md`, `.gemini/` [N/A in UndeRoute: only root stub `GEMINI.md` is used; `.gemini/` tree is not generated], `GEMINI.md`, `.github/copilot-instructions.md`) are **generated**, never hand-edited.
 
 - Edits flow one direction: `.claude/` → transformers → consumer tree.
 - Any reverse flow (editing a generated file) is an incident and must be rolled back via `clai-helpers sync`.
@@ -48,6 +48,7 @@ Every file in `.claude/` earns its place by being invoked. Decorative clones, st
 - A file not referenced by any command, agent, or skill in 60 days is a candidate for deletion.
 - `ultrathink` markers belong on entry points (commands + primary agents + decision-framework skills), not on every file. Each marker costs reasoning budget on load.
 - Persona flavor (catchphrases, aphorisms) MUST be opt-in via a separate transpile target so non-Russian-speaking consumers can omit it.
+- **Dual role in UndeRoute**: `.claude/` serves both as this repo's own AI config and as the shipped template inventory for `underoute-clai`; the 60-day deletion rule applies to consumer instances, while template inventory items earn their place by being referenced by any command, agent, or skill in the shipped corpus.
 
 ### VI. Cross-AI Review Gate (NON-NEGOTIABLE)
 
@@ -94,7 +95,7 @@ The AI workflow infrastructure MUST keep itself current. Lessons learned are cap
 
 Mechanisms (delivered May 2026):
 
-1. **Intent Routing** (CLAUDE.md §"Intent Routing" + `/dispatch` command). User utterances map to known commands/agents. Soft-baseline transpiles to all targets; CC adds reliability via `UserPromptSubmit` hook (`.claude/hooks/intent-hint.sh`).
+1. **Intent Routing** (AGENTS.md §"Intent Routing" + `/dispatch` command). User utterances map to known commands/agents. Soft-baseline transpiles to all targets; CC adds reliability via `UserPromptSubmit` hook (`.claude/hooks/intent-hint.sh`).
 2. **Agent skills loading** (`.claude/hooks/agent-skills-reminder.sh`). `PreToolUse(Task)` hook prepends "load skills from frontmatter" reminder into the spawned subagent's prompt. Prevents subagents from skipping their declared skills.
 3. **Session checkpoint** (`.claude/hooks/session-checkpoint.sh`). Stop hook fires once per session at turn ~30 to remind about `/improve`, `/learn`, spec updates. Counter-gated to avoid alarm fatigue.
 4. **Pattern capture** (`/learn <slug>`). Stages reusable patterns in `knowledge/patterns/<slug>.md` with `status: draft`. Not a final destination — patterns mature here before being promoted.
@@ -132,7 +133,7 @@ This replaces the old `feature/<N>-<slug>` convention. Existing `feature/<N>-<sl
 
 - `/speckit.start` creates `specs/<slug>` branches.
 - `/speckit.implement` creates `<slug>` implementation branches from `main` after planning merge.
-- Branch auto-cleanup targets `specs/<slug>` branches after merge (via CI workflow).
+- Branch cleanup targets `specs/<slug>` branches manually (`git branch -d` after merge).
 
 ### X. Zero-Downtime Data Architecture & Expand/Contract (NON-NEGOTIABLE)
 
@@ -185,6 +186,13 @@ UndeRoute is an agentic coding harness: features that let an agent execute code,
 
 Reference implementation: `specs/004-safe-harness-valves/` (valves G1–G8). Evidence base: `repos/undreplans/docs/projects/underoute/researches/ZCode_VibeCoding-Failures-Safe-Harness-Design_20261110-2223.md` (13 failure modes, L1/L2 identifiers).
 
+### XIV. Stage Checklists
+
+Domain checklists under `.specify/checklists/` (`accessibility`, `api-contract`, `data-migration`, `i18n`, `operational-readiness`, `performance`, `regulatory-compliance`, `security`, `spike-governance`) are binding stage gates, not optional reading:
+
+1. **`/speckit.plan` (Constitution Check)**: selects applicable checklists for the feature's domain and surface (applicability determined by plan; chore specs may mark inapplicable checklists N/A).
+2. **`/speckit.qa-signoff` (Release Gate)**: verifies every checklist marked applicable by the plan; for features with runtime surface, `.specify/checklists/operational-readiness.md` is mandatory at sign-off.
+
 ## Technical Constraints
 
 > Moved to [`../../specs/main/requirements.md`](../../specs/main/requirements.md) §2.1 (single source of truth). Constitution governs **principles**; concrete tech-stack constraints live alongside requirements where they belong.
@@ -228,9 +236,11 @@ This file (the constitution) is loaded at the Constitution Check gate of `/speck
 4. **Complexity must be justified.** Every new agent, transformer, target, or skill adds load to every downstream session. A change that doesn't earn its weight is rejected.
 5. **Anti-sycophancy applies to review of this file too.** If a principle above is wrong for the project, say so and propose an amendment. Don't quietly ignore it.
 
-**Version**: 1.9.0 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-11-10
+**Version**: 1.9.1 | **Ratified**: 2026-04-17 | **Last Amended**: 2026-11-16
 
 ### Changelog
+
+- **1.9.1** (2026-11-16) — Governance & wiring truth pass (spec `006-constitution-wiring-fix`): updated UndeRoute adaptation note (6 hooks active in `.claude/settings.json` since 2026-08-14 `f4c87e9099`); marked `.gemini/` generation N/A in UndeRoute (Principle I); added dual-role rule to Principle V (template inventory vs consumer); updated VIII.1 `Intent Routing` reference to `AGENTS.md`; removed stale CI auto-cleanup claim in Principle IX (manual `git branch -d` cleanup); added Principle **XIV: Stage Checklists** binding the 9 `.specify/checklists/` gates to `/speckit.plan` and `/speckit.qa-signoff` (including mandatory `operational-readiness.md` for runtime features). Dependent commands updated atomically (`speckit.plan.md`, `speckit.qa-signoff.md`).
 
 - **1.9.0** (2026-11-10) — UndeRoute adaptation + Principle **XII.4 Evidence-Backed Completion** (a `[x]` without an inline artifact reference is a CRITICAL analyze finding) + Principle **XIII: Agent Execution Safety Valves** (NON-NEGOTIABLE: fail-closed valves, human-only approval, negative acceptance mandatory, non-disableable core valves, logged bypass; ref `specs/004-safe-harness-valves/`) + VII-B.7 **External Canon** (bizplan may live in `repos/undreplans`, pointer stub `docs/business-plan-pointer.md` required) + pipeline wording fix (requirements-audit after specify OR clarify, always before plan) + living-spec links now resolve in-repo (`specs/main/`). Raised by forensic recheck of specs 001–003: 4 unverifiable `[x]` in 001-init, missing `stack-matrix.json` in closed 003, zero stage tags.
 

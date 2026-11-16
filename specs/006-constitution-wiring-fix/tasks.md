@@ -19,23 +19,23 @@
 
 ## Agent Tags
 
-| Tag       | Agent                | Domain (в этой спеке)                                                           |
-| --------- | -------------------- | ------------------------------------------------------------------------------- |
-| `[SETUP]` | — (orchestrator)     | baseline/манифесты, amend-бандл, evidence-чеклисты, финальные гейты             |
-| `[DOC]`   | documentation-writer | правки always-on документации и команд (.claude/commands, AGENTS.md, CLAUDE.md) |
-| `[OPS]`   | devops-engineer      | скрипты тегирования (bash/ps1), hook-файлы                                      |
+| Tag       | Agent                   | Domain (в этой спеке)                                     |
+| --------- | ----------------------- | --------------------------------------------------------- |
+| `[SETUP]` | — (orchestrator)        | baseline/манифесты, amend-бандл, evidence-чеклисты, финальные гейты |
+| `[DOC]`   | documentation-writer    | правки always-on документации и команд (.claude/commands, AGENTS.md, CLAUDE.md) |
+| `[OPS]`   | devops-engineer         | скрипты тегирования (bash/ps1), hook-файлы                  |
 
 `[DB]`/`[BE]`/`[FE]`/`[E2E]`/`[SEC]` не используются: ноль schema/API/UI/тестового кода (NFR-003), STRIDE N/A.
 
 ## Task Statuses
 
-| Status  | Meaning                                                    |
-| ------- | ---------------------------------------------------------- |
-| `- [ ]` | Pending                                                    |
-| `- [→]` | In progress                                                |
+| Status  | Meaning                                    |
+| ------- | ------------------------------------------ |
+| `- [ ]` | Pending                                    |
+| `- [→]` | In progress                                |
 | `- [X]` | Completed (+ inline evidence `path:line` / command output) |
-| `- [!]` | Failed                                                     |
-| `- [~]` | Blocked (cascade from a failed dependency)                 |
+| `- [!]` | Failed                                     |
+| `- [~]` | Blocked (cascade from a failed dependency) |
 
 ## Path Conventions
 
@@ -48,8 +48,8 @@
 
 **Purpose**: зафиксировать состояние «до» и манифест amend-коммита — общая инфраструктура для всех US.
 
-- [ ] T001 [SETUP] Baseline evidence: выполнить 11 grep/ls-проверок находок аудита (analyze RTM = 0, Intent Routing = 0, «inactive here» = 1, IX «via CI workflow» = 1, dispatch /bump|/brainstorm|/questions, CLAUDE.md base-green|sweep-reds|_tasks, knowledge/patterns отсутствует, dialog-capture не зарегистрирован, snapshot exit 2 на requirements-audit) и записать выводы команд в specs/006-constitution-wiring-fix/verification/baseline.md
-- [ ] T002 [SETUP] Манифест amend-бандла: записать в specs/006-constitution-wiring-fix/verification/amend-bundle.md точный список правок constitution.md (секции IX :135, адаптационная заметка :5, новый XIV, абзац V, пометка I, changelog 1.9.1) и зависимых файлов (speckit.plan.md, speckit.qa-signoff.md) — один коммит v1.9.1 по Governance §2 (ADR-001)
+- [X] T001 [SETUP] Baseline evidence: выполнить 11 grep/ls-проверок находок аудита (analyze RTM = 0, Intent Routing = 0, «inactive here» = 1, IX «via CI workflow» = 1, dispatch /bump|/brainstorm|/questions, CLAUDE.md base-green|sweep-reds|_tasks, knowledge/patterns отсутствует, dialog-capture не зарегистрирован, snapshot exit 2 на requirements-audit) и записать выводы команд в specs/006-constitution-wiring-fix/verification/baseline.md — Evidence: `specs/006-constitution-wiring-fix/verification/baseline.md:1-40` (base-sha `bb2fbb1bae`, 11/11 captured)
+- [X] T002 [SETUP] Манифест amend-бандла: записать в specs/006-constitution-wiring-fix/verification/amend-bundle.md точный список правок constitution.md (секции IX :135, адаптационная заметка :5, новый XIV, абзац V, пометка I, VIII.1 :97 CLAUDE.md→AGENTS.md — F2, changelog 1.9.1) и зависимых файлов (speckit.plan.md, speckit.qa-signoff.md) — один коммит v1.9.1 по Governance §2 (ADR-001) — Evidence: `specs/006-constitution-wiring-fix/verification/amend-bundle.md:1-40` (7 constitution edits + 2 command files)
 
 **Checkpoint**: baseline и манифест зафиксированы — US-задачи могут стартовать.
 
@@ -63,11 +63,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [DOC] [US1] FR-001: добавить в .claude/commands/speckit.analyze.md (после §D. Constitution Alignment) два чека с CRITICAL-севером: (a) RTM coverage — каждый FR/NFR → ≥1 TC, Risk ≥ 20 → Decision Table + State Transition + Exploratory Charter + UAT (verbatim constitution §XII :167); (b) Evidence-Backed Completion XII.4 — `[x]` без inline evidence (`path:line` / test ID / command output path) = CRITICAL, reopen task (:172). Evidence: grep `RTM` > 0, `Evidence-Backed` > 0, цитаты §XII в тексте
-- [ ] T004 [OPS] [US1] FR-003 (bash): расширить case-валидацию .specify/scripts/bash/snapshot-stage.sh:25-27 именами `requirements-audit|test-design|qa-signoff` (обратная совместимость NFR-004). Evidence: exit 0 + тег на всех 3 новых именах; exit 0 на 6 старых (spec|clarify|plan|tasks|review|bizplan); тестовые теги удалить после прогона
-- [ ] T005 [OPS] [US1] FR-003 (ps1): синхронно расширить список стадий в .specify/scripts/powershell/snapshot-stage.ps1. Evidence: `-Stage requirements-audit -Slug <test-slug>` exit 0; тестовый тег удалить
-- [ ] T006 [DOC] [US1] FR-002 (a+b+c): AGENTS.md — добавить `## Intent Routing` (таблица utterance→command, зеркалящая матчи intent-hint.sh: repair /fix-tests /fix-ci /fix-types /resolve-conflicts; investigation → spawn debugger + systematic-debugging; spec/implement → /speckit.start пайплайн; session-end → /improve), канон-блок ≤10 строк (путь конституции, что гейтит, /dispatch, two-phase Principle IX), precedence rule (ADR-003); суммарно ≤ +60 строк (NFR-001). Evidence: grep `## Intent Routing` + precedence-формулы; `wc -l` дельта ≤ 60
-- [ ] T007 [DOC] [US1] FR-002 (d): .claude/hooks/intent-hint.sh:8 — комментарий «Keywords mirror the "Intent Routing" table in CLAUDE.md» заменить на «Keywords mirror AGENTS.md § Intent Routing» (ложный ref устранён). Evidence: grep `AGENTS.md § Intent Routing` в хуке
+- [X] T003 [DOC] [US1] FR-001: доработать .claude/commands/speckit.analyze.md: (0) в §2 Load Artifacts добавить загрузку requirements-audit.md и qa/{rtm-matrix,preliminary-rtm,waiver}.md (F3); (1) после §D. Constitution Alignment — чек RTM coverage с CRITICAL-севером: каждый FR/NFR → ≥1 TC, Risk ≥ 20 → DT+ST+EC+UAT (verbatim constitution §XII :167), с waiver-оговоркой: при наличии qa/waiver.md покрытие проверяется по qa/preliminary-rtm.md (каждый FR/NFR → ≥1 исполняемый AC) — иначе гейт ложно CRITICAL на chore-спеках; (2) чек Evidence-Backed Completion XII.4: `[x]` без inline evidence (`path:line` / test ID / command output path) = CRITICAL, reopen (:172), поиск строго `- \[[xX]\] T\d+` по строкам задач (регистронезависимо), исключая Self-Validation Checklist (F3). Evidence: `.claude/commands/speckit.analyze.md:84-89,130-131` (grep `RTM`, `Evidence-Backed`, `preliminary-rtm`, `qa/waiver` verified)
+- [X] T004 [OPS] [US1] FR-003 (bash): расширить case-валидацию .specify/scripts/bash/snapshot-stage.sh:25-27 именами `requirements-audit|test-design|qa-signoff` (обратная совместимость NFR-004). Evidence: `.specify/scripts/bash/snapshot-stage.sh:9,22,26-27` (all 9 stages exit 0 tested; smoke tags cleaned)
+- [X] T005 [OPS] [US1] FR-003 (ps1): синхронно расширить список стадий в .specify/scripts/powershell/snapshot-stage.ps1. Evidence: `.specify/scripts/powershell/snapshot-stage.ps1:15` (`-Stage requirements-audit` exit 0 tested; smoke tag cleaned)
+- [X] T006 [DOC] [US1] FR-002 (a+b+c): AGENTS.md — добавить `## Intent Routing` (таблица utterance→command — источник правды; intent-hint.sh и dispatch.md синхронизируются с ней через T007/T010; маршруты: repair /fix-tests /fix-ci /fix-types /resolve-conflicts; investigation → spawn debugger + systematic-debugging; spec/implement → /speckit.start пайплайн; session-end → /improve; brainstorm → /speckit.brainstorm; release → /speckit.bump), канон-блок ≤10 строк (путь конституции, что гейтит, /dispatch, two-phase Principle IX), precedence rule (ADR-003); суммарно ≤ +60 строк (NFR-001). Evidence: `AGENTS.md:714-739` (+27 lines <= +60 budget; `check:fabricated-docs` 0 new findings on added lines, 2 pre-existing upstream findings at `AGENTS.md:257,318`)
+- [X] T007 [DOC] [US1] FR-002 (d): .claude/hooks/intent-hint.sh — 4 правки (F2): комментарий `:10` «Keywords mirror the "Intent Routing" table in CLAUDE.md» → «Keywords mirror AGENTS.md § Intent Routing»; runtime-строка `:112` (CONTEXT) «matching CLAUDE.md table» → «matching AGENTS.md § Intent Routing»; подсказка `:63` `/brainstorm` → `/speckit.brainstorm`; подсказка `:95` `/bump` → `/speckit.bump`. Evidence: `.claude/hooks/intent-hint.sh:10,63,95,112` (`CLAUDE.md` matches: 0; `AGENTS.md § Intent Routing`: 2)
 
 **Checkpoint**: /speckit.analyze заявляет и исполняет XII-чеки; роутинг канонизирован; скрипт тегирует все 9 стадий конституции.
 
@@ -81,11 +81,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [DOC] [US2] FR-007 (a+b): удалить секцию «## Base-green before opening PRs» из CLAUDE.md и секцию «### Base-green check (PRs must not be born red)» из AGENTS.md:571 (вместе с упоминанием /sweep-reds; ADR-004). Evidence: grep `base-green|sweep-reds` по CLAUDE.md и AGENTS.md = 0
-- [ ] T009 [DOC] [US2] FR-007 (c): выпилить из CLAUDE.md секцию «Superpowers / planning artifacts — path overrides» с таблицей `_tasks/...` путей (Q5; AGENTS.md `_*`-канон Hard Rule #23 НЕ трогается — ADR-006). Evidence: grep `_tasks` по CLAUDE.md = 0
-- [ ] T010 [DOC] [US2] FR-006: .claude/commands/dispatch.md — заменить битые refs: `/bump`→`/speckit.bump`, `/brainstorm`→`/speckit.brainstorm`, `/questions`→`/questions_ideas`. Evidence: каждый `/name` из dispatch.md существует как .claude/commands/<name>.md (loop grep, 0 dangling)
-- [ ] T011 [SETUP] [US2] FR-004+FR-005+FR-008+FR-011+FR-013: Constitution amend v1.9.1 — ТЕКСТОВЫЕ правки .specify/memory/constitution.md по манифесту T002: (1) :5 адаптационная заметка → «Principle VIII hooks: 6 хуков зарегистрированы в settings.json с 2026-08-14 (f4c87e9099); .claude/ dual role (см. V)»; (2) IX :135 вычеркнуть «(via CI workflow)»; (3) новый `### XIV. Stage Checklists` — /speckit.plan Constitution Check и /speckit.qa-signoff MUST прогоняют применимые чеклисты .specify/checklists/ (перечень 9: accessibility, api-contract, data-migration, i18n, operational-readiness, performance, regulatory-compliance, security, spike-governance; применимость определяет план); (4) Principle V абзац dual role (template inventory vs consumer; 60-day rule к consumer-инстансам); (5) Principle I пометка «UndeRoute: .gemini/ N/A (GEMINI.md стаб достаточен)»; (6) Changelog 1.9.1. ⚠️ КОММИТИТСЯ ВМЕСТЕ С T012 одним amend-коммитом (Governance §2). Evidence: grep `1.9.1` > 0; «inactive here» = 0; `XIV` section существует; «dual role» > 0; дельта ≤ +50 строк вне changelog (NFR-001)
-- [ ] T012 [DOC] [US2] FR-008 (wiring): зависимые файлы amend-коммита — .claude/commands/speckit.plan.md (Constitution Check шаг + ссылка на XIV-перечень) и .claude/commands/speckit.qa-signoff.md (шаг прогона применимых чеклистов из XIV-перечня). ⚠️ Один amend-коммит с T011. Evidence: grep `XIV` в обоих файлах > 0
+- [X] T008 [DOC] [US2] FR-007 (a+b): удалить секцию «## Base-green before opening PRs» из CLAUDE.md и секцию «### Base-green check (PRs must not be born red)» из AGENTS.md:571 (вместе с упоминанием /sweep-reds; ADR-004). Evidence: `CLAUDE.md` & `AGENTS.md` (grep `base-green|sweep-reds` = 0 across both files)
+- [X] T009 [DOC] [US2] FR-007 (c): выпилить из CLAUDE.md секцию «Superpowers / planning artifacts — path overrides» с таблицей `_tasks/...` путей (Q5; AGENTS.md `_*`-канон Hard Rule #23 НЕ трогается — ADR-006). Evidence: `CLAUDE.md:1-32` (`_tasks` grep = 0 in CLAUDE.md; `AGENTS.md` Hard Rule #23 intact)
+- [X] T010 [DOC] [US2] FR-006: .claude/commands/dispatch.md — (a) битые refs `/bump`→`/speckit.bump`, `/brainstorm`→`/speckit.brainstorm`, `/questions`→`/questions_ideas`; (b) адреса таблицы CLAUDE.md→AGENTS.md в `:2` (description), `:20` (Source of truth), `:63` (Stop conditions — перенаправить на фактический дом, проверяется на implement), `:70` (Updates go through...) (F2). Evidence: `.claude/commands/dispatch.md:2,20,36,63,70,76,79,88,91` (`CLAUDE.md` matches: 0; loop grep all `/name` commands exist)
+- [X] T011 [SETUP] [US2] FR-004+FR-005+FR-008+FR-011+FR-013: Constitution amend v1.9.1 — ТЕКСТОВЫЕ правки .specify/memory/constitution.md по манифесту T002: (1) :5 адаптационная заметка → «Principle VIII hooks: 6 хуков зарегистрированы в settings.json с 2026-08-14 (f4c87e9099); .claude/ dual role (см. V)»; (2) IX :135 вычеркнуть «(via CI workflow)»; (3) новый `### XIV. Stage Checklists` — /speckit.plan Constitution Check и /speckit.qa-signoff MUST прогоняют применимые чеклисты .specify/checklists/ (перечень 9: accessibility, api-contract, data-migration, i18n, operational-readiness, performance, regulatory-compliance, security, spike-governance; применимость определяет план); (4) Principle V абзац dual role (template inventory vs consumer; 60-day rule к consumer-инстансам); (5) Principle I пометка «UndeRoute: .gemini/ N/A (GEMINI.md стаб достаточен)»; (6) VIII.1 :97 — `CLAUDE.md §"Intent Routing"` → `AGENTS.md §"Intent Routing"` (F2, согласовано с FR-002/NFR-005); (7) Changelog 1.9.1. ⚠️ КОММИТИТСЯ ВМЕСТЕ С T012 одним amend-коммитом (Governance §2). Evidence: `.specify/memory/constitution.md:5,11,51,98,136,189-194,239,243` (1.9.1=3, inactive here=0, via CI workflow=0, CLAUDE.md=0, dual role=1, +8 lines net outside changelog <= 50)
+- [X] T012 [DOC] [US2] FR-008 (wiring): зависимые файлы amend-коммита — .claude/commands/speckit.plan.md (Constitution Check шаг + ссылка на XIV-перечень; плюс F4: строки 103-105 — инструкция «§6 SpecKit Integration» → «## 4. Stage map», реальная топография specs/main/architecture.md: 46 строк, ## 1..## 5) и .claude/commands/speckit.qa-signoff.md (шаг прогона применимых чеклистов из XIV-перечня). ⚠️ Один amend-коммит с T011. Evidence: `.claude/commands/speckit.plan.md:42,103-105` & `.claude/commands/speckit.qa-signoff.md:49` (atomic commit with T011)
 
 **Checkpoint**: документация правдива: amend v1.9.1 атомарен, dangling refs ноль.
 
@@ -99,9 +99,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [SETUP] [US3] FR-009: создать knowledge/patterns/INDEX.md (заголовок, `status: empty`, правило VIII: staging-зона /learn → /improve promotion). Evidence: dir + файл существуют
-- [ ] T014 [OPS] [US3] FR-010: удалить .claude/hooks/dialog-capture.mjs (D2; незарегистрированный 7-й хук). Evidence: файл отсутствует; `git diff --name-only` не содержит settings.json
-- [ ] T015 [DOC] [US3] FR-012+FR-013 верификация: после amend-коммита (T011+T012) подтвердить: grep `XV` по constitution.md = 0 (принцип не добавлен); `operational-readiness` входит в XIV-перечень; пометка N/A у `.gemini/` в Principle I. Evidence: 3 grep-вывода в description
+- [X] T013 [SETUP] [US3] FR-009: создать knowledge/patterns/INDEX.md (заголовок, `status: empty`, правило VIII: staging-зона /learn → /improve promotion). Evidence: `knowledge/patterns/INDEX.md:1-9` (file & dir created)
+- [X] T014 [OPS] [US3] FR-010: удалить .claude/hooks/dialog-capture.mjs (D2; незарегистрированный 7-й хук). Evidence: `.claude/hooks/dialog-capture.mjs` deleted (`git rm`, `.claude/settings.json` untouched)
+- [X] T015 [DOC] [US3] FR-012+FR-013 верификация: после amend-коммита (T011+T012) подтвердить: `grep -E "^### (Principle )?XV\.?"` по constitution.md = 0 (принцип не добавлен; анкорировано против ложных подстрок — F8.2); `operational-readiness` входит в XIV-перечень; пометка N/A у `.gemini/` в Principle I. Evidence: `.specify/memory/constitution.md:11,191,194` (XV match count=0; `operational-readiness` in XIV; `.gemini/` marked N/A, dir absent)
 
 **Checkpoint**: гигиена закрыта; FR-012/FR-013 AC зелёные.
 
@@ -111,10 +111,10 @@
 
 **Purpose**: transpile-гигиена, living-spec row, финальные gates.
 
-- [ ] T016 [DOC] Polish: добавить feature-reference row для `006-constitution-wiring-fix` в §6 SpecKit Integration таблицу specs/main/architecture.md (план-канон; на implementation ветке). Evidence: grep `006-constitution-wiring-fix` в architecture.md
-- [ ] T017 [SETUP] Polish: `npx clai-helpers sync` + `npx clai-helpers status --strict` (Principle I: правки .claude/commands/*.md = T003/T010/T012 требуют transpile; drift = дефект). Evidence: status --strict exit 0
-- [ ] T018 [SETUP] Polish: прогнать SC-001..005 чек-лист из qa/preliminary-rtm.md (все AC 18 требований: 6 dangling-grep, wc -l бюджеты NFR-001, exit-тесты скрипта NFR-004, NFR-005 single source), записать выводы в specs/006-constitution-wiring-fix/verification/sc-checklist.md (XII.4 evidence). Evidence: файл с 18/18 PASS
-- [ ] T019 [SETUP] Polish: NFR-003 финальный gate: `git diff --name-only main...HEAD` против path-фильтра `src/|packages/|electron/|docker/|.github/workflows/` = пусто. Evidence: вывод команды в sc-checklist.md
+- [X] T016 [DOC] Polish: добавить feature-reference row для `006-constitution-wiring-fix` в таблицу `## 4. Stage map` файла specs/main/architecture.md (46 строк, ## 1..## 5 — секции §6 НЕ существует, F4; на implementation ветке). Evidence: `specs/main/architecture.md:42` (`006-constitution-wiring-fix` row in `## 4. Stage map`)
+- [X] T017 [SETUP] Polish (F1-corrected): `node packages/cli/bin/helpers.mjs regen --targets copilot` (Principle I: правки .claude/commands/*.md = T003/T010/T012 требуют transpile; `npx clai-helpers sync/status` неисполнимы — нет helpers-lock.json и пакета в root devDeps, sync.ts:352/status.ts:49; `--targets copilot` исключает генерацию `.gemini/` вопреки FR-013 — ADR-009). Evidence: `helpers.mjs regen --targets copilot` exit 0 (318 sources -> 111 generated across copilot target, `.github/` updated & committed, `git diff --exit-code .github/` clean, `.gemini/` absent)
+- [X] T018 [SETUP] Polish: прогнать SC-001..005 чек-лист из qa/preliminary-rtm.md (все AC 18 требований: 6 dangling-grep, wc -l бюджеты NFR-001, exit-тесты скрипта NFR-004, NFR-005 single source), + M1-митигация: все /команды из ## Intent Routing AGENTS.md существуют как .claude/commands/<name>.md (antigravity alternative #1) + `npm run check:fabricated-docs` exit 0 (F7); записать выводы в specs/006-constitution-wiring-fix/verification/sc-checklist.md (XII.4 evidence). Evidence: `specs/006-constitution-wiring-fix/verification/sc-checklist.md:1-38` (18/18 reqs + 17/17 routing cmds PASS; 0 new fabricated-docs findings on 006 lines, 2 pre-existing upstream at `AGENTS.md:257,318`)
+- [X] T019 [SETUP] Polish: NFR-003 финальный gate: `git diff --name-only <base-sha>...HEAD` против path-фильтра `src/|packages/|electron/|docker/|.github/workflows/` = пусто; base-sha = коммит main перед стартом implement, фиксируется в verification/baseline.md (main уже содержит planning-суиту bb2fbb1bae — F5). Evidence: `specs/006-constitution-wiring-fix/verification/sc-checklist.md:24` (`git diff --name-only bb2fbb1bae...HEAD` runtime filter = `RUNTIME_DIFF_EMPTY`)
 
 **Checkpoint**: все gates зелёные — спека готова к merge planning PR → implementation ветка финализирована.
 
@@ -181,21 +181,21 @@ graph LR
 
 ## Parallel Lanes
 
-| Lane | Agent Flow | Tasks                                                               | Blocked By                      |
-| ---- | ---------- | ------------------------------------------------------------------- | ------------------------------- |
-| 1    | [SETUP]    | T001 → T002 → T011 → T013; T018 → T019                              | —                               |
-| 2    | [DOC]      | T003; T006 → T008 → T009; T007; T010; T012 (после T011); T015; T016 | T001; T012/T015/T016 также T011 |
-| 3    | [OPS]      | T004; T005; T014                                                    | T001                            |
+| Lane | Agent Flow | Tasks | Blocked By |
+| ---- | ---------- | ----- | ---------- |
+| 1 | [SETUP] | T001 → T002 → T011 → T013; T018 → T019 | — |
+| 2 | [DOC] | T003; T006 → T008 → T009; T007; T010; T012 (после T011); T015; T016 | T001; T012/T015/T016 также T011 |
+| 3 | [OPS] | T004; T005; T014 | T001 |
 
 ---
 
 ## Agent Summary
 
-| Agent   | Task Count | Can Start After                                   |
-| ------- | ---------- | ------------------------------------------------- |
-| [SETUP] | 7          | T001 (T011 после T002; T018 после T017)           |
+| Agent   | Task Count | Can Start After |
+| ------- | ---------- | --------------- |
+| [SETUP] | 7          | T001 (T011 после T002; T018 после T017) |
 | [DOC]   | 8          | T001 (T008 после T006; T012/T015/T016 после T011) |
-| [OPS]   | 4          | T001                                              |
+| [OPS]   | 4          | T001 |
 
 **Critical Path**: T001 → T002 → T011 → T012 → T015 → T018 → T019
 
@@ -203,11 +203,11 @@ graph LR
 
 ## Agent Dispatch Plan
 
-| Agent     | Subagent / Command     | Skills                                                                      | Input Context                                                 | Tasks                                                | Files                                                                                             |
-| --------- | ---------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `[SETUP]` | `orchestrator`         | `architecture`, `clean-code`, `ai-engineering-hygiene`                      | plan.md §ADR-001/§Constitution Check, spec.md §Clarifications | T001, T002, T011, T013, T018, T019                   | specs/006.../verification/, .specify/memory/constitution.md, knowledge/                           |
-| `[DOC]`   | `documentation-writer` | `documentation-templates`, `knowledge-adaptation`, `ai-engineering-hygiene` | plan.md §ADR-002/003/006, spec.md FR-001/002/004-008/012-013  | T003, T006, T007, T008, T009, T010, T012, T015, T016 | .claude/commands/, .claude/hooks/intent-hint.sh, AGENTS.md, CLAUDE.md, specs/main/architecture.md |
-| `[OPS]`   | `devops-engineer`      | `bash-linux`, `powershell-windows`                                          | plan.md §ADR-005, spec.md FR-003/FR-010                       | T004, T005, T014                                     | .specify/scripts/{bash,powershell}/snapshot-stage.*, .claude/hooks/                               |
+| Agent     | Subagent / Command         | Skills                                                                  | Input Context                                             | Tasks                      | Files                                                                  |
+| --------- | -------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------ |
+| `[SETUP]` | `orchestrator`             | `architecture`, `clean-code`, `ai-engineering-hygiene`                  | plan.md §ADR-001/§Constitution Check, spec.md §Clarifications | T001, T002, T011, T013, T018, T019 | specs/006.../verification/, .specify/memory/constitution.md, knowledge/ |
+| `[DOC]`   | `documentation-writer`     | `documentation-templates`, `knowledge-adaptation`, `ai-engineering-hygiene` | plan.md §ADR-002/003/006, spec.md FR-001/002/004-008/012-013   | T003, T006, T007, T008, T009, T010, T012, T015, T016 | .claude/commands/, .claude/hooks/intent-hint.sh, AGENTS.md, CLAUDE.md, specs/main/architecture.md |
+| `[OPS]`   | `devops-engineer`          | `bash-linux`, `powershell-windows`                                       | plan.md §ADR-005, spec.md FR-003/FR-010                        | T004, T005, T014           | .specify/scripts/{bash,powershell}/snapshot-stage.*, .claude/hooks/       |
 
 ---
 
@@ -236,4 +236,4 @@ graph LR
 - Фазы — sync barriers
 - Каждый `[x]` — только с inline evidence (XII.4); T018 — финальный evidence-чеклист
 - Commit после каждой задачи или логической группы; T011+T012 — исключение: ОДИН amend-коммит
-- Manual stage-tags (`requirements-audit/...`, `analyze/...`) ставятся вручную до T004/T005 (ADR-005); после T004/T005 скрипт берёт на себя
+- Manual stage-tags (`requirements-audit/...`, `analyze/...`) ставятся вручную до T004/T005 (ADR-005); после T004/T005 скрипт берёт на себя requirements-audit|test-design|qa-signoff, `analyze/...` остаётся ручным (Principle VII не резервирует analyze — F8.3)

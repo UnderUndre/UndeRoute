@@ -81,6 +81,13 @@ Load only the minimal necessary context from each artifact:
 
 - Load `.specify/memory/constitution.md` for principle validation
 
+**From QA artifacts (Constitution Principle XII):**
+
+- `FEATURE_DIR/requirements-audit.md` (if present — Risk scores, 4-pillar gate verdict)
+- `FEATURE_DIR/qa/rtm-matrix.md` (if present — end-to-end `FR ↔ TC` traceability)
+- `FEATURE_DIR/qa/preliminary-rtm.md` (if present — draft RTM / executable AC fallback)
+- `FEATURE_DIR/qa/waiver.md` (if present — indicates waived `/speckit.test-design` / `/speckit.qa-signoff` for chore specs)
+
 **From business plan (Principle VII-B — commercial features):**
 
 - Load any `docs/**/*business-plan*.md` and `docs/business-plan.md` if present
@@ -120,6 +127,8 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 
 - Any requirement or plan element conflicting with a MUST principle
 - Missing mandated sections or quality gates from constitution
+- **RTM coverage (Constitution §XII)**: every FR/NFR MUST trace to at least one test case (`TC-*` in `qa/rtm-matrix.md`); requirements with Risk ≥ 20 MUST have Decision Table + State Transition + Exploratory Charter + UAT coverage. **Waiver fallback**: if `FEATURE_DIR/qa/waiver.md` exists (waived `test-design`), verify coverage against `qa/preliminary-rtm.md` (every FR/NFR → ≥ 1 executable AC). Missing coverage = **CRITICAL**.
+- **Evidence-Backed Completion (Constitution §XII.4)**: scan completed task lines strictly matching `- \[[xX]\] T\d+` (case-insensitive `[x]`/`[X]`, excluding template checkboxes such as `Self-Validation Checklist`); a completed task checkbox is valid ONLY with an inline evidence reference (`path:line`, test name/ID, or command output path). Unverifiable completed tasks = **CRITICAL** finding (reopens task).
 
 #### E. Coverage Gaps
 

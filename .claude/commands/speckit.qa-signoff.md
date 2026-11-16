@@ -46,6 +46,7 @@ Goal: Блокировать мердж PR и переход к финально
 - [ ] **NFR Evidence**: для каждого критического NFR (Risk ≥ 15) в RTM заполнена колонка Evidence (сырой файл: k6 json, scanner report, failover log) со статусом PASS. «По ощущениям летает» — не evidence.
 - [ ] **UAT**: в `uat-scenarios.md` проставлены галочки выполнения и `Business Sign-off: APPROVED`.
 - [ ] **Traceability Audit**: колонки `Implementation PR` / `Commit SHA` заполнены в `rtm-matrix.md`.
+- [ ] **Stage Checklists (Principle XIV)**: проверить все применимые чеклисты из `.specify/checklists/` (определённые планом: `accessibility`, `api-contract`, `data-migration`, `i18n`, `operational-readiness`, `performance`, `regulatory-compliance`, `security`, `spike-governance`); для runtime-фич `operational-readiness.md` обязателен.
 
 4. Вынеси **трёхпозиционный вердикт** и запиши `specs/<slug>/qa/signoff-report.md`:
 

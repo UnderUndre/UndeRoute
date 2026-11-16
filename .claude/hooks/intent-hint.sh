@@ -7,8 +7,8 @@
 #   stdout = JSON { hookSpecificOutput: { hookEventName, additionalContext } }
 #   exit   = 0 (always allow; we only inject context, never block)
 #
-# Keywords mirror the "Intent Routing" table in CLAUDE.md. Update both
-# when adding routes — there is no single source of truth (parsing
+# Keywords mirror AGENTS.md § Intent Routing. Update both
+# when adding routes — AGENTS.md is the single source of truth (parsing
 # markdown at runtime would be slow and fragile).
 #
 # Slash commands ("/dispatch foo") are skipped — user already routed.
@@ -60,7 +60,7 @@ case "$PROMPT" in
 esac
 case "$PROMPT" in
   *"обкашлю"*|*"обкашляю"*|*"brainstorm"*|*"explore options"*|*"варианты"*)
-    HINTS="${HINTS}- Detected brainstorm intent → consider \`/brainstorm\` (forward-looking, ≥3 options).\n" ;;
+    HINTS="${HINTS}- Detected brainstorm intent → consider \`/speckit.brainstorm\` (forward-looking, ≥3 options).\n" ;;
 esac
 case "$PROMPT" in
   *"найди дыр"*|*"scrutinize"*|*"devil's advocate"*|*"что может пойти не так"*|*"what could go wrong"*)
@@ -92,7 +92,7 @@ esac
 # ─── Lifecycle ───────────────────────────────────────────────────────
 case "$PROMPT" in
   *"релиз"*|*"release"*|*"ship "*|*"publish"*|*"bump version"*)
-    HINTS="${HINTS}- Detected release intent → consider \`/bump\` (loads semver-versioning skill).\n" ;;
+    HINTS="${HINTS}- Detected release intent → consider \`/speckit.bump\` (loads semver-versioning skill).\n" ;;
 esac
 case "$PROMPT" in
   *"запомни"*|*"capture lesson"*|*"session end"*|*"summari"*)
@@ -109,7 +109,7 @@ if [ -z "$HINTS" ]; then
 fi
 
 # Compose injection. Header explains source so Claude knows to trust it.
-CONTEXT="📍 Intent Routing hint (from \`.claude/hooks/intent-hint.sh\` matching CLAUDE.md table):\n${HINTS}If unsure → \`/dispatch <free-text>\` for explicit routing. The hint is advisory; Stop Conditions still apply."
+CONTEXT="📍 Intent Routing hint (from \`.claude/hooks/intent-hint.sh\` matching AGENTS.md § Intent Routing):\n${HINTS}If unsure → \`/dispatch <free-text>\` for explicit routing. The hint is advisory; Stop Conditions still apply."
 
 # Emit JSON — additionalContext appears as a system note in Claude's stream.
 jq -n --arg ctx "$CONTEXT" '{
