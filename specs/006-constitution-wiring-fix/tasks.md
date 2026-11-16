@@ -99,9 +99,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [SETUP] [US3] FR-009: создать knowledge/patterns/INDEX.md (заголовок, `status: empty`, правило VIII: staging-зона /learn → /improve promotion). Evidence: dir + файл существуют
-- [ ] T014 [OPS] [US3] FR-010: удалить .claude/hooks/dialog-capture.mjs (D2; незарегистрированный 7-й хук). Evidence: файл отсутствует; `git diff --name-only` не содержит settings.json
-- [ ] T015 [DOC] [US3] FR-012+FR-013 верификация: после amend-коммита (T011+T012) подтвердить: `grep -E "^### (Principle )?XV\.?"` по constitution.md = 0 (принцип не добавлен; анкорировано против ложных подстрок — F8.2); `operational-readiness` входит в XIV-перечень; пометка N/A у `.gemini/` в Principle I. Evidence: 3 grep-вывода
+- [X] T013 [SETUP] [US3] FR-009: создать knowledge/patterns/INDEX.md (заголовок, `status: empty`, правило VIII: staging-зона /learn → /improve promotion). Evidence: `knowledge/patterns/INDEX.md:1-9` (file & dir created)
+- [X] T014 [OPS] [US3] FR-010: удалить .claude/hooks/dialog-capture.mjs (D2; незарегистрированный 7-й хук). Evidence: `.claude/hooks/dialog-capture.mjs` deleted (`git rm`, `.claude/settings.json` untouched)
+- [X] T015 [DOC] [US3] FR-012+FR-013 верификация: после amend-коммита (T011+T012) подтвердить: `grep -E "^### (Principle )?XV\.?"` по constitution.md = 0 (принцип не добавлен; анкорировано против ложных подстрок — F8.2); `operational-readiness` входит в XIV-перечень; пометка N/A у `.gemini/` в Principle I. Evidence: `.specify/memory/constitution.md:11,191,194` (XV match count=0; `operational-readiness` in XIV; `.gemini/` marked N/A, dir absent)
 
 **Checkpoint**: гигиена закрыта; FR-012/FR-013 AC зелёные.
 
