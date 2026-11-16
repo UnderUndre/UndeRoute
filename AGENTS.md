@@ -565,26 +565,8 @@ is invalid, it points out of the filesystem root`) while typecheck, lint and the
    `git worktree remove .claude/worktrees/<dir>` then `git branch -D <task>`. Never blanket-delete
    `fix/*`/`feat/*` — other sessions keep their own; delete only the branches you created, by name.
 5. **Never touch another session's worktree, branch, or uncommitted changes.** If `git worktree
-list` shows worktrees you didn't create, leave them alone. End every session with the main
+   list` shows worktrees you didn't create, leave them alone. End every session with the main
    checkout back on the branch it started on (the active `release/vX.Y.Z`, never `main`).
-
-### Base-green check (PRs must not be born red)
-
-Before cutting a branch, merging the base into a PR branch, mass-retargeting PRs, or opening a
-PR: check whether the base tip is green. The `Release-Green (continuous)` workflow
-(`.github/workflows/nightly-release-green.yml`) publishes the verdict in a single deduplicated
-issue titled `🔴 Release branch not green: <branch>` (label `base-red`). One call replaces any
-local suite run for this purpose:
-
-```bash
-gh issue list --repo diegosouzapw/OmniRoute --state open \
-  --search "Release branch not green: <base> in:title"
-```
-
-If the base is red: never treat the inherited failures as your branch's defect; never "fix" them
-inside your feature branch (a base-red fix is its own freeze-gated `fix/release-vX.Y.Z-basereds`
-PR); and if you must open a PR anyway, add `⚠️ base-red inherited: #<issue>` to the PR body so
-reviewers and CI babysitters do not chase ghosts.
 
 ---
 

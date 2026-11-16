@@ -46,10 +46,3 @@ rewrite it to the `_tasks/…` equivalent before writing:
 | Hand-offs (`/handoff`)             | —                         | `_tasks/hands-off/<YYYY-MM-DD>_<branch>_v<versão>_sess-<id>/` |
 
 Commit those artifacts inside the `_tasks/` repo (`git -C _tasks …`), never in the main repo.
-
-## Base-green before opening PRs
-
-Before cutting a branch or opening a PR, run the base-green check (`AGENTS.md` → Git Workflow →
-"Base-green check"; project skills reference it as `.agents/skills/_shared/base-green.md`). A PR
-opened while the base tip is red must carry `⚠️ base-red inherited: #<issue>` in its body. To
-drain an accumulated red state (base tip + red PRs), use the `/sweep-reds` skill.
