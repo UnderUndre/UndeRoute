@@ -39,7 +39,7 @@ ultrathink
 37 a) Regulatory compliance isolation (e.g. PCI DSS v4.0.1 CDE scope reduction);
 38 b) Heterogeneous hardware requirements (GPU vs CPU);
 39 c) Independent team boundaries.
-40 - Fill Constitution Check section from constitution
+40 - Fill Constitution Check section from constitution (including applicable Principle XIV checklists from `.specify/checklists/`: `accessibility`, `api-contract`, `data-migration`, `i18n`, `operational-readiness`, `performance`, `regulatory-compliance`, `security`, `spike-governance`)
 41 - Evaluate gates (ERROR if violations unjustified)
 42 - Phase 0: Generate research.md (resolve all NEEDS CLARIFICATION with Spike Governance)
 43 - Phase 1: Generate data-model.md (Expand/Contract schema strategy), contracts/, quickstart.md (Tracer Bullet scenario)
@@ -100,9 +100,9 @@ ultrathink
 
 3. **Architecture update** (`specs/main/architecture.md`):
    - Read the current `specs/main/architecture.md`
-   - If the feature introduces **new technologies** (language, framework, DB, external service) not already listed → add them to the relevant section (§5 CLI Package Layout, or a new subsection if the tech doesn't fit existing sections)
-   - If the feature adds **new directories or modules** to the project layout → update the path tables in §2/§4/§5/§6 to reflect the new structure
-   - Add a **feature reference row** to §6 SpecKit Integration's `specs/<feature-slug>/` pattern (or update the existing description if the slug already appears)
+   - If the feature introduces **new technologies** (language, framework, DB, external service) not already listed → add them to the relevant section (`## 2. Topography` or `## 5. Constraints`, or a new subsection if the tech doesn't fit existing sections)
+   - If the feature adds **new directories or modules** to the project layout → update the path table in `## 2. Topography` to reflect the new structure
+   - Add a **feature reference row** to `## 4. Stage map` (`specs/<feature-slug>/` pattern, or update the existing description if the slug already appears)
    - Preserve all existing content — only append or update, never remove sections
    - Use the same markdown table style and heading hierarchy as the rest of the file
 
