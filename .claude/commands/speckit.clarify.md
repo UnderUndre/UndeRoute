@@ -41,6 +41,12 @@ Execution steps:
 
 2. Load the current spec file. Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
 
+   Business Pain, Ownership & Outcome Signals (skip only for pure technical/hardening chores):
+   - Concrete recent pain incidents & cost/impact ("2-3 real lost cases" or verified baseline)
+   - Observable Completion Signal Boundary (how real-world fulfillment closes outside the software, e.g. bank/CRM vs in-app action)
+   - Entity / Dialog Ownership Model (assigned responsible owner, handoff/backup visibility, anti-diffusion-of-responsibility)
+   - 30-60 day Business Outcome KPIs (what Before -> After numbers prove ROI)
+
    Functional Scope & Behavior:
    - Core user goals & success criteria
    - Explicit out-of-scope declarations

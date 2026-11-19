@@ -10,6 +10,12 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## Business Problem & Baseline _(mandatory; or `N/A — Technical/Hardening` for pure chores)_
+
+- **Observed Pain & Signal Source**: [Concrete user/business pain + source: L1 client cases / lost deals / hours / TOC bottleneck from business-plan]
+- **Before Baseline**: [Quantified current state, e.g. "12 overdue replies/week, MTTA 2.5h", or `Baseline unmeasured — measure in Stage 1 / pre-pilot`]
+- **Observable Completion Boundary**: [If real-world resolution happens outside this software (e.g. bank/CRM), state what in-system signal closes the loop]
+
 ## User Scenarios & Testing _(mandatory)_
 
 <!--
@@ -127,6 +133,13 @@ _Example of marking unclear requirements:_
 - **Denial of Service**: [Rate-limiting, resource quotas, bounded payload limits]
 - **Elevation of Privilege**: [RBAC/ABAC boundary enforcement, scope assertions]
 
+### Operational Governance & Ownership Assumptions _(conditional)_
+
+> **Trigger**: Mandatory if feature introduces alerts, approvals, queues, or multi-actor workflows. Otherwise: `Governance: N/A (Automated/Single-actor)`.
+
+- **Entity / Dialog Ownership**: [Who owns each tracked item/chat/alert to prevent diffusion of responsibility]
+- **Human-in-the-Loop & Process Dependency**: [Required manual button/SOP outside the model when external systems are out of scope]
+
 ### Key Entities _(include if feature involves data)_
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
@@ -141,7 +154,14 @@ _Example of marking unclear requirements:_
 
 ### Measurable Outcomes
 
+**Technical & UX Criteria (`SC-*` — verifiable at release):**
+
 - **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+
+**Business Outcome KPIs (`KPI-*`, 30–60 days `Before → After`; or `N/A — Technical/Hardening`):**
+
+- **KPI-01**: [Operational/business pain delta, e.g., "Overdue SLA replies reduced from X/week to <= Y/week"]
+- **KPI-02**: [Adoption / time-saved delta, e.g., "Mean first-response time reduced by >= 30%; active weekly queries >= N per staff user"]
+- **KPI-03**: [Signal quality in production, e.g., "Human alert acceptance rate >= X% vs false escalation rate <= Y%"]

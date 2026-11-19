@@ -66,7 +66,7 @@ Parse status markers:
 #### Wins
 
 - Tasks marked `[X]` that completed without scope drift (compare against original task description — same files, same agents)
-- Predictions in spec.md that turned out correct (success criteria that were measurable AND met)
+- Predictions in spec.md that turned out correct (success criteria that were measurable AND met, including `KPI-*` business outcomes)
 
 #### Misses
 
@@ -74,6 +74,7 @@ Parse status markers:
 - Tasks marked `[~]` — what failure cascaded
 - Scope drift: tasks `[X]` but completed via different files / agents than predicted (sign that the plan was off)
 - Surprises: changes during implement that weren't in any review finding
+- Business Outcome Misses: technical `SC-*` passed, yet `KPI-*` (`Before → After` adoption, SLA reduction, human alert acceptance) failed to move or lacked baseline tracking
 
 #### System Engineering & SDLC Health Audit (ISO/IEC/IEEE 12207)
 

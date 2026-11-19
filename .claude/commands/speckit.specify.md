@@ -143,12 +143,13 @@ Given that feature description, do this:
       140 For NFR: Quantify metrics with strict quantiles (latency p95/p99 in ms, throughput RPS/QPS, availability SLA 99.x%, RTO/RPO limits).
       141 For Security/Compliance (NIST SP 800-218 PW.1, ISO 12207 Phase 0): Include STRIDE threat triggers and regulatory constraints (PCI DSS v4.0.1, GDPR / 152-ФЗ, audit isolation).
       142 Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
-      143 6. Define Success Criteria
-      144 Create measurable, technology-agnostic outcomes
-      145 Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
-      146 Each criterion must be verifiable without implementation details
-      147 7. Identify Key Entities & Data Classifications (PII, financial, tokens, public)
-      148 8. Return: SUCCESS (spec ready for planning)
+      143 6. Fill **Business Problem & Baseline** and **Operational Governance & Ownership** (for non-chore features: concrete pain/signal, Before baseline or `Baseline unmeasured — measure in Stage 1`, explicit owner per entity/alert, and observable external closure boundary; pure internal fixes use `N/A — Technical/Hardening`)
+      144 7. Define Success Criteria
+      145 Create measurable, technology-agnostic outcomes split into:
+      146 - **Technical & UX Criteria (`SC-*`)**: verifiable at release (time, performance, accuracy, isolation)
+      147 - **Business Outcome KPIs (`KPI-*`, 30–60d `Before → After`)**: measurable business impact & human acceptance/adoption metrics (or `N/A — Technical/Hardening`)
+      148 8. Identify Key Entities & Data Classifications (PII, financial, tokens, public)
+      149 9. Return: SUCCESS (spec ready for planning)
 
 6. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
 
@@ -183,6 +184,8 @@ Given that feature description, do this:
    - [ ] Edge cases are identified
    - [ ] Scope is clearly bounded with explicit Out-of-Scope declarations (prevents feature creep)
    - [ ] Dependencies and assumptions identified
+   - [ ] Business Problem & Baseline defined (observed pain + Before metric, or explicit `N/A — Technical/Hardening`)
+   - [ ] Operational Ownership, observable closure signal, and Business Outcome KPIs (`Before → After`) defined where workflow/human-in-the-loop applies
 
    ## Feature Readiness
 
